@@ -1,0 +1,19 @@
+{
+  "trackName": "Circuito das Curvas Maiores",
+  "points": [
+    { "x": 0, "y": 0, "z": 0, "label": "START_GRID" },
+    { "x": 40, "y": 0, "z": 10, "label": "STRAIGHT_1" },
+    { "x": 80, "y": 3, "z": 40, "label": "ASCENDING_RAMP" },
+    { "x": 100, "y": 5, "z": 80, "label": "MAJOR_CURVE_APEX" },
+    { "x": 60, "y": 3, "z": 110, "label": "DESCENDING_SECTION" },
+    { "x": 20, "y": -1, "z": 70, "label": "TUNNEL_UNDERPASS" },
+    { "x": -30, "y": 0, "z": 40, "label": "WORKSHOP_BEND" },
+    { "x": -10, "y": 0, "z": 10, "label": "FINAL_CORNER" }
+  ],
+  "checkpoints": [0.125, 0.375, 0.625, 0.875],
+  "trackHalfWidth": 6.5,
+  "assets": {
+    "workshop": { "x": -45, "y": 0, "z": 30 },
+    "bleachers": { "x": 110, "y": 5, "z": 120 }
+  }
+}
