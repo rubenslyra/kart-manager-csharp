@@ -1,0 +1,55 @@
+# Historico De Etapas
+
+## 2026-05-13
+
+### Etapa 1 - Remocao do cone azul frontal
+
+- Arquivo principal: `src/components/realsim/RealKart.tsx`.
+- Alteracao: removido o bloco `Nose cone`.
+- Resultado esperado: frente do kart fica limpa, mantendo o arco/estrutura do chassi.
+
+### Etapa 2 - Estribos laterais
+
+- Arquivo principal: `src/components/realsim/RealKart.tsx`.
+- Alteracao: side pods azuis substituidos por estribos laterais em aluminio polido.
+- Marcador: `TASK-SIDESTEPS-ONLY`.
+- Ajuste posterior: estribos encurtados e recuados para ficarem atras da linha da roda dianteira.
+
+### Etapa 3 - Rodas e calotas
+
+- Arquivo principal: `src/components/realsim/parts/Wheels.tsx`.
+- Alteracoes:
+  - Rodas dianteiras estreitas e traseiras largas.
+  - Pivots centralizados no cubo.
+  - Calotas em aluminio polido no mesmo acabamento dos estribos.
+  - Calotas deslocadas para fora da face da roda.
+  - Aneis `torusGeometry` corrigidos para nao cortar visualmente pneu/aro.
+- Tentativa descartada: design futurista turbofan/carbono.
+
+### Etapa 4 - Motor removivel e sala acustica
+
+- Arquivos:
+  - `src/components/realsim/parts/MotorAssembly.tsx`
+  - `src/components/realsim/Workshop.tsx`
+- Alteracoes:
+  - Criado motor removivel com pivot na base inferior central.
+  - Criada sala acustica dentro da oficina.
+  - Criada bancada/dinamometro de teste usando o mesmo motor.
+
+### Etapa 5 - Conversao para motor Wankel
+
+- Arquivo principal: `src/components/realsim/parts/MotorAssembly.tsx`.
+- Alteracao: motor 2T substituido por Wankel/rotativo.
+- Itens incluidos:
+  - Carcaca epitrocoidal.
+  - Rotor triangular em corte tecnico.
+  - Eixo excentrico.
+  - Vedacoes de apice.
+  - Admissao, escape, dupla ignicao e arrefecimento.
+- Sinalizacao atualizada em `Workshop.tsx`: `SALA ACUSTICA · TESTE MOTOR WANKEL`.
+
+### Etapa 6 - Sistema de documentacao
+
+- Diretorio: `analise-tecnica/documentacao-partes/`.
+- Objetivo: manter rastreabilidade tecnica de partes, arquivos, pivots e tarefas.
+
