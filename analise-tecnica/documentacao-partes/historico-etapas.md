@@ -64,3 +64,14 @@
   - `MODULES OK` agora alterna com `MODULES CHECK` conforme checklist real de modulos.
   - Painel de telemetria exibe velocidade, marcha, bateria, freio e direcao.
   - Console `DIAG 26A` passou a exibir estado real de validacao, marcha e bateria.
+
+### Etapa 8 - Refinamento da sala acustica Wankel
+
+- Arquivo principal: `src/components/realsim/Workshop.tsx`.
+- Alteracoes:
+  - Sala acustica recebeu porta/vidro tecnico com moldura de vedacao.
+  - Paineis acusticos ganharam relevo para melhor leitura de isolamento.
+  - Criado sistema visual de exaustao com duto, grelha, flange e luz de status.
+  - Adicionados microfones/sensores de medicao acustica ao redor da bancada.
+  - Adicionada tela interna com leitura de dB, RPM, array de microfones e celula de carga.
+  - Bancada ganhou detalhe visual de carga/dinamometro.

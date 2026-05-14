@@ -73,6 +73,10 @@
   - Ficar dentro da oficina atual.
   - Conter paineis acusticos, bancada/dinamometro e sinalizacao.
   - Representar isolamento sonoro, exaustao e teste controlado.
+  - Ter porta/vidro tecnico com vedacao visual.
+  - Evidenciar sistema de exaustao dedicado com duto, grelha e status.
+  - Conter sensores/microfones de medicao acustica.
+  - Exibir leitura interna de teste, como dB, RPM, array de microfones ou carga.
 
 ## Cockpit E Controle
 
@@ -101,4 +105,3 @@
   - Manter bateria, BMS, controlador e chicotes.
   - Preservar conexoes visuais para o motor.
   - Revisar futuramente o roteamento para alinhar com o Wankel, caso a arquitetura passe a ser hibrida/combustao.
-

@@ -161,6 +161,17 @@ function AcousticEngineRoom({ position }: { position: [number, number, number] }
     [1.16, 1.0, -0.25, Math.PI / 2],
     [1.16, 1.0, 0.25, Math.PI / 2],
   ] as const;
+  const sealPositions = [
+    [-1.34, 1.05, 0.94, 0],
+    [1.34, 1.05, 0.94, 0],
+    [0, 2.08, 0.94, Math.PI / 2],
+    [0, 0.08, 0.94, Math.PI / 2],
+  ] as const;
+  const microphonePositions = [
+    [-0.72, 0.92, 0.4],
+    [0.72, 0.92, 0.4],
+    [0, 1.36, -0.28],
+  ] as const;
 
   return (
     <group position={position}>
@@ -183,8 +194,14 @@ function AcousticEngineRoom({ position }: { position: [number, number, number] }
 
       {foamPanels.map(([x, y, z, rot], i) => (
         <mesh key={`foam-${i}`} position={[x, y, z]} rotation={[0, rot, 0]}>
-          <boxGeometry args={[0.32, 0.78, 0.035]} />
+          <boxGeometry args={[0.32, 0.78, i % 2 === 0 ? 0.055 : 0.035]} />
           <meshStandardMaterial color={i % 2 === 0 ? "#202a35" : "#151c24"} roughness={0.98} />
+        </mesh>
+      ))}
+      {foamPanels.map(([x, y, z, rot], i) => (
+        <mesh key={`foam-rib-${i}`} position={[x, y + 0.01, z + (rot === 0 ? 0.028 : 0)]} rotation={[0, rot, 0]}>
+          <boxGeometry args={[0.26, 0.035, 0.024]} />
+          <meshStandardMaterial color="#2d3b4a" roughness={0.94} metalness={0.08} />
         </mesh>
       ))}
 
@@ -199,6 +216,46 @@ function AcousticEngineRoom({ position }: { position: [number, number, number] }
 
       <EngineTestRig position={[0, 0, 0]} />
 
+      {/* Acoustic door frame and sealed observation glass. */}
+      {sealPositions.map(([x, y, z, rot], i) => (
+        <mesh key={`door-seal-${i}`} position={[x, y, z]} rotation={[0, 0, rot]}>
+          <boxGeometry args={i < 2 ? [0.055, 1.95, 0.05] : [1.95, 0.055, 0.05]} />
+          <meshStandardMaterial color="#05080d" metalness={0.25} roughness={0.7} />
+        </mesh>
+      ))}
+      <mesh position={[0, 1.08, 0.965]}>
+        <planeGeometry args={[1.72, 1.32]} />
+        <meshBasicMaterial color="#93c5fd" transparent opacity={0.16} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[0.78, 1.08, 0.995]}>
+        <boxGeometry args={[0.08, 0.5, 0.045]} />
+        <meshStandardMaterial color="#d9dde2" metalness={0.88} roughness={0.2} />
+      </mesh>
+
+      {/* Exhaust extraction duct: visible controlled ventilation for Wankel tests. */}
+      <mesh position={[0.62, 1.78, -0.76]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.14, 0.14, 0.12, 28]} />
+        <meshStandardMaterial color="#3b4652" metalness={0.72} roughness={0.32} />
+      </mesh>
+      <mesh position={[0.62, 2.04, -0.52]} rotation={[0.72, 0, 0]}>
+        <cylinderGeometry args={[0.07, 0.07, 0.68, 18]} />
+        <meshStandardMaterial color="#56616d" metalness={0.78} roughness={0.28} />
+      </mesh>
+      <mesh position={[0.62, 2.26, -0.18]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.11, 0.11, 0.16, 24]} />
+        <meshStandardMaterial color="#111827" metalness={0.65} roughness={0.44} />
+      </mesh>
+      {[0, 1, 2, 3].map((i) => (
+        <mesh key={`exhaust-louver-${i}`} position={[0.62, 2.26, -0.27 + i * 0.045]} rotation={[0.4, 0, 0]}>
+          <boxGeometry args={[0.2, 0.012, 0.018]} />
+          <meshStandardMaterial color="#8da2b8" metalness={0.8} roughness={0.24} />
+        </mesh>
+      ))}
+      <mesh position={[0.82, 1.72, -0.73]}>
+        <sphereGeometry args={[0.035, 16, 12]} />
+        <meshBasicMaterial color="#5be39a" />
+      </mesh>
+
       <mesh position={[0, 1.68, 0.92]} rotation={[0, Math.PI, 0]}>
         <planeGeometry args={[1.25, 0.28]} />
         <meshBasicMaterial color="#0c2236" />
@@ -210,11 +267,49 @@ function AcousticEngineRoom({ position }: { position: [number, number, number] }
         ISOLAMENTO SONORO · DINAMOMETRO · EXAUSTAO
       </Text>
 
+      <mesh position={[-0.83, 1.48, 0.91]} rotation={[0, Math.PI, 0]}>
+        <planeGeometry args={[0.62, 0.34]} />
+        <meshBasicMaterial color="#061827" />
+      </mesh>
+      <Text position={[-0.83, 1.54, 0.9]} rotation={[0, Math.PI, 0]} fontSize={0.04} color="#5be39a" anchorX="center">
+        86 dB · 7.4k RPM
+      </Text>
+      <Text position={[-0.83, 1.43, 0.9]} rotation={[0, Math.PI, 0]} fontSize={0.032} color="#9ed8ff" anchorX="center">
+        MIC ARRAY · LOAD CELL
+      </Text>
+
+      {microphonePositions.map(([x, y, z], i) => (
+        <group key={`acoustic-mic-${i}`} position={[x, y, z]}>
+          <mesh position={[0, -0.18, 0]}>
+            <cylinderGeometry args={[0.01, 0.01, 0.34, 8]} />
+            <meshStandardMaterial color="#111318" metalness={0.45} roughness={0.55} />
+          </mesh>
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.026, 0.026, 0.075, 14]} />
+            <meshStandardMaterial color="#d9dde2" metalness={0.82} roughness={0.24} />
+          </mesh>
+          <mesh position={[0, 0, 0.05]} rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.038, 0.003, 6, 20]} />
+            <meshBasicMaterial color={i === 2 ? "#ffb340" : "#39a8ff"} />
+          </mesh>
+        </group>
+      ))}
+
+      <mesh position={[0.34, 0.63, 0.31]} rotation={[Math.PI / 2, 0, Math.PI / 2]}>
+        <torusGeometry args={[0.16, 0.012, 10, 36]} />
+        <meshStandardMaterial color="#101720" metalness={0.82} roughness={0.3} />
+      </mesh>
+      <mesh position={[0.34, 0.63, 0.31]} rotation={[Math.PI / 2, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.026, 0.026, 0.42, 16]} />
+        <meshStandardMaterial color="#a0a7ae" metalness={0.85} roughness={0.25} />
+      </mesh>
+
       <mesh position={[1.18, 0.78, 0.78]} rotation={[0, Math.PI / 2, 0]}>
         <planeGeometry args={[0.38, 1.05]} />
         <meshBasicMaterial color="#93c5fd" transparent opacity={0.18} side={THREE.DoubleSide} />
       </mesh>
-      <pointLight position={[0, 1.5, 0]} intensity={1.0} color="#7ec8ff" distance={3} />
+      <pointLight position={[0, 1.5, 0]} intensity={1.15} color="#7ec8ff" distance={3} />
+      <pointLight position={[0.72, 1.85, -0.68]} intensity={0.65} color="#5be39a" distance={2.4} />
     </group>
   );
 }
