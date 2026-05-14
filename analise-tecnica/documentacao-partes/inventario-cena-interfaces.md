@@ -65,6 +65,23 @@ Este documento registra elementos do ambiente 3D que nao sao partes fisicas do k
   - Mostra `PIT VALIDATION` quando ainda existe etapa pendente.
   - Exibe marcha atual e nivel de bateria.
 
+### Controle de foco `Sala Acustica`
+
+- Codigo:
+  - `src/components/realsim/RealSimUI.tsx`
+  - `src/components/realsim/CameraController.tsx`
+  - `src/components/realsim/RealSimulator.tsx`
+- Funcao: permitir que o usuario acesse visualmente a sala acustica Wankel sem procurar manualmente pela cena.
+- Comportamento:
+  - Botao `Sala Acustica` move a camera para a sala de teste Wankel.
+  - O foco de cena e separado do foco modular do kart.
+  - Ao focar a sala, o foco de modulo e limpo.
+  - Ao focar bateria, freios, direcao, ignicao ou cambio, o foco de sala e limpo.
+  - O botao `reset` retorna a camera para a vista inicial.
+- Requisito tecnico:
+  - Nao adicionar a sala acustica como modulo do kart.
+  - Preservar labels, cabos, raio-X e auditoria como recursos dos modulos do kart.
+
 ## Convencao
 
 - Elementos deste documento podem parecer "projetores", telas ou hologramas, mas devem ser tratados como interfaces tecnicas de cena.

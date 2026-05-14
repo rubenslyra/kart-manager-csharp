@@ -75,3 +75,16 @@
   - Adicionados microfones/sensores de medicao acustica ao redor da bancada.
   - Adicionada tela interna com leitura de dB, RPM, array de microfones e celula de carga.
   - Bancada ganhou detalhe visual de carga/dinamometro.
+
+### Etapa 9 - Acesso direto a sala acustica
+
+- Arquivos:
+  - `src/components/realsim/RealSimulator.tsx`
+  - `src/components/realsim/RealSimUI.tsx`
+  - `src/components/realsim/CameraController.tsx`
+  - `analise-tecnica/documentacao-partes/inventario-cena-interfaces.md`
+- Alteracoes:
+  - Criado foco de cena separado do foco modular do kart.
+  - Adicionado botao `Sala Acustica` na barra de focos.
+  - Camera passa a mirar diretamente a sala de teste Wankel.
+  - Focos de modulo continuam preservando labels, cabos, raio-X e auditoria.

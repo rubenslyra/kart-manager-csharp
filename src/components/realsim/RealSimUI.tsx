@@ -1,6 +1,7 @@
 import { mockBridge } from "@/bridge/mockExternalData";
 import type { ConnectionStatus, DataSource, KartTelemetry } from "@/bridge/types";
 import { buildChecklist, canLeavePit } from "@/bridge/moduleValidator";
+import type { SceneFocusTarget } from "./CameraController";
 import type { FocusTarget } from "./RealKart";
 
 interface Props {
@@ -13,6 +14,8 @@ interface Props {
   lastRaw: string | null;
   focus: FocusTarget;
   setFocus: (f: FocusTarget) => void;
+  sceneFocus: SceneFocusTarget;
+  setSceneFocus: (f: SceneFocusTarget) => void;
   onRelease: () => void;
   showLabels: boolean;
   setShowLabels: (v: boolean) => void;
@@ -46,6 +49,8 @@ export function RealSimUI({
   lastRaw,
   focus,
   setFocus,
+  sceneFocus,
+  setSceneFocus,
   onRelease,
   showLabels,
   setShowLabels,
@@ -109,11 +114,14 @@ export function RealSimUI({
       </div>
 
       {/* Focus chips */}
-      <div className="pointer-events-auto absolute left-1/2 top-3 z-30 flex -translate-x-1/2 gap-1">
+      <div className="pointer-events-auto absolute left-1/2 top-3 z-30 flex -translate-x-1/2 flex-wrap justify-center gap-1">
         {(["battery", "brakes", "steering", "ignition", "gearbox"] as const).map((f) => (
           <button
             key={f}
-            onClick={() => setFocus(focus === f ? null : f)}
+            onClick={() => {
+              setSceneFocus(null);
+              setFocus(focus === f ? null : f);
+            }}
             className={`corner-cut border px-2 py-1 font-mono text-[10px] uppercase tracking-widest backdrop-blur-sm ${
               focus === f
                 ? "border-primary bg-primary text-primary-foreground"
@@ -123,9 +131,25 @@ export function RealSimUI({
             {f}
           </button>
         ))}
-        {focus && (
+        <button
+          onClick={() => {
+            setFocus(null);
+            setSceneFocus(sceneFocus === "acousticRoom" ? null : "acousticRoom");
+          }}
+          className={`corner-cut border px-2 py-1 font-mono text-[10px] uppercase tracking-widest backdrop-blur-sm ${
+            sceneFocus === "acousticRoom"
+              ? "border-accent bg-accent text-accent-foreground"
+              : "border-border bg-background/80 text-muted-foreground hover:text-accent"
+          }`}
+        >
+          Sala Acustica
+        </button>
+        {(focus || sceneFocus) && (
           <button
-            onClick={() => setFocus(null)}
+            onClick={() => {
+              setFocus(null);
+              setSceneFocus(null);
+            }}
             className="corner-cut border border-border bg-background/80 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:text-primary"
           >
             ← reset

@@ -2,7 +2,7 @@ import { Suspense, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Workshop } from "./Workshop";
 import { RealKart, type FocusTarget } from "./RealKart";
-import { CameraController } from "./CameraController";
+import { CameraController, type SceneFocusTarget } from "./CameraController";
 import { RealSimUI } from "./RealSimUI";
 import { Postfx } from "./Postfx";
 import { ModuleLabels } from "./ModuleLabels";
@@ -19,6 +19,7 @@ import { canLeavePit } from "@/bridge/moduleValidator";
 export function RealSimulator() {
   const ext = useExternalData();
   const [focus, setFocus] = useState<FocusTarget>(null);
+  const [sceneFocus, setSceneFocus] = useState<SceneFocusTarget>(null);
   const [showLabels, setShowLabels] = useState(true);
   const [xray, setXray] = useState(false);
   const [showWiring, setShowWiring] = useState(true);
@@ -50,7 +51,7 @@ export function RealSimulator() {
           <Wiring telemetry={ext.telemetry} focus={focus} visible={showWiring || xray} />
           <ModuleLabels telemetry={ext.telemetry} focus={focus} visible={showLabels} />
           <XRayOverlay telemetry={ext.telemetry} focus={focus} enabled={xray} />
-          <CameraController focus={focus} />
+          <CameraController focus={sceneFocus ?? focus} />
           <Postfx />
         </Suspense>
       </Canvas>
@@ -64,6 +65,8 @@ export function RealSimulator() {
         lastRaw={ext.lastRaw}
         focus={focus}
         setFocus={setFocus}
+        sceneFocus={sceneFocus}
+        setSceneFocus={setSceneFocus}
         onRelease={onRelease}
         showLabels={showLabels}
         setShowLabels={setShowLabels}

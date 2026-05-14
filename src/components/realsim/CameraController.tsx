@@ -3,18 +3,22 @@ import * as THREE from "three";
 import { useThree, useFrame } from "@react-three/fiber";
 import type { FocusTarget } from "./parts/shared";
 
+export type SceneFocusTarget = "acousticRoom" | null;
+export type CameraFocusTarget = FocusTarget | SceneFocusTarget;
+
 // Targets in blueprint scale (meters). Look points align with MODULE_ANCHORS.
-const TARGETS: Record<Exclude<FocusTarget, null>, { pos: THREE.Vector3; look: THREE.Vector3 }> = {
+const TARGETS: Record<Exclude<CameraFocusTarget, null>, { pos: THREE.Vector3; look: THREE.Vector3 }> = {
   battery: { pos: new THREE.Vector3(0.9, 0.85, -1.4), look: new THREE.Vector3(0.22, 0.40, -0.20) },
   brakes: { pos: new THREE.Vector3(1.4, 0.55, -1.2), look: new THREE.Vector3(0.41, 0.30, -0.50) },
   steering: { pos: new THREE.Vector3(0, 0.95, 1.6), look: new THREE.Vector3(0, 0.58, 0.30) },
   ignition: { pos: new THREE.Vector3(1.0, 0.85, 1.1), look: new THREE.Vector3(0.18, 0.55, 0.20) },
   gearbox: { pos: new THREE.Vector3(0, 0.75, -1.4), look: new THREE.Vector3(0, 0.32, -0.40) },
+  acousticRoom: { pos: new THREE.Vector3(5.2, 1.85, 6.0), look: new THREE.Vector3(7.2, 1.05, 3.9) },
 };
 
 const HOME = { pos: new THREE.Vector3(2.6, 1.6, 2.8), look: new THREE.Vector3(0, 0.45, 0) };
 
-export function CameraController({ focus }: { focus: FocusTarget }) {
+export function CameraController({ focus }: { focus: CameraFocusTarget }) {
   const { camera } = useThree();
   const target = useRef(new THREE.Vector3());
   const desiredPos = useRef(new THREE.Vector3());
