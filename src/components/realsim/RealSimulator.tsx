@@ -44,7 +44,7 @@ export function RealSimulator() {
         <color attach="background" args={["#0d1826"]} />
         <fog attach="fog" args={["#0d1826", 18, 38]} />
         <Suspense fallback={null}>
-          <Workshop />
+          <Workshop telemetry={ext.telemetry} />
           <BackgroundMonitors telemetry={ext.telemetry} />
           <RealKart telemetry={ext.telemetry} focus={focus} />
           <Wiring telemetry={ext.telemetry} focus={focus} visible={showWiring || xray} />

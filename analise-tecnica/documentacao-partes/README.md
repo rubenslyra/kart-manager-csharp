@@ -14,6 +14,7 @@ Este diretorio documenta as partes, conjuntos e membros estruturais do kart usad
 ## Arquivos
 
 - `catalogo-partes.md`: lista de partes do veiculo e seus requisitos visuais/funcionais.
+- `inventario-cena-interfaces.md`: elementos de cena, telas, paineis e interfaces tecnicas da oficina.
 - `mapa-componentes.md`: relacao entre partes fisicas e componentes React/Three.js.
 - `historico-etapas.md`: etapas de alteracao feitas ate aqui.
 - `procedimento-reversao.md`: como reverter alteracoes isoladas quando uma proposta visual nao ficar boa.
@@ -27,4 +28,3 @@ Este diretorio documenta as partes, conjuntos e membros estruturais do kart usad
 - Pivot do kart completo: centro do chassi no nivel do solo.
 - Pivot de rodas: centro geometrico do cubo.
 - Pivot do motor removivel: base inferior central da placa/carcaca.
-

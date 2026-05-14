@@ -1,10 +1,13 @@
 import { useMemo } from "react";
 import * as THREE from "three";
+import { useFrame } from "@react-three/fiber";
 import { MeshReflectorMaterial, Text } from "@react-three/drei";
 import { EngineTestRig } from "./parts/MotorAssembly";
+import type { KartTelemetry, ModuleStatus } from "@/bridge/types";
+import { buildChecklist, canLeavePit } from "@/bridge/moduleValidator";
 
 /** Cinematic engineering workshop: reflective floor, hydraulic lift, racks, holo panels. */
-export function Workshop() {
+export function Workshop({ telemetry }: { telemetry: KartTelemetry }) {
   const stripeMatrices = useMemo(() => {
     const arr: THREE.Matrix4[] = [];
     const m = new THREE.Matrix4();
@@ -101,14 +104,14 @@ export function Workshop() {
         </mesh>
       ))}
 
-      <DiagnosticBay position={[-5.0, 0, -2]} />
+      <DiagnosticBay position={[-5.0, 0, -2]} telemetry={telemetry} />
       <Workbench position={[5.0, 0, -1.5]} />
       <AcousticEngineRoom position={[7.2, 0, 3.9]} />
       <ToolRack position={[-5.5, 0, 2]} />
       <ToolRack position={[5.5, 0, 2]} />
 
-      <FloatingPanel position={[-3.4, 2.7, -3.5]} color="#39a8ff" label="MODULES OK" />
-      <FloatingPanel position={[3.4, 2.7, -3.5]} color="#5be39a" label="TELEMETRY" />
+      <ModuleReadinessPanel position={[-3.4, 2.85, -3.5]} telemetry={telemetry} />
+      <TelemetryReadoutPanel position={[3.4, 2.85, -3.5]} telemetry={telemetry} />
 
       {/* Lighting — RL palette, cinematic */}
       <ambientLight intensity={0.55} color="#9ec8ff" />
@@ -216,24 +219,20 @@ function AcousticEngineRoom({ position }: { position: [number, number, number] }
   );
 }
 
-function DiagnosticBay({ position }: { position: [number, number, number] }) {
+function DiagnosticBay({
+  position,
+  telemetry,
+}: {
+  position: [number, number, number];
+  telemetry: KartTelemetry;
+}) {
   return (
     <group position={position}>
       <mesh position={[0, 0.6, 0]} castShadow>
         <boxGeometry args={[1.4, 1.2, 0.6]} />
         <meshStandardMaterial color="#243244" metalness={0.7} roughness={0.4} />
       </mesh>
-      <mesh position={[0, 1.4, 0.05]}>
-        <planeGeometry args={[1.1, 0.7]} />
-        <meshBasicMaterial color="#0c2236" />
-      </mesh>
-      <mesh position={[0, 1.4, 0.06]}>
-        <planeGeometry args={[1.0, 0.6]} />
-        <meshBasicMaterial color="#39c5ff" transparent opacity={0.18} />
-      </mesh>
-      <Text position={[0, 1.4, 0.07]} fontSize={0.07} color="#9ed8ff" anchorX="center">
-        DIAG · 26A
-      </Text>
+      <DiagnosticConsoleScreen position={[0, 1.4, 0.08]} telemetry={telemetry} />
     </group>
   );
 }
@@ -276,32 +275,218 @@ function ToolRack({ position }: { position: [number, number, number] }) {
   );
 }
 
-function FloatingPanel({
+function ModuleReadinessPanel({
   position,
-  color,
-  wide,
-  label,
+  telemetry,
 }: {
   position: [number, number, number];
-  color: string;
-  wide?: boolean;
-  label?: string;
+  telemetry: KartTelemetry;
 }) {
+  const checklist = buildChecklist(telemetry);
+  const critical = checklist.some((item) => !item.ok);
+  const title = critical ? "MODULES CHECK" : "MODULES OK";
+  const subtitle = canLeavePit(telemetry) ? "PIT RELEASE ARMED" : telemetry.vehicleState;
+  const modules = [
+    ["CORE", telemetry.modules.core.loaded, telemetry.modules.core.status],
+    ["GEAR", telemetry.modules.gearbox.loaded, telemetry.modules.gearbox.status],
+    ["BRK", telemetry.modules.brakes.loaded, telemetry.modules.brakes.status],
+    ["IGN", telemetry.modules.ignition.loaded, telemetry.modules.ignition.status],
+    ["BAT", telemetry.modules.battery.level > 15, telemetry.modules.battery.status],
+  ] as const;
+
+  return (
+    <HoloCanvasPanel
+      position={position}
+      width={2.65}
+      height={1.5}
+      accent={critical ? "#ffb340" : "#39a8ff"}
+      draw={(ctx, w, h, time) => {
+        drawPanelShell(ctx, w, h, title, subtitle, critical ? "#ffb340" : "#39a8ff", time);
+        ctx.font = "700 32px ui-monospace, monospace";
+        modules.forEach(([name, loaded, status], i) => {
+          const x = 34 + (i % 2) * 260;
+          const y = 112 + Math.floor(i / 2) * 62;
+          const ok = loaded && status !== "critical";
+          ctx.fillStyle = "#102235";
+          ctx.fillRect(x, y - 30, 218, 42);
+          ctx.strokeStyle = ok ? "#5be39a99" : status === "warning" ? "#ffb340aa" : "#ff5079aa";
+          ctx.strokeRect(x, y - 30, 218, 42);
+          ctx.fillStyle = ok ? "#5be39a" : status === "warning" ? "#ffb340" : "#ff5079";
+          ctx.fillText(ok ? "OK" : loaded ? status.toUpperCase() : "MISS", x + 128, y);
+          ctx.fillStyle = "#9ed8ff";
+          ctx.fillText(name, x + 14, y);
+        });
+      }}
+    />
+  );
+}
+
+function TelemetryReadoutPanel({
+  position,
+  telemetry,
+}: {
+  position: [number, number, number];
+  telemetry: KartTelemetry;
+}) {
+  const m = telemetry.modules;
+  return (
+    <HoloCanvasPanel
+      position={position}
+      width={2.65}
+      height={1.5}
+      accent="#5be39a"
+      draw={(ctx, w, h, time) => {
+        drawPanelShell(ctx, w, h, "LIVE TELEMETRY", telemetry.vehicleState, "#5be39a", time);
+        const rows = [
+          ["SPD", `${(telemetry.speedKmh ?? 0).toFixed(1)} km/h`, "#39a8ff"],
+          ["GEAR", m.gearbox.currentGear, "#ffb340"],
+          ["BAT", `${m.battery.level.toFixed(0)}%  ${m.battery.voltage.toFixed(1)}V`, statusColor(m.battery.status)],
+          ["BRAKE", `${(m.brakes.pedalPressure * 100).toFixed(0)}%  ${m.brakes.discTemperature.toFixed(0)}C`, statusColor(m.brakes.status)],
+          ["STEER", `${m.steering.angle.toFixed(1)} deg`, statusColor(m.steering.status)],
+        ];
+        ctx.font = "700 28px ui-monospace, monospace";
+        rows.forEach(([label, value, color], i) => {
+          const y = 102 + i * 42;
+          ctx.fillStyle = "#102235";
+          ctx.fillRect(34, y - 26, w - 68, 32);
+          ctx.fillStyle = "#7f93a8";
+          ctx.fillText(label, 52, y);
+          ctx.fillStyle = color;
+          ctx.textAlign = "right";
+          ctx.fillText(value, w - 52, y);
+          ctx.textAlign = "left";
+        });
+      }}
+    />
+  );
+}
+
+function DiagnosticConsoleScreen({
+  position,
+  telemetry,
+}: {
+  position: [number, number, number];
+  telemetry: KartTelemetry;
+}) {
+  return (
+    <HoloCanvasPanel
+      position={position}
+      width={1.15}
+      height={0.72}
+      accent="#39a8ff"
+      draw={(ctx, w, h, time) => {
+        drawPanelShell(ctx, w, h, "DIAG 26A", telemetry.vehicleState, "#39a8ff", time);
+        ctx.font = "700 26px ui-monospace, monospace";
+        ctx.fillStyle = canLeavePit(telemetry) ? "#5be39a" : "#ffb340";
+        ctx.fillText(canLeavePit(telemetry) ? "READY TO DRIVE" : "PIT VALIDATION", 28, 112);
+        ctx.font = "600 22px ui-monospace, monospace";
+        ctx.fillStyle = "#9ed8ff";
+        ctx.fillText(`GEAR ${telemetry.modules.gearbox.currentGear}`, 28, 152);
+        ctx.fillText(`BAT ${telemetry.modules.battery.level.toFixed(0)}%`, 210, 152);
+      }}
+    />
+  );
+}
+
+function HoloCanvasPanel({
+  position,
+  width,
+  height,
+  accent,
+  draw,
+}: {
+  position: [number, number, number];
+  width: number;
+  height: number;
+  accent: string;
+  draw: (ctx: CanvasRenderingContext2D, width: number, height: number, time: number) => void;
+}) {
+  const textureWidth = 640;
+  const textureHeight = 360;
+  const { ctx, texture } = useMemo(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = textureWidth;
+    canvas.height = textureHeight;
+    const context = canvas.getContext("2d")!;
+    const canvasTexture = new THREE.CanvasTexture(canvas);
+    canvasTexture.colorSpace = THREE.SRGBColorSpace;
+    canvasTexture.minFilter = THREE.LinearFilter;
+    return { ctx: context, texture: canvasTexture };
+  }, []);
+
+  useFrame(({ clock }) => {
+    draw(ctx, textureWidth, textureHeight, clock.elapsedTime);
+    texture.needsUpdate = true;
+  });
+
   return (
     <group position={position}>
       <mesh>
-        <planeGeometry args={[wide ? 4 : 1.6, wide ? 1.6 : 1]} />
-        <meshBasicMaterial color={color} transparent opacity={0.1} />
+        <planeGeometry args={[width + 0.08, height + 0.08]} />
+        <meshBasicMaterial color="#07121e" transparent opacity={0.62} />
       </mesh>
       <mesh position={[0, 0, -0.01]}>
-        <planeGeometry args={[wide ? 4.05 : 1.65, wide ? 1.65 : 1.05]} />
-        <meshBasicMaterial color={color} wireframe />
+        <planeGeometry args={[width + 0.13, height + 0.13]} />
+        <meshBasicMaterial color={accent} wireframe transparent opacity={0.9} />
       </mesh>
-      {label && (
-        <Text position={[0, 0, 0.01]} fontSize={wide ? 0.22 : 0.12} color={color} anchorX="center">
-          {label}
-        </Text>
-      )}
+      <mesh position={[0, 0, 0.012]}>
+        <planeGeometry args={[width, height]} />
+        <meshBasicMaterial map={texture} transparent opacity={0.96} toneMapped={false} />
+      </mesh>
+      <pointLight position={[0, 0, 0.7]} color={accent} intensity={0.55} distance={3.2} />
     </group>
   );
+}
+
+function drawPanelShell(
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  title: string,
+  subtitle: string,
+  accent: string,
+  time: number,
+) {
+  const grad = ctx.createLinearGradient(0, 0, width, height);
+  grad.addColorStop(0, "#06111d");
+  grad.addColorStop(0.55, "#0b1f31");
+  grad.addColorStop(1, "#06111d");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.strokeStyle = "#1f344a88";
+  ctx.lineWidth = 1;
+  for (let x = 0; x < width; x += 32) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x + 80, height);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = "#071827dd";
+  ctx.fillRect(0, 0, width, 58);
+  ctx.fillStyle = accent;
+  ctx.font = "800 30px ui-sans-serif, system-ui";
+  ctx.fillText(title, 28, 38);
+  ctx.fillStyle = "#cfd6e0";
+  ctx.font = "600 18px ui-monospace, monospace";
+  ctx.textAlign = "right";
+  ctx.fillText(subtitle, width - 28, 36);
+  ctx.textAlign = "left";
+
+  ctx.strokeStyle = accent;
+  ctx.lineWidth = 3;
+  ctx.strokeRect(12, 12, width - 24, height - 24);
+  ctx.fillStyle = `${accent}18`;
+  ctx.fillRect(16, height - 34, ((Math.sin(time * 1.6) + 1) / 2) * (width - 32), 8);
+
+  ctx.fillStyle = "#39a8ff10";
+  for (let y = 0; y < height; y += 4) ctx.fillRect(0, y, width, 1);
+}
+
+function statusColor(status: ModuleStatus) {
+  if (status === "ok") return "#5be39a";
+  if (status === "warning") return "#ffb340";
+  if (status === "critical") return "#ff5079";
+  return "#7f93a8";
 }

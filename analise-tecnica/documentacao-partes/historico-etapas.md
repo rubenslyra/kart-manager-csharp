@@ -53,3 +53,14 @@
 - Diretorio: `analise-tecnica/documentacao-partes/`.
 - Objetivo: manter rastreabilidade tecnica de partes, arquivos, pivots e tarefas.
 
+### Etapa 7 - Interfaces tecnicas de cena
+
+- Arquivos:
+  - `src/components/realsim/Workshop.tsx`
+  - `src/components/realsim/RealSimulator.tsx`
+  - `analise-tecnica/documentacao-partes/inventario-cena-interfaces.md`
+- Alteracoes:
+  - Paineis superiores deixaram de ser textos fixos e passaram a usar `KartTelemetry`.
+  - `MODULES OK` agora alterna com `MODULES CHECK` conforme checklist real de modulos.
+  - Painel de telemetria exibe velocidade, marcha, bateria, freio e direcao.
+  - Console `DIAG 26A` passou a exibir estado real de validacao, marcha e bateria.
