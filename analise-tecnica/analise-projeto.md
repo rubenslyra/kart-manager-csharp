@@ -70,6 +70,12 @@ Areas importantes do codigo:
 - `src/lib/csharp/dllInspector.ts`: inspecao de DLLs C# via leitura de PE/metadados.
 - `public/docs/CSHARP_MODULE_CONTRACT.md`: contrato formal dos modulos C#.
 
+Documentacao operacional:
+
+- `AGENTS.md`: instrucoes operacionais carregadas na raiz do repositorio.
+- `analise-tecnica/protocolo-tarefas.md`: protocolo para `[Iniciar Tarefa]` e `[Finalizar Tarefa]`.
+- `analise-tecnica/tarefas/`: registros de tarefas abertas e finalizadas.
+
 ## 5. Contrato De Modulos C#
 
 O projeto espera DLLs independentes por modulo. Cada modulo deve expor uma classe publica implementando uma interface base semelhante a:
