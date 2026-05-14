@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import * as THREE from "three";
 import type { DimProps } from "./shared";
+import type { EngineTestState } from "../engineTest";
 import { RL_KART_DERIVED, RL_KART_PART_NAMES } from "@/components/simulator/kart/RLKart26ADimensions";
 
 const X = RL_KART_DERIVED;
@@ -234,7 +235,23 @@ export function MotorAssembly({ dim }: { dim: DimProps }) {
   );
 }
 
-export function EngineTestRig({ position }: { position: [number, number, number] }) {
+const IDLE_ENGINE_TEST: EngineTestState = {
+  running: false,
+  throttle: 0,
+  rpm: 0,
+  health: 100,
+  temperature: 30,
+  load: 0,
+  audioEnabled: false,
+};
+
+export function EngineTestRig({
+  position,
+  engineTest = IDLE_ENGINE_TEST,
+}: {
+  position: [number, number, number];
+  engineTest?: EngineTestState;
+}) {
   return (
     <group position={position}>
       <mesh position={[0, 0.44, 0]} castShadow>
@@ -243,7 +260,13 @@ export function EngineTestRig({ position }: { position: [number, number, number]
       </mesh>
       <mesh position={[0.46, 0.64, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
         <cylinderGeometry args={[0.12, 0.12, 0.22, 32]} />
-        <meshStandardMaterial color="#111827" metalness={0.78} roughness={0.32} />
+        <meshStandardMaterial
+          color="#111827"
+          emissive={engineTest.running ? "#39a8ff" : "#000000"}
+          emissiveIntensity={engineTest.running ? 0.12 + engineTest.throttle * 0.45 : 0}
+          metalness={0.78}
+          roughness={0.32}
+        />
       </mesh>
       <mesh position={[0.27, 0.64, 0]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.018, 0.018, 0.18, 16]} />
@@ -254,7 +277,15 @@ export function EngineTestRig({ position }: { position: [number, number, number]
       </group>
       <mesh position={[0, 0.9, -0.32]} rotation={[-0.35, 0, 0]}>
         <planeGeometry args={[0.8, 0.32]} />
-        <meshBasicMaterial color="#39c5ff" transparent opacity={0.22} />
+        <meshBasicMaterial color={engineTest.health < 70 ? "#ffb340" : "#39c5ff"} transparent opacity={engineTest.running ? 0.34 : 0.18} />
+      </mesh>
+      <mesh position={[0.15, 0.58, 0.31]}>
+        <boxGeometry args={[0.46, 0.035, 0.045]} />
+        <meshStandardMaterial color={engineTest.running ? "#5be39a" : "#4b5563"} emissive={engineTest.running ? "#12321f" : "#000000"} emissiveIntensity={0.5} />
+      </mesh>
+      <mesh position={[0.02 + engineTest.throttle * 0.34, 0.58, 0.34]}>
+        <boxGeometry args={[0.035, 0.052, 0.052]} />
+        <meshStandardMaterial color="#d9dde2" metalness={0.8} roughness={0.22} />
       </mesh>
     </group>
   );

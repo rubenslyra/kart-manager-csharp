@@ -3,11 +3,18 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { MeshReflectorMaterial, Text } from "@react-three/drei";
 import { EngineTestRig } from "./parts/MotorAssembly";
+import type { EngineTestState } from "./engineTest";
 import type { KartTelemetry, ModuleStatus } from "@/bridge/types";
 import { buildChecklist, canLeavePit } from "@/bridge/moduleValidator";
 
 /** Cinematic engineering workshop: reflective floor, hydraulic lift, racks, holo panels. */
-export function Workshop({ telemetry }: { telemetry: KartTelemetry }) {
+export function Workshop({
+  telemetry,
+  engineTest,
+}: {
+  telemetry: KartTelemetry;
+  engineTest: EngineTestState;
+}) {
   const stripeMatrices = useMemo(() => {
     const arr: THREE.Matrix4[] = [];
     const m = new THREE.Matrix4();
@@ -106,7 +113,7 @@ export function Workshop({ telemetry }: { telemetry: KartTelemetry }) {
 
       <DiagnosticBay position={[-5.0, 0, -2]} telemetry={telemetry} />
       <Workbench position={[5.0, 0, -1.5]} />
-      <AcousticEngineRoom position={[7.2, 0, 3.9]} />
+      <AcousticEngineRoom position={[7.2, 0, 3.9]} engineTest={engineTest} />
       <ToolRack position={[-5.5, 0, 2]} />
       <ToolRack position={[5.5, 0, 2]} />
 
@@ -149,7 +156,13 @@ export function Workshop({ telemetry }: { telemetry: KartTelemetry }) {
   );
 }
 
-function AcousticEngineRoom({ position }: { position: [number, number, number] }) {
+function AcousticEngineRoom({
+  position,
+  engineTest,
+}: {
+  position: [number, number, number];
+  engineTest: EngineTestState;
+}) {
   const foamPanels = [
     [-1.05, 1.0, -0.76, 0],
     [-0.55, 1.0, -0.76, 0],
@@ -214,7 +227,7 @@ function AcousticEngineRoom({ position }: { position: [number, number, number] }
         <meshBasicMaterial color="#7ec8ff" />
       </mesh>
 
-      <EngineTestRig position={[0, 0, 0]} />
+      <EngineTestRig position={[0, 0, 0]} engineTest={engineTest} />
 
       {/* Acoustic door frame and sealed observation glass. */}
       {sealPositions.map(([x, y, z, rot], i) => (
@@ -253,7 +266,7 @@ function AcousticEngineRoom({ position }: { position: [number, number, number] }
       ))}
       <mesh position={[0.82, 1.72, -0.73]}>
         <sphereGeometry args={[0.035, 16, 12]} />
-        <meshBasicMaterial color="#5be39a" />
+        <meshBasicMaterial color={engineTest.running ? "#5be39a" : "#7f93a8"} />
       </mesh>
 
       <mesh position={[0, 1.68, 0.92]} rotation={[0, Math.PI, 0]}>
@@ -272,10 +285,16 @@ function AcousticEngineRoom({ position }: { position: [number, number, number] }
         <meshBasicMaterial color="#061827" />
       </mesh>
       <Text position={[-0.83, 1.54, 0.9]} rotation={[0, Math.PI, 0]} fontSize={0.04} color="#5be39a" anchorX="center">
-        86 dB · 7.4k RPM
+        {`${(engineTest.running ? 74 + engineTest.throttle * 22 : 32).toFixed(0)} dB · ${(engineTest.rpm / 1000).toFixed(1)}k RPM`}
       </Text>
-      <Text position={[-0.83, 1.43, 0.9]} rotation={[0, Math.PI, 0]} fontSize={0.032} color="#9ed8ff" anchorX="center">
-        MIC ARRAY · LOAD CELL
+      <Text
+        position={[-0.83, 1.43, 0.9]}
+        rotation={[0, Math.PI, 0]}
+        fontSize={0.032}
+        color={engineTest.health < 70 ? "#ffb340" : "#9ed8ff"}
+        anchorX="center"
+      >
+        {`HEALTH ${engineTest.health.toFixed(0)}% · LOAD ${(engineTest.load * 100).toFixed(0)}%`}
       </Text>
 
       {microphonePositions.map(([x, y, z], i) => (
@@ -308,8 +327,13 @@ function AcousticEngineRoom({ position }: { position: [number, number, number] }
         <planeGeometry args={[0.38, 1.05]} />
         <meshBasicMaterial color="#93c5fd" transparent opacity={0.18} side={THREE.DoubleSide} />
       </mesh>
-      <pointLight position={[0, 1.5, 0]} intensity={1.15} color="#7ec8ff" distance={3} />
-      <pointLight position={[0.72, 1.85, -0.68]} intensity={0.65} color="#5be39a" distance={2.4} />
+      <pointLight position={[0, 1.5, 0]} intensity={1.15 + engineTest.throttle * 0.25} color="#7ec8ff" distance={3} />
+      <pointLight
+        position={[0.72, 1.85, -0.68]}
+        intensity={engineTest.running ? 0.8 + engineTest.throttle * 0.7 : 0.22}
+        color={engineTest.health < 70 ? "#ffb340" : "#5be39a"}
+        distance={2.4}
+      />
     </group>
   );
 }

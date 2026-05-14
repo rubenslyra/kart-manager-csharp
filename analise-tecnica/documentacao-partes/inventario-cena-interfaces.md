@@ -82,6 +82,33 @@ Este documento registra elementos do ambiente 3D que nao sao partes fisicas do k
   - Nao adicionar a sala acustica como modulo do kart.
   - Preservar labels, cabos, raio-X e auditoria como recursos dos modulos do kart.
 
+### Painel externo `Teste Motor Wankel`
+
+- Codigo:
+  - `src/components/realsim/RealSimUI.tsx`
+  - `src/components/realsim/RealSimulator.tsx`
+  - `src/components/realsim/hooks/useWankelTestAudio.ts`
+  - `src/components/realsim/engineTest.ts`
+- Funcao: controlar o teste local da bancada Wankel na sala acustica.
+- Dados locais:
+  - `running`
+  - `throttle`
+  - `rpm`
+  - `health`
+  - `temperature`
+  - `load`
+  - `audioEnabled`
+- Comportamento:
+  - Botao `Ligar bancada` inicia o teste local.
+  - Botao `Audio ON/OFF` inicia ou para o som sintetizado do motor.
+  - Slider de aceleracao controla RPM, carga, temperatura e timbre do audio.
+  - Leituras de RPM, saude, temperatura e carga aparecem fora da cena, em painel de controle.
+  - A sala acustica reflete o estado do teste em luzes, leitura interna e bancada.
+- Requisito tecnico:
+  - O teste da bancada nao altera `KartTelemetry`.
+  - O audio depende de gesto do usuario por restricao dos navegadores.
+  - O som e sintetizado via Web Audio, sem assets externos.
+
 ## Convencao
 
 - Elementos deste documento podem parecer "projetores", telas ou hologramas, mas devem ser tratados como interfaces tecnicas de cena.

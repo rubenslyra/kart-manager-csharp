@@ -2,6 +2,7 @@ import { mockBridge } from "@/bridge/mockExternalData";
 import type { ConnectionStatus, DataSource, KartTelemetry } from "@/bridge/types";
 import { buildChecklist, canLeavePit } from "@/bridge/moduleValidator";
 import type { SceneFocusTarget } from "./CameraController";
+import type { EngineTestState } from "./engineTest";
 import type { FocusTarget } from "./RealKart";
 
 interface Props {
@@ -23,6 +24,10 @@ interface Props {
   setXray: (v: boolean) => void;
   showWiring: boolean;
   setShowWiring: (v: boolean) => void;
+  engineTest: EngineTestState;
+  setEngineRunning: (v: boolean) => void;
+  setEngineThrottle: (v: number) => void;
+  toggleEngineAudio: () => void;
 }
 
 const stateColor: Record<KartTelemetry["vehicleState"], string> = {
@@ -58,6 +63,10 @@ export function RealSimUI({
   setXray,
   showWiring,
   setShowWiring,
+  engineTest,
+  setEngineRunning,
+  setEngineThrottle,
+  toggleEngineAudio,
 }: Props) {
   const m = telemetry.modules;
   const checklist = buildChecklist(telemetry);
@@ -207,6 +216,56 @@ export function RealSimUI({
             {lastRaw ?? JSON.stringify(telemetry, null, 2)}
           </pre>
         </details>
+      </div>
+
+      {/* Wankel bench controls */}
+      <div className="pointer-events-auto absolute left-3 top-24 z-30 w-80 corner-cut border border-accent/50 bg-background/85 p-3 font-mono text-[10px] backdrop-blur-sm">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <div className="text-[9px] uppercase tracking-widest text-accent">Teste Motor Wankel</div>
+          <span className={engineTest.running ? "text-success" : "text-muted-foreground"}>
+            {engineTest.running ? "RODANDO" : "STANDBY"}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-1">
+          <button
+            onClick={() => setEngineRunning(!engineTest.running)}
+            className={`corner-cut px-2 py-1 uppercase tracking-widest ${
+              engineTest.running
+                ? "bg-warning text-background"
+                : "border border-border text-muted-foreground hover:text-accent"
+            }`}
+          >
+            {engineTest.running ? "Parar teste" : "Ligar bancada"}
+          </button>
+          <button
+            onClick={toggleEngineAudio}
+            className={`corner-cut px-2 py-1 uppercase tracking-widest ${
+              engineTest.audioEnabled
+                ? "bg-accent text-accent-foreground"
+                : "border border-border text-muted-foreground hover:text-accent"
+            }`}
+          >
+            Audio {engineTest.audioEnabled ? "ON" : "OFF"}
+          </button>
+        </div>
+        <label className="mt-2 block text-muted-foreground">
+          Aceleracao ({(engineTest.throttle * 100).toFixed(0)}%)
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={engineTest.throttle}
+            onChange={(e) => setEngineThrottle(Number(e.target.value))}
+            className="w-full"
+          />
+        </label>
+        <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
+          <Row k="RPM" v={engineTest.running ? engineTest.rpm.toFixed(0) : "0"} tone={engineTest.running ? "ok" : undefined} />
+          <Row k="Saude" v={`${engineTest.health.toFixed(0)}%`} tone={engineTest.health < 70 ? "warning" : "ok"} />
+          <Row k="Temp." v={`${engineTest.temperature.toFixed(0)} °C`} tone={engineTest.temperature > 95 ? "warning" : undefined} />
+          <Row k="Carga" v={`${(engineTest.load * 100).toFixed(0)}%`} />
+        </div>
       </div>
 
       {/* Checklist */}

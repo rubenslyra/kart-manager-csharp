@@ -5,76 +5,106 @@ Aberta em: 2026-05-14
 
 ## Titulo
 
-Adicionar botao de acesso/foco para a sala acustica Wankel
+Adicionar som do motor em teste e painel externo de controle da bancada
 
 ## Objetivo
 
-Criar uma forma clara de o usuario acessar visualmente a sala acustica Wankel dentro do simulador real, sem depender de procurar manualmente a sala na cena 3D.
+Permitir que o usuario teste a bancada do motor Wankel com feedback sonoro e controle visual externo para aceleracao, saude e funcionamento do motor.
 
 ## Escopo
 
-- Avaliar como o foco de camera funciona hoje no simulador real.
-- Identificar onde adicionar um comando de UI para a sala acustica.
-- Planejar se a sala sera integrada ao sistema existente de `focus` ou se precisara de um novo tipo de foco de cena.
-- Garantir que o botao siga o padrao visual dos controles atuais.
+- Avaliar a infraestrutura atual de audio do simulador.
+- Avaliar a sala acustica, `EngineTestRig` e UI do simulador real.
+- Planejar controles de aceleracao, saude e funcionamento do motor sem confundir com os modulos do kart.
+- Definir onde o painel externo deve viver: overlay HTML, painel 3D na bancada, ou ambos.
 - Definir criterios de aceite antes de implementar.
 
 ## Subtarefas
 
 - Concluido: executar Research.
 - Concluido: executar Plan.
-- Concluido: implementar botao/foco aprovado no RPI.
+- Concluido: implementar audio e painel aprovados no RPI.
 
 ## RPI
 
 ### Research
 
-- `RealSimulator.tsx` mantem `focus` como `FocusTarget`, usado por kart, labels, cabos, raio-X, auditoria e camera.
-- `FocusTarget` atual e estritamente modular: `battery`, `brakes`, `steering`, `ignition`, `gearbox` ou `null`.
-- `RealSimUI.tsx` renderiza os chips de foco no topo: bateria, freios, direcao, ignicao e cambio.
-- `CameraController.tsx` usa o mesmo `FocusTarget` para mover a camera entre alvos do kart.
-- `ModuleLabels.tsx`, `Wiring.tsx` e `XRayOverlay.tsx` assumem que qualquer foco nao nulo e um modulo presente em `MODULE_ANCHORS`.
-- Adicionar `acousticRoom` diretamente em `FocusTarget` aumentaria o risco de quebrar overlays ou exigir excecoes em varios componentes.
-- Melhor opcao tecnica: separar foco de camera/cena do foco modular, mantendo os modulos atuais intactos.
+- O simulador de corrida possui `src/components/simulator/useSimAudio.ts`, que usa Web Audio sintetizado sem assets externos.
+- O audio existente e especifico do simulador de pista:
+  - motor por oscilador `sawtooth`;
+  - filtro low-pass;
+  - volume/pitch seguindo velocidade;
+  - efeitos de torcida, pneus e tons de checkpoint.
+- Navegadores exigem gesto do usuario para iniciar Web Audio; portanto o som do motor em teste precisa de botao explicito de start/stop.
+- O simulador real (`src/components/realsim/RealSimulator.tsx`) ainda nao tem engine de audio propria.
+- A bancada de teste vive em `EngineTestRig`, dentro de `src/components/realsim/parts/MotorAssembly.tsx`.
+- A sala acustica vive em `AcousticEngineRoom`, dentro de `src/components/realsim/Workshop.tsx`, e ja mostra leitura decorativa `86 dB · 7.4k RPM`.
+- A UI do simulador real (`RealSimUI.tsx`) ja tem:
+  - barra de focos;
+  - painel de telemetria do kart;
+  - checklist;
+  - controles mock.
+- O painel pedido deve representar o teste do motor na bancada, nao o estado real dos modulos do kart.
+- Melhor separacao tecnica:
+  - estado local de teste da bancada no simulador real;
+  - hook de audio proprio para a bancada Wankel;
+  - painel HTML externo para controle do usuario;
+  - opcionalmente refletir estado no painel/tela 3D da sala.
 
 ### Plan
 
-Implementar um foco de cena separado para a sala acustica.
+Implementar um sistema local de teste da bancada Wankel.
 
 Escopo dentro:
 
-1. Criar um tipo de foco de camera que aceite:
-   - focos modulares atuais;
-   - novo foco de cena `acousticRoom`;
-   - `null` para home.
-2. Manter `FocusTarget` modular para `RealKart`, `ModuleLabels`, `Wiring`, `XRayOverlay` e `useAuditLog`.
-3. Alterar `CameraController` para receber o novo tipo de foco de camera e incluir alvo da sala:
-   - posicao aproximada olhando para `AcousticEngineRoom` em `[7.2, 0, 3.9]`;
-   - camera mais aberta/lateral para ver vidro, exaustao e bancada.
-4. Alterar `RealSimulator` para manter dois estados:
-   - `focus`: modulo do kart;
-   - `sceneFocus`: alvo de camera.
-5. Alterar `RealSimUI`:
-   - chips atuais continuam focando modulos;
-   - adicionar botao `Sala Acustica` ou `Teste Wankel`;
-   - ao clicar em modulo, limpar foco de cena;
-   - ao clicar na sala, limpar foco modular e apontar a camera para a sala.
-6. Atualizar documentacao de interfaces de cena e historico.
+1. Criar um estado local `engineTest` em `RealSimulator.tsx`:
+   - `running`;
+   - `throttle`;
+   - `rpm`;
+   - `health`;
+   - `temperature`;
+   - `load`;
+   - `audioEnabled`.
+2. Criar hook de audio para o simulador real, por exemplo `src/components/realsim/hooks/useWankelTestAudio.ts`:
+   - Web Audio sintetizado;
+   - start/stop por gesto do usuario;
+   - som rotativo mais agudo/rasgado que o motor de pista;
+   - pitch/volume/filtro seguindo throttle/rpm/health;
+   - desligamento seguro no unmount.
+3. Adicionar painel externo na UI, preferencialmente em `RealSimUI.tsx`:
+   - titulo `Teste Motor Wankel`;
+   - botao ligar/desligar bancada;
+   - botao audio on/off;
+   - slider de aceleracao;
+   - leitura de RPM;
+   - leitura de saude;
+   - leitura de temperatura;
+   - leitura de carga/dinamometro.
+4. Refletir estado visual na cena:
+   - passar `engineTest` para `Workshop`;
+   - passar para `AcousticEngineRoom` e/ou `EngineTestRig`;
+   - atualizar leitura interna da sala com RPM/dB/health reais do estado local;
+   - intensificar luz/status do exaustor ou bancada quando o motor estiver rodando.
+5. Documentar:
+   - `inventario-cena-interfaces.md` com painel externo de teste;
+   - `catalogo-partes.md` se novos requisitos de bancada forem definidos;
+   - `historico-etapas.md` com a etapa.
 
 Escopo fora:
 
-- Nao alterar a geometria da sala acustica nesta tarefa.
-- Nao alterar contrato de telemetria.
-- Nao transformar a sala em modulo do kart.
+- Nao ligar o teste da bancada aos modulos C# ainda.
+- Nao alterar contrato `KartTelemetry`.
+- Nao alterar o motor instalado no kart.
+- Nao usar arquivos de audio externos.
 
 Criterios de aceite:
 
-- Usuario ve um botao claro para acessar a sala acustica.
-- Clicar no botao move a camera para a sala acustica Wankel.
-- Clicar novamente ou `reset` volta ao estado home.
-- Focos de bateria, freios, direcao, ignicao e cambio continuam funcionando.
-- Labels, cabos e raio-X nao devem quebrar com foco da sala.
-- `npm run build` deve passar.
+- Usuario consegue ligar/desligar o teste da bancada.
+- Usuario consegue ativar/desativar audio por gesto.
+- Slider de aceleracao altera RPM, som e leituras.
+- Painel mostra saude e funcionamento do motor de forma clara.
+- Cena da sala reflete estado do teste.
+- `npm run build` passa.
 
 ### Status RPI
 
@@ -84,7 +114,10 @@ Concluido. Implement liberado por `[Concluir RPI]`.
 
 - `src/components/realsim/RealSimulator.tsx`
 - `src/components/realsim/RealSimUI.tsx`
-- `src/components/realsim/CameraController.tsx`
+- `src/components/realsim/Workshop.tsx`
+- `src/components/realsim/parts/MotorAssembly.tsx`
+- `src/components/realsim/engineTest.ts`
+- `src/components/realsim/hooks/useWankelTestAudio.ts`
 - `analise-tecnica/documentacao-partes/inventario-cena-interfaces.md`
 - `analise-tecnica/documentacao-partes/historico-etapas.md`
 - `analise-tecnica/tarefas/tarefa-atual.md`
@@ -93,14 +126,15 @@ Concluido. Implement liberado por `[Concluir RPI]`.
 
 - Revisao de diff.
 - `npm run build` apos implementacao.
-- Validacao visual/manual em `/simulador-real`.
+- Validacao manual em `/simulador-real`.
+- Validacao do fluxo de audio conforme restricoes do navegador.
 
 ## Checks Executados
 
 - `git status --short --branch`: branch `main` limpa antes da abertura.
-- Research de `RealSimulator.tsx`, `RealSimUI.tsx`, `CameraController.tsx`, `parts/shared.ts`, `ModuleLabels.tsx`, `Wiring.tsx` e `XRayOverlay.tsx`.
+- Research de `useSimAudio.ts`, `RealSimulator.tsx`, `RealSimUI.tsx`, `Workshop.tsx`, `MotorAssembly.tsx`, inventario de interfaces, catalogo de partes e usos de audio no projeto.
 - `npm run build`: passou. Avisos conhecidos de `@import` CSS e chunks grandes permanecem.
-- Revisao de diff final: concluida, escopo restrito ao foco de cena da sala acustica e documentacao da tarefa.
+- Revisao de diff final: concluida, escopo restrito ao teste da bancada Wankel e documentacao da tarefa.
 
 ## Fechamento
 
@@ -109,6 +143,7 @@ Concluido. Implement liberado por `[Concluir RPI]`.
 
 ## Notas Para Release
 
-- **Adicionado:** botao `Sala Acustica` para acessar diretamente a sala de teste Wankel.
-- **Alterado:** camera agora possui foco de cena separado do foco modular do kart.
-- **Tecnico:** labels, cabos, raio-X e auditoria continuam restritos aos modulos do kart.
+- **Adicionado:** painel externo `Teste Motor Wankel` com ligar/parar, audio, aceleracao, RPM, saude, temperatura e carga.
+- **Adicionado:** som sintetizado do motor em teste usando Web Audio.
+- **Alterado:** sala acustica reflete o funcionamento da bancada em luzes, leitura interna e detalhes do dinamometro.
+- **Tecnico:** teste da bancada fica separado de `KartTelemetry` e dos modulos C#.

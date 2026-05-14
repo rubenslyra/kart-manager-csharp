@@ -88,3 +88,20 @@
   - Adicionado botao `Sala Acustica` na barra de focos.
   - Camera passa a mirar diretamente a sala de teste Wankel.
   - Focos de modulo continuam preservando labels, cabos, raio-X e auditoria.
+
+### Etapa 10 - Som e painel de teste da bancada Wankel
+
+- Arquivos:
+  - `src/components/realsim/RealSimulator.tsx`
+  - `src/components/realsim/RealSimUI.tsx`
+  - `src/components/realsim/Workshop.tsx`
+  - `src/components/realsim/parts/MotorAssembly.tsx`
+  - `src/components/realsim/hooks/useWankelTestAudio.ts`
+  - `src/components/realsim/engineTest.ts`
+  - `analise-tecnica/documentacao-partes/inventario-cena-interfaces.md`
+- Alteracoes:
+  - Criado estado local de teste da bancada Wankel.
+  - Criado audio sintetizado do motor de teste via Web Audio.
+  - Adicionado painel externo com ligar/parar, audio, aceleracao, RPM, saude, temperatura e carga.
+  - Sala acustica passou a refletir o teste em leitura interna, luz de status e bancada.
+  - O teste da bancada permanece separado dos modulos C# e de `KartTelemetry`.
