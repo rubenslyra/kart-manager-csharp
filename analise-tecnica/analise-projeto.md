@@ -73,7 +73,7 @@ Areas importantes do codigo:
 Documentacao operacional:
 
 - `AGENTS.md`: instrucoes operacionais carregadas na raiz do repositorio.
-- `analise-tecnica/protocolo-tarefas.md`: protocolo para `[Iniciar Tarefa]` e `[Finalizar Tarefa]`.
+- `analise-tecnica/protocolo-tarefas.md`: protocolo SDD/RPI para `[Iniciar Tarefa]`, `[Iniciar RPI]`, `[Concluir RPI]` e `[Finalizar Tarefa]`.
 - `analise-tecnica/tarefas/`: registros de tarefas abertas e finalizadas.
 
 ## 5. Contrato De Modulos C#

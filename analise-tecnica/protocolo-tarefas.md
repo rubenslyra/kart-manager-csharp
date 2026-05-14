@@ -6,6 +6,21 @@ Este documento define o fluxo operacional padrao para evolucao do RL Kart 26A de
 
 Manter cada ciclo de trabalho rastreavel, validado e pronto para release notes, evitando alteracoes soltas sem contexto tecnico.
 
+## SDD E RPI
+
+O projeto adota SDD (Spec-Driven Development) com RPI:
+
+1. Research.
+2. Plan.
+3. Implement.
+
+Regra central:
+
+- Nenhuma implementacao deve ser executada antes de o usuario escrever `[Concluir RPI]`.
+- `[Iniciar RPI]` abre a fase de pesquisa e planejamento.
+- `[Concluir RPI]` aprova o plano e libera a fase de implementacao.
+- Implementar sem RPI concluido so e permitido se o usuario pedir explicitamente uma excecao.
+
 ## Marcador `[Iniciar Tarefa]`
 
 Quando o usuario escrever `[Iniciar Tarefa]`, uma tarefa formal deve ser aberta.
@@ -24,14 +39,60 @@ Quando o usuario escrever `[Iniciar Tarefa]`, uma tarefa formal deve ser aberta.
    - arquivos ou areas provaveis;
    - riscos tecnicos;
    - checks previstos.
+6. Se a tarefa exigir alteracao de codigo, cena, UI, comportamento ou documentacao tecnica estrutural, orientar o usuario a abrir RPI com `[Iniciar RPI]`.
+7. Nao iniciar implementacao enquanto `[Concluir RPI]` nao for recebido.
 
-### Execucao
+### Marcador `[Iniciar RPI]`
+
+Quando o usuario escrever `[Iniciar RPI]`, iniciar a fase de Research e Plan da tarefa aberta.
+
+#### Research
+
+Objetivo: entender antes de alterar.
+
+Atividades esperadas:
+
+- Ler codigo relevante.
+- Ler documentacao tecnica, contratos e historico de etapas.
+- Identificar dependencias, estado atual, pontos de integracao e riscos.
+- Verificar restricoes de UX, cena 3D, arquitetura e padroes do projeto.
+- Registrar achados em `analise-tecnica/tarefas/tarefa-atual.md`.
+
+#### Plan
+
+Objetivo: transformar a pesquisa em proposta implementavel.
+
+O plano deve conter:
+
+- objetivo refinado;
+- escopo dentro e fora;
+- arquivos provaveis;
+- subtarefas;
+- criterios de aceite;
+- checks previstos;
+- riscos e rollback quando aplicavel;
+- notas de release previstas, se houver impacto de produto.
+
+Ao final do Plan:
+
+- Apresentar o plano ao usuario.
+- Aguardar `[Concluir RPI]`.
+- Nao editar arquivos de implementacao antes da conclusao do RPI.
+
+### Marcador `[Concluir RPI]`
+
+Quando o usuario escrever `[Concluir RPI]`, considerar o Research/Plan aprovado e abrir a fase Implement.
+
+### Implement
+
+Depois de `[Concluir RPI]`:
 
 - Fazer alteracoes de forma incremental e coerente com o padrao existente.
 - Evitar refatoracoes fora do escopo.
 - Atualizar documentacao quando a mudanca criar ou alterar conceito tecnico.
 - Validar visualmente quando a tarefa envolver UI, cena 3D, simulador ou experiencia do usuario.
 - Manter notas suficientes para gerar commit e release notes no fechamento.
+- Atualizar `analise-tecnica/tarefas/tarefa-atual.md` com progresso, arquivos impactados e checks executados.
 
 ### Estado Da Tarefa
 
@@ -53,9 +114,21 @@ Aberta em: AAAA-MM-DD
 
 ## Subtarefas
 
+## RPI
+
+### Research
+
+### Plan
+
+### Status RPI
+
+Pendente | Em andamento | Concluido
+
 ## Arquivos Impactados
 
 ## Checks Planejados
+
+## Checks Executados
 
 ## Notas Para Release
 ```
@@ -148,9 +221,9 @@ Formato recomendado:
 
 ## Regras Gerais
 
+- Respeitar o bloqueio RPI: sem `[Concluir RPI]`, nao implementar.
 - Nao commitar alteracoes sem validacao proporcional ao escopo.
 - Nao misturar tarefas independentes no mesmo commit.
 - Nao reverter mudancas existentes sem pedido explicito.
 - Se houver alteracao visual, manter coerencia com o padrao tecnico/futurista do RL Kart 26A.
 - Se um novo elemento de cena ou parte tecnica for criado, documentar em `analise-tecnica/documentacao-partes/` quando aplicavel.
-
