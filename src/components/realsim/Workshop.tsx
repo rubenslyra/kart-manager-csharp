@@ -48,15 +48,14 @@ export function Workshop({
       {/* RL grid */}
       <gridHelper args={[40, 40, "#39a8ff", "#1f344a"]} position={[0, 0.003, 0]} />
 
-      {/* Inspection pad — flush with floor (kart sits ON TOP, never inside) */}
+      {/* Inspection pad — visual floor insert, top kept at y = 0 so tires do not sink. */}
       <group position={[0, 0, 0]}>
-        {/* Polished service pad (top at y = 0.02) */}
-        <mesh position={[0, 0.01, 0]} receiveShadow>
+        <mesh position={[0, -0.01, 0]} receiveShadow>
           <boxGeometry args={[2.6, 0.02, 3.2]} />
           <meshStandardMaterial color="#2a3544" metalness={0.7} roughness={0.35} />
         </mesh>
-        {/* Painted RL outline around pad */}
-        <mesh position={[0, 0.022, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        {/* Painted RL outline around pad, just above floor to avoid z-fighting. */}
+        <mesh position={[0, 0.004, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[1.7, 1.78, 48]} />
           <meshBasicMaterial color="#39a8ff" side={THREE.DoubleSide} />
         </mesh>
@@ -190,25 +189,25 @@ function AcousticEngineRoom({
     <group position={position}>
       <mesh position={[0, 0.035, 0]} receiveShadow>
         <boxGeometry args={[2.6, 0.07, 1.8]} />
-        <meshStandardMaterial color="#1b2430" metalness={0.64} roughness={0.45} />
+        <meshStandardMaterial color="#243142" metalness={0.64} roughness={0.4} />
       </mesh>
       <mesh position={[0, 1.05, -0.9]} receiveShadow>
         <boxGeometry args={[2.6, 2.1, 0.08]} />
-        <meshStandardMaterial color="#111820" metalness={0.25} roughness={0.84} />
+        <meshStandardMaterial color="#1a2430" metalness={0.25} roughness={0.78} />
       </mesh>
       <mesh position={[-1.3, 1.05, 0]} receiveShadow>
         <boxGeometry args={[0.08, 2.1, 1.8]} />
-        <meshStandardMaterial color="#111820" metalness={0.25} roughness={0.84} />
+        <meshStandardMaterial color="#1a2430" metalness={0.25} roughness={0.78} />
       </mesh>
       <mesh position={[1.3, 1.05, 0]} receiveShadow>
         <boxGeometry args={[0.08, 2.1, 1.8]} />
-        <meshStandardMaterial color="#111820" metalness={0.25} roughness={0.84} />
+        <meshStandardMaterial color="#1a2430" metalness={0.25} roughness={0.78} />
       </mesh>
 
       {foamPanels.map(([x, y, z, rot], i) => (
         <mesh key={`foam-${i}`} position={[x, y, z]} rotation={[0, rot, 0]}>
           <boxGeometry args={[0.32, 0.78, i % 2 === 0 ? 0.055 : 0.035]} />
-          <meshStandardMaterial color={i % 2 === 0 ? "#202a35" : "#151c24"} roughness={0.98} />
+          <meshStandardMaterial color={i % 2 === 0 ? "#2c3a49" : "#202b37"} roughness={0.96} />
         </mesh>
       ))}
       {foamPanels.map(([x, y, z, rot], i) => (
@@ -226,6 +225,14 @@ function AcousticEngineRoom({
         <boxGeometry args={[1.4, 0.025, 0.12]} />
         <meshBasicMaterial color="#7ec8ff" />
       </mesh>
+      <mesh position={[-0.72, 1.9, 0.35]}>
+        <boxGeometry args={[0.6, 0.018, 0.08]} />
+        <meshBasicMaterial color="#9ed8ff" />
+      </mesh>
+      <mesh position={[0.72, 1.9, 0.35]}>
+        <boxGeometry args={[0.6, 0.018, 0.08]} />
+        <meshBasicMaterial color="#9ed8ff" />
+      </mesh>
 
       <EngineTestRig position={[0, 0, 0]} engineTest={engineTest} />
 
@@ -238,7 +245,7 @@ function AcousticEngineRoom({
       ))}
       <mesh position={[0, 1.08, 0.965]}>
         <planeGeometry args={[1.72, 1.32]} />
-        <meshBasicMaterial color="#93c5fd" transparent opacity={0.16} side={THREE.DoubleSide} />
+        <meshBasicMaterial color="#a8d8ff" transparent opacity={0.22} side={THREE.DoubleSide} />
       </mesh>
       <mesh position={[0.78, 1.08, 0.995]}>
         <boxGeometry args={[0.08, 0.5, 0.045]} />
@@ -327,10 +334,12 @@ function AcousticEngineRoom({
         <planeGeometry args={[0.38, 1.05]} />
         <meshBasicMaterial color="#93c5fd" transparent opacity={0.18} side={THREE.DoubleSide} />
       </mesh>
-      <pointLight position={[0, 1.5, 0]} intensity={1.15 + engineTest.throttle * 0.25} color="#7ec8ff" distance={3} />
+      <pointLight position={[0, 1.45, 0.18]} intensity={1.85 + engineTest.throttle * 0.35} color="#d7ecff" distance={3.6} />
+      <pointLight position={[-0.95, 1.62, 0.42]} intensity={0.9} color="#9ed8ff" distance={2.4} />
+      <pointLight position={[0.95, 1.62, 0.42]} intensity={0.9} color="#9ed8ff" distance={2.4} />
       <pointLight
         position={[0.72, 1.85, -0.68]}
-        intensity={engineTest.running ? 0.8 + engineTest.throttle * 0.7 : 0.22}
+        intensity={engineTest.running ? 1.05 + engineTest.throttle * 0.85 : 0.42}
         color={engineTest.health < 70 ? "#ffb340" : "#5be39a"}
         distance={2.4}
       />

@@ -5,106 +5,82 @@ Aberta em: 2026-05-14
 
 ## Titulo
 
-Adicionar som do motor em teste e painel externo de controle da bancada
+Corrigir iluminacao da sala acustica e ajustar contato das rodas com a plataforma
 
 ## Objetivo
 
-Permitir que o usuario teste a bancada do motor Wankel com feedback sonoro e controle visual externo para aceleracao, saude e funcionamento do motor.
+Melhorar a legibilidade visual da sala acustica Wankel e corrigir a percepcao de que as rodas do kart estao entrando no solo ou na plataforma da oficina.
 
 ## Escopo
 
-- Avaliar a infraestrutura atual de audio do simulador.
-- Avaliar a sala acustica, `EngineTestRig` e UI do simulador real.
-- Planejar controles de aceleracao, saude e funcionamento do motor sem confundir com os modulos do kart.
-- Definir onde o painel externo deve viver: overlay HTML, painel 3D na bancada, ou ambos.
+- Avaliar iluminacao atual da sala acustica e da oficina.
+- Avaliar altura da plataforma de inspecao, piso e contato visual das rodas.
+- Identificar se o problema de contato vem da plataforma, do posicionamento do kart, do raio das rodas ou de materiais/reflexos.
+- Planejar ajustes sem quebrar escala oficial do kart.
 - Definir criterios de aceite antes de implementar.
 
 ## Subtarefas
 
 - Concluido: executar Research.
 - Concluido: executar Plan.
-- Concluido: implementar audio e painel aprovados no RPI.
+- Concluido: implementar iluminacao/ajustes de contato aprovados no RPI.
 
 ## RPI
 
 ### Research
 
-- O simulador de corrida possui `src/components/simulator/useSimAudio.ts`, que usa Web Audio sintetizado sem assets externos.
-- O audio existente e especifico do simulador de pista:
-  - motor por oscilador `sawtooth`;
-  - filtro low-pass;
-  - volume/pitch seguindo velocidade;
-  - efeitos de torcida, pneus e tons de checkpoint.
-- Navegadores exigem gesto do usuario para iniciar Web Audio; portanto o som do motor em teste precisa de botao explicito de start/stop.
-- O simulador real (`src/components/realsim/RealSimulator.tsx`) ainda nao tem engine de audio propria.
-- A bancada de teste vive em `EngineTestRig`, dentro de `src/components/realsim/parts/MotorAssembly.tsx`.
-- A sala acustica vive em `AcousticEngineRoom`, dentro de `src/components/realsim/Workshop.tsx`, e ja mostra leitura decorativa `86 dB · 7.4k RPM`.
-- A UI do simulador real (`RealSimUI.tsx`) ja tem:
-  - barra de focos;
-  - painel de telemetria do kart;
-  - checklist;
-  - controles mock.
-- O painel pedido deve representar o teste do motor na bancada, nao o estado real dos modulos do kart.
-- Melhor separacao tecnica:
-  - estado local de teste da bancada no simulador real;
-  - hook de audio proprio para a bancada Wankel;
-  - painel HTML externo para controle do usuario;
-  - opcionalmente refletir estado no painel/tela 3D da sala.
+- Em `Workshop.tsx`, a plataforma de inspecao e uma caixa com:
+  - `position={[0, 0.01, 0]}`;
+  - `boxGeometry args={[2.6, 0.02, 3.2]}`;
+  - topo em `y = 0.02`.
+- As rodas sao posicionadas em `BrakeSystem.tsx` com `wheelY = X.wheelRadius`.
+- Em `RLKart26ADimensions.ts`, `wheelDiameter = 0.28`, logo `wheelRadius = 0.14`.
+- Em `Wheels.tsx`, o pneu tem `TIRE_RADIUS = 0.14` e pivot central no cubo.
+- Portanto, roda com centro em `y = 0.14` toca o solo em `y = 0`.
+- A plataforma com topo em `y = 0.02` entra visualmente 2 cm dentro dos pneus.
+- O comentario atual em `Workshop.tsx` diz que o kart fica em cima da plataforma, mas a escala/pivots atuais indicam que o kart esta calibrado para tocar o piso em `y = 0`.
+- A sala acustica esta escura porque combina:
+  - paredes em `#111820`;
+  - paineis acusticos em `#202a35` e `#151c24`;
+  - vidro com opacidade baixa;
+  - apenas uma barra emissiva pequena e point lights relativamente discretos dentro da sala.
+- A iluminacao geral da oficina nao privilegia a sala acustica, que fica deslocada para `[7.2, 0, 3.9]`.
 
 ### Plan
 
-Implementar um sistema local de teste da bancada Wankel.
+Implementar dois ajustes visuais controlados.
 
 Escopo dentro:
 
-1. Criar um estado local `engineTest` em `RealSimulator.tsx`:
-   - `running`;
-   - `throttle`;
-   - `rpm`;
-   - `health`;
-   - `temperature`;
-   - `load`;
-   - `audioEnabled`.
-2. Criar hook de audio para o simulador real, por exemplo `src/components/realsim/hooks/useWankelTestAudio.ts`:
-   - Web Audio sintetizado;
-   - start/stop por gesto do usuario;
-   - som rotativo mais agudo/rasgado que o motor de pista;
-   - pitch/volume/filtro seguindo throttle/rpm/health;
-   - desligamento seguro no unmount.
-3. Adicionar painel externo na UI, preferencialmente em `RealSimUI.tsx`:
-   - titulo `Teste Motor Wankel`;
-   - botao ligar/desligar bancada;
-   - botao audio on/off;
-   - slider de aceleracao;
-   - leitura de RPM;
-   - leitura de saude;
-   - leitura de temperatura;
-   - leitura de carga/dinamometro.
-4. Refletir estado visual na cena:
-   - passar `engineTest` para `Workshop`;
-   - passar para `AcousticEngineRoom` e/ou `EngineTestRig`;
-   - atualizar leitura interna da sala com RPM/dB/health reais do estado local;
-   - intensificar luz/status do exaustor ou bancada quando o motor estiver rodando.
-5. Documentar:
-   - `inventario-cena-interfaces.md` com painel externo de teste;
-   - `catalogo-partes.md` se novos requisitos de bancada forem definidos;
-   - `historico-etapas.md` com a etapa.
+1. Corrigir contato das rodas com a plataforma:
+   - manter rodas e dimensoes oficiais sem alterar `wheelRadius`;
+   - baixar a plataforma de inspecao para que o topo fique em `y = 0` ou ligeiramente abaixo;
+   - ajustar o anel/outline RL para ficar quase no piso, sem parecer atravessar os pneus;
+   - revisar comentario da plataforma para explicar que ela e um pad visual nivelado ao piso.
+2. Melhorar iluminacao da sala acustica:
+   - adicionar luz interna dedicada na sala, com intensidade suficiente para revelar bancada, vidro, duto e paineis;
+   - aumentar leitura da barra de teto ou adicionar luzes laterais discretas;
+   - clarear levemente materiais internos sem perder o aspecto acustico/industrial;
+   - reforcar luz da bancada quando o teste Wankel estiver ligado;
+   - evitar excesso de brilho ou lavagem da cena.
+3. Documentar:
+   - atualizar historico de etapas;
+   - atualizar catalogo se a regra da plataforma/piso precisar ficar explicita.
 
 Escopo fora:
 
-- Nao ligar o teste da bancada aos modulos C# ainda.
-- Nao alterar contrato `KartTelemetry`.
-- Nao alterar o motor instalado no kart.
-- Nao usar arquivos de audio externos.
+- Nao alterar raio das rodas.
+- Nao alterar pivots de rodas ou suspensao.
+- Nao alterar dimensoes oficiais do kart.
+- Nao refazer a oficina inteira.
 
 Criterios de aceite:
 
-- Usuario consegue ligar/desligar o teste da bancada.
-- Usuario consegue ativar/desativar audio por gesto.
-- Slider de aceleracao altera RPM, som e leituras.
-- Painel mostra saude e funcionamento do motor de forma clara.
-- Cena da sala reflete estado do teste.
-- `npm run build` passa.
+- Rodas nao devem parecer entrar no piso/plataforma.
+- Sala acustica deve ficar legivel sem depender apenas do teste ligado.
+- Quando a bancada estiver ligada, a sala pode ganhar reforco de luz/status.
+- O kart deve manter escala oficial e contato visual coerente com o piso.
+- `npm run build` deve passar.
 
 ### Status RPI
 
@@ -112,13 +88,8 @@ Concluido. Implement liberado por `[Concluir RPI]`.
 
 ## Arquivos Impactados
 
-- `src/components/realsim/RealSimulator.tsx`
-- `src/components/realsim/RealSimUI.tsx`
 - `src/components/realsim/Workshop.tsx`
-- `src/components/realsim/parts/MotorAssembly.tsx`
-- `src/components/realsim/engineTest.ts`
-- `src/components/realsim/hooks/useWankelTestAudio.ts`
-- `analise-tecnica/documentacao-partes/inventario-cena-interfaces.md`
+- `analise-tecnica/documentacao-partes/catalogo-partes.md`
 - `analise-tecnica/documentacao-partes/historico-etapas.md`
 - `analise-tecnica/tarefas/tarefa-atual.md`
 
@@ -126,15 +97,14 @@ Concluido. Implement liberado por `[Concluir RPI]`.
 
 - Revisao de diff.
 - `npm run build` apos implementacao.
-- Validacao manual em `/simulador-real`.
-- Validacao do fluxo de audio conforme restricoes do navegador.
+- Validacao visual/manual em `/simulador-real`.
 
 ## Checks Executados
 
 - `git status --short --branch`: branch `main` limpa antes da abertura.
-- Research de `useSimAudio.ts`, `RealSimulator.tsx`, `RealSimUI.tsx`, `Workshop.tsx`, `MotorAssembly.tsx`, inventario de interfaces, catalogo de partes e usos de audio no projeto.
+- Research de `Workshop.tsx`, `RealKart.tsx`, `Wheels.tsx`, `BrakeSystem.tsx`, `RLKart26ADimensions.ts` e `catalogo-partes.md`.
 - `npm run build`: passou. Avisos conhecidos de `@import` CSS e chunks grandes permanecem.
-- Revisao de diff final: concluida, escopo restrito ao teste da bancada Wankel e documentacao da tarefa.
+- Revisao de diff final: concluida, escopo restrito a iluminacao da sala, plataforma e documentacao da tarefa.
 
 ## Fechamento
 
@@ -143,7 +113,6 @@ Concluido. Implement liberado por `[Concluir RPI]`.
 
 ## Notas Para Release
 
-- **Adicionado:** painel externo `Teste Motor Wankel` com ligar/parar, audio, aceleracao, RPM, saude, temperatura e carga.
-- **Adicionado:** som sintetizado do motor em teste usando Web Audio.
-- **Alterado:** sala acustica reflete o funcionamento da bancada em luzes, leitura interna e detalhes do dinamometro.
-- **Tecnico:** teste da bancada fica separado de `KartTelemetry` e dos modulos C#.
+- **Corrigido:** plataforma de inspecao nao atravessa mais visualmente os pneus.
+- **Alterado:** sala acustica Wankel recebeu materiais mais legiveis e iluminacao interna reforcada.
+- **Tecnico:** regra de contato das rodas com o piso foi documentada no catalogo de partes.

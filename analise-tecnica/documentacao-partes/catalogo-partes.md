@@ -39,6 +39,7 @@
   - Aro preto com tres raios.
   - Calotas em aluminio polido, alinhadas lateralmente e fora da face da roda.
   - Calotas nao podem cortar pneu, aro ou cubo.
+  - Com centro em `wheelRadius`, o pneu deve tocar o piso em `y = 0`; plataformas visuais nao devem subir acima desse plano.
 
 ### Freios
 
@@ -77,6 +78,7 @@
   - Evidenciar sistema de exaustao dedicado com duto, grelha e status.
   - Conter sensores/microfones de medicao acustica.
   - Exibir leitura interna de teste, como dB, RPM, array de microfones ou carga.
+  - Manter iluminacao interna suficiente para leitura de bancada, vidro, duto e paineis acusticos mesmo com a bancada desligada.
 
 ## Cockpit E Controle
 

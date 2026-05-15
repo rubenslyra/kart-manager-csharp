@@ -105,3 +105,13 @@
   - Adicionado painel externo com ligar/parar, audio, aceleracao, RPM, saude, temperatura e carga.
   - Sala acustica passou a refletir o teste em leitura interna, luz de status e bancada.
   - O teste da bancada permanece separado dos modulos C# e de `KartTelemetry`.
+
+### Etapa 11 - Iluminacao da sala e contato das rodas
+
+- Arquivo principal: `src/components/realsim/Workshop.tsx`.
+- Alteracoes:
+  - Plataforma de inspecao foi nivelada ao piso para nao atravessar visualmente os pneus.
+  - Outline/anel RL da plataforma foi reposicionado para ficar apenas acima do piso.
+  - Materiais internos da sala acustica foram clareados sem perder o visual industrial.
+  - Sala acustica recebeu luzes internas adicionais para vidro, bancada, duto e paineis.
+  - Luz de status da bancada foi reforcada quando o teste Wankel esta rodando.
