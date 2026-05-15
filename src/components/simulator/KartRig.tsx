@@ -4,7 +4,7 @@ import { Group, MathUtils, PerspectiveCamera as ThreePerspectiveCamera, Vector3 
 import { PerspectiveCamera } from "@react-three/drei";
 import { KartModel } from "./KartModel";
 import { useKartControls } from "./useKartControls";
-import { CHECKPOINTS, TRACK_HALF_WIDTH, nearestOnTrack, spawnPose } from "./track";
+import { CHECKPOINTS, TRACK_HALF_WIDTH, TRACK_SURFACE_OFFSET, nearestOnTrack, spawnPose } from "./track";
 import type { Gear, KartState } from "./types";
 import { raceStore } from "./raceStore";
 import type { SparksHandle } from "./Sparks";
@@ -50,7 +50,7 @@ const PHYS = {
   steerSpeed: 1.6,
   maxSpeed: 70,
   maxReverse: 25,
-  visualScale: 2.2,
+  visualScale: 1,
 };
 
 const FOV_BASE = 70;
@@ -200,7 +200,8 @@ export function KartRig({
       next.add(push);
       speed.current *= 0.5;
     }
-    next.y = group.current.position.y * 0.85 + probe.point.y * 0.15;
+    const surfaceY = probe.point.y + TRACK_SURFACE_OFFSET;
+    next.y = group.current.position.y * 0.85 + surfaceY * 0.15;
     group.current.position.copy(next);
 
     // ─── Extended physics: RPM, torque, grip, G-forces, drift ───

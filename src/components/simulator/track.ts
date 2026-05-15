@@ -2,6 +2,9 @@ import * as THREE from "three";
 import config from "./trackConfig.json";
 
 export const TRACK_HALF_WIDTH = config.trackHalfWidth ?? 5;
+export const TRACK_SURFACE_OFFSET = 0;
+export const TRACK_DECAL_OFFSET = 0.006;
+export const TRACK_KERB_OFFSET = 0.008;
 
 // Centerline curve from trackConfig.json
 export function trackCurve() {
@@ -41,6 +44,10 @@ export function nearestOnTrack(pos: THREE.Vector3) {
     }
   }
   return { distance: Math.sqrt(bestD), t: ts[best], point: points[best], index: best };
+}
+
+export function trackSurfaceYAt(pos: THREE.Vector3) {
+  return nearestOnTrack(pos).point.y + TRACK_SURFACE_OFFSET;
 }
 
 // Checkpoint t-values (0..1) loaded from config

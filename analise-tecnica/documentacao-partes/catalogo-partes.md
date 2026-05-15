@@ -49,6 +49,32 @@
   - Preservar refs de rodas dianteiras para esterco.
   - Preservar refs de suspensao para compressao via telemetria.
 
+## Pista E Superficie
+
+### Superficie de contato da pista
+
+- Funcao: plano de referencia para contato dos pneus no simulador de corrida.
+- Codigo:
+  - `src/components/simulator/track.ts`
+  - `src/components/simulator/TrackModel.tsx`
+  - `src/components/simulator/trackConfig.json`
+- Requisitos:
+  - A altura de contato deve vir da curva central da pista, via `trackCurve()`/`nearestOnTrack()`.
+  - O asfalto deve ser desenhado no mesmo plano da superficie de contato, sem offset vertical positivo.
+  - Linhas, zebras e marcadores podem usar apenas offsets pequenos de decalque para evitar z-fighting.
+  - Player, IA, fantasma e replay devem usar a mesma referencia de altura.
+  - Pads trafegaveis, como boxes, nao devem ter topo acima do plano de contato dos pneus.
+
+### Contencao de seguranca da pista
+
+- Funcao: reduzir risco visual de pecas quebradas ou soltas atingirem a torcida.
+- Codigo: `src/components/simulator/TrackModel.tsx`.
+- Requisitos:
+  - Barreiras de pneus devem ficar antes das cercas externas.
+  - Muretas baixas devem proteger a base da cerca.
+  - Cercas/rede de contencao devem ficar fora da area trafegavel e entre pista/torcida.
+  - Protecoes devem acompanhar a elevacao da pista para nao flutuar em rampas.
+
 ## Motor E Testes
 
 ### Motor Wankel removivel

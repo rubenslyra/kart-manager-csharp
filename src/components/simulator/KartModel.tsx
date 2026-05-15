@@ -4,6 +4,7 @@ import { Group, MathUtils, Mesh } from "three";
 import type { KartState } from "./types";
 import { STATE_COLOR } from "./types";
 import { Driver } from "./Driver";
+import { RL_KART_DERIVED, RL_KART_DIMENSIONS } from "./kart/RLKart26ADimensions";
 
 interface Props {
   position?: [number, number, number];
@@ -19,8 +20,11 @@ interface Props {
 }
 
 const STEER_ANGLE = 0.55; // ~31°
-const TRACK_WIDTH = 1.2; // distance between left/right wheels (for differential)
-const WHEELBASE = 1.6; // front-rear axle distance (Ackermann)
+const TRACK_WIDTH = RL_KART_DIMENSIONS.frontAxleWidth; // distance between left/right wheels (for differential)
+const WHEELBASE = RL_KART_DIMENSIONS.wheelbase; // front-rear axle distance (Ackermann)
+const WHEEL_RADIUS = RL_KART_DERIVED.wheelRadius;
+const FRONT_WHEEL_WIDTH = 0.09;
+const REAR_WHEEL_WIDTH = 0.12;
 
 /**
  * KartModel — RL Kart 26A with proper wheel hierarchy:
@@ -66,9 +70,9 @@ export function KartModel({
     }
 
     // Rolling — proportional to speed; differential when turning
-    // v (m/s) ≈ kmh / 3.6; tire radius ~0.24m → angular = v / r
+    // v (m/s) ≈ kmh / 3.6; tire radius follows the RL Kart 26A blueprint.
     const v = speedKmh / 3.6;
-    const baseOmega = v / 0.24;
+    const baseOmega = v / WHEEL_RADIUS;
     // Differential factor: outer wheel spins faster, inner slower
     const diff = Math.abs(steer) * 0.25;
     const leftFactor = steer > 0 ? 1 - diff : 1 + diff; // turning left → left (inner) slower
@@ -106,8 +110,8 @@ export function KartModel({
 
   // Wheel renderer — centered on its own pivot (no internal offset)
   const renderWheel = (ref: React.RefObject<Mesh | null>, isRear: boolean) => {
-    const r = isRear ? 0.26 : 0.22;
-    const w = isRear ? 0.22 : 0.18;
+    const r = WHEEL_RADIUS;
+    const w = isRear ? REAR_WHEEL_WIDTH : FRONT_WHEEL_WIDTH;
     return (
       <group>
         {/* Tire — centered on pivot */}
@@ -128,71 +132,71 @@ export function KartModel({
     <group ref={group} position={position} rotation={rotation}>
       {/* ========== CHASSIS — tubular ========== */}
       <group>
-        {[0.42, -0.42].map((x, i) => (
-          <mesh key={`rail-${i}`} position={[x, 0.18, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
-            <cylinderGeometry args={[0.045, 0.045, 2.4, 10]} />
+        {[0.32, -0.32].map((x, i) => (
+          <mesh key={`rail-${i}`} position={[x, 0.13, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+            <cylinderGeometry args={[0.035, 0.035, 1.35, 10]} />
             <meshStandardMaterial color={tubular} metalness={0.85} roughness={0.25} />
           </mesh>
         ))}
-        {[-1.05, -0.4, 0.3, 1.05].map((z, i) => (
-          <mesh key={`cross-${i}`} rotation={[0, 0, Math.PI / 2]} position={[0, 0.18, z]} castShadow>
-            <cylinderGeometry args={[0.04, 0.04, 0.95, 10]} />
+        {[-0.6, -0.2, 0.2, 0.6].map((z, i) => (
+          <mesh key={`cross-${i}`} rotation={[0, 0, Math.PI / 2]} position={[0, 0.13, z]} castShadow>
+            <cylinderGeometry args={[0.032, 0.032, 0.78, 10]} />
             <meshStandardMaterial color={tubular} metalness={0.85} roughness={0.25} />
           </mesh>
         ))}
-        <mesh position={[0, 0.22, 1.2]} rotation={[0, 0, Math.PI / 2]} castShadow>
-          <torusGeometry args={[0.32, 0.04, 8, 18, Math.PI]} />
+        <mesh position={[0, 0.17, 0.74]} rotation={[0, 0, Math.PI / 2]} castShadow>
+          <torusGeometry args={[0.26, 0.03, 8, 18, Math.PI]} />
           <meshStandardMaterial color={tubular} metalness={0.85} roughness={0.25} />
         </mesh>
-        <mesh position={[0, 0.25, -1.18]} rotation={[0, 0, Math.PI / 2]} castShadow>
-          <cylinderGeometry args={[0.04, 0.04, 1.0, 10]} />
+        <mesh position={[0, 0.17, -0.68]} rotation={[0, 0, Math.PI / 2]} castShadow>
+          <cylinderGeometry args={[0.032, 0.032, 0.82, 10]} />
           <meshStandardMaterial color={tubular} metalness={0.85} roughness={0.25} />
         </mesh>
       </group>
 
       {/* Floor pan */}
-      <mesh position={[0, 0.1, 0]} receiveShadow>
-        <boxGeometry args={[0.85, 0.04, 2.2]} />
+      <mesh position={[0, 0.08, 0]} receiveShadow>
+        <boxGeometry args={[0.66, 0.035, 1.25]} />
         <meshStandardMaterial color="#1f2937" metalness={0.6} roughness={0.4} />
       </mesh>
 
       {/* Front fairing */}
-      <group position={[0, 0.22, 1.0]}>
+      <group position={[0, 0.18, 0.56]}>
         <mesh castShadow>
-          <boxGeometry args={[0.78, 0.22, 0.55]} />
+          <boxGeometry args={[0.62, 0.18, 0.34]} />
           <meshStandardMaterial color={liveryBlue} metalness={0.3} roughness={0.4} />
         </mesh>
-        <mesh position={[0, 0.0, 0.28]}>
-          <boxGeometry args={[0.78, 0.06, 0.005]} />
+        <mesh position={[0, 0.0, 0.175]}>
+          <boxGeometry args={[0.62, 0.045, 0.005]} />
           <meshStandardMaterial color={liveryOrange} />
         </mesh>
-        <mesh position={[0, 0.04, 0.281]}>
-          <planeGeometry args={[0.36, 0.18]} />
+        <mesh position={[0, 0.035, 0.176]}>
+          <planeGeometry args={[0.28, 0.14]} />
           <meshStandardMaterial color="#fde047" />
         </mesh>
       </group>
 
       {/* Side pods */}
       {[0.5, -0.5].map((x, i) => (
-        <group key={`pod-${i}`} position={[x, 0.18, -0.15]}>
+        <group key={`pod-${i}`} position={[x * 0.86, 0.15, -0.08]}>
           <mesh castShadow>
-            <boxGeometry args={[0.1, 0.28, 1.2]} />
+            <boxGeometry args={[0.08, 0.2, 0.72]} />
             <meshStandardMaterial color={liveryBlue} metalness={0.3} roughness={0.5} />
           </mesh>
           <mesh position={[x > 0 ? 0.052 : -0.052, 0, 0]}>
-            <planeGeometry args={[1.2, 0.08]} />
+            <planeGeometry args={[0.72, 0.06]} />
             <meshStandardMaterial color={liveryOrange} />
           </mesh>
-          <mesh position={[x > 0 ? 0.053 : -0.053, -0.05, -0.4]} rotation={[0, x > 0 ? 0 : Math.PI, 0]}>
-            <planeGeometry args={[0.32, 0.16]} />
+          <mesh position={[x > 0 ? 0.053 : -0.053, -0.04, -0.24]} rotation={[0, x > 0 ? 0 : Math.PI, 0]}>
+            <planeGeometry args={[0.24, 0.12]} />
             <meshStandardMaterial color="#fde047" />
           </mesh>
         </group>
       ))}
 
       {/* Accent strip */}
-      <mesh position={[0, 0.32, 0.7]}>
-        <boxGeometry args={[0.86, 0.02, 0.3]} />
+      <mesh position={[0, 0.26, 0.36]}>
+        <boxGeometry args={[0.64, 0.018, 0.22]} />
         <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.7} />
       </mesh>
 
@@ -216,28 +220,28 @@ export function KartModel({
       <Driver driving={driving} />
 
       {/* Battery */}
-      <mesh position={[0, 0.22, -0.95]} castShadow>
-        <boxGeometry args={[0.7, 0.22, 0.5]} />
+      <mesh position={[0, 0.19, -0.48]} castShadow>
+        <boxGeometry args={[0.5, 0.18, 0.3]} />
         <meshStandardMaterial color="#0b1220" metalness={0.4} roughness={0.5} />
       </mesh>
-      <mesh position={[0, 0.34, -0.95]}>
-        <boxGeometry args={[0.5, 0.02, 0.3]} />
+      <mesh position={[0, 0.29, -0.48]}>
+        <boxGeometry args={[0.36, 0.018, 0.18]} />
         <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.9} />
       </mesh>
 
       {/* Motor + exhaust */}
-      <mesh position={[0.35, 0.22, -0.65]} rotation={[0, 0, Math.PI / 2]} castShadow>
-        <cylinderGeometry args={[0.14, 0.14, 0.3, 18]} />
+      <mesh position={[0.28, 0.2, -0.42]} rotation={[0, 0, Math.PI / 2]} castShadow>
+        <cylinderGeometry args={[0.11, 0.11, 0.24, 18]} />
         <meshStandardMaterial color="#374151" metalness={0.85} roughness={0.25} />
       </mesh>
       {[0, 0.06, 0.12, -0.06, -0.12].map((z, i) => (
-        <mesh key={`fin-${i}`} position={[0.35, 0.36, -0.65 + z]}>
-          <boxGeometry args={[0.32, 0.02, 0.03]} />
+        <mesh key={`fin-${i}`} position={[0.28, 0.31, -0.42 + z * 0.7]}>
+          <boxGeometry args={[0.24, 0.016, 0.024]} />
           <meshStandardMaterial color="#475569" metalness={0.7} />
         </mesh>
       ))}
-      <mesh position={[-0.35, 0.3, -0.7]} rotation={[Math.PI / 2.2, 0, 0]} castShadow>
-        <cylinderGeometry args={[0.05, 0.06, 0.7, 12]} />
+      <mesh position={[-0.28, 0.26, -0.44]} rotation={[Math.PI / 2.2, 0, 0]} castShadow>
+        <cylinderGeometry args={[0.04, 0.045, 0.46, 12]} />
         <meshStandardMaterial color="#1f2937" metalness={0.9} roughness={0.3} />
       </mesh>
 
@@ -247,20 +251,20 @@ export function KartModel({
           Rear: wheel mesh directly at axle position
          ========================================================== */}
 
-      {/* Front-left: pivot at (+0.6, 0.22, +0.8) */}
-      <group ref={pivotFL} position={[0.6, 0.22, 0.8]}>
+      {/* Front-left: pivot at official axle center height. */}
+      <group ref={pivotFL} position={[RL_KART_DERIVED.halfFrontTrack, WHEEL_RADIUS, RL_KART_DERIVED.halfWheelbase]}>
         {renderWheel(wheelFL, false)}
       </group>
-      {/* Front-right: pivot at (-0.6, 0.22, +0.8) */}
-      <group ref={pivotFR} position={[-0.6, 0.22, 0.8]}>
+      {/* Front-right: pivot at official axle center height. */}
+      <group ref={pivotFR} position={[-RL_KART_DERIVED.halfFrontTrack, WHEEL_RADIUS, RL_KART_DERIVED.halfWheelbase]}>
         {renderWheel(wheelFR, false)}
       </group>
-      {/* Rear-left: (+0.65, 0.24, -0.8) */}
-      <group position={[0.65, 0.24, -0.8]}>
+      {/* Rear-left: official axle center height. */}
+      <group position={[RL_KART_DERIVED.halfRearTrack, WHEEL_RADIUS, -RL_KART_DERIVED.halfWheelbase]}>
         {renderWheel(wheelRL, true)}
       </group>
-      {/* Rear-right: (-0.65, 0.24, -0.8) */}
-      <group position={[-0.65, 0.24, -0.8]}>
+      {/* Rear-right: official axle center height. */}
+      <group position={[-RL_KART_DERIVED.halfRearTrack, WHEEL_RADIUS, -RL_KART_DERIVED.halfWheelbase]}>
         {renderWheel(wheelRR, true)}
       </group>
     </group>

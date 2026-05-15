@@ -335,7 +335,7 @@ export function SimulatorScene({ fullscreen = false }: Props) {
               <OrbitControls
                 enablePan
                 enabled={activeView === FREE_VIEW && !splitMode}
-                target={[40, 0, 50]}
+                target={[15, 0, 31]}
                 maxPolarAngle={Math.PI / 2.1}
                 minDistance={8}
                 maxDistance={300}
@@ -392,7 +392,7 @@ export function SimulatorScene({ fullscreen = false }: Props) {
                 <group name="fx">
                   <Sparks ref={sparksRef} />
                   {(race.finished || race.playbackActive) && race.replayPhase >= 2 && (
-                    <Confetti origin={[40, 0, 50]} />
+                    <Confetti origin={[15, 0, 31]} />
                   )}
                 </group>
                 <RecordedRace />

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Group, MathUtils } from "three";
+import { Group, MathUtils, Vector3 } from "three";
 import { ghostStore, type GhostLap } from "./ghostStore";
+import { trackSurfaceYAt } from "./track";
 
 /**
  * Kart Fantasma — replica a melhor volta gravada do player.
@@ -12,6 +13,7 @@ export function GhostKart() {
   const group = useRef<Group>(null);
   const [best, setBest] = useState<GhostLap | null>(ghostStore.getBest());
   const startRef = useRef(performance.now());
+  const probe = useRef(new Vector3());
 
   useEffect(() => {
     const unsub = ghostStore.subscribe(() => {
@@ -34,11 +36,10 @@ export function GhostKart() {
     const b = samples[Math.min(i + 1, samples.length - 1)];
     const span = Math.max(1, b.t - a.t);
     const k = MathUtils.clamp((tMs - a.t) / span, 0, 1);
-    group.current.position.set(
-      a.x + (b.x - a.x) * k,
-      0.4,
-      a.z + (b.z - a.z) * k,
-    );
+    const x = a.x + (b.x - a.x) * k;
+    const z = a.z + (b.z - a.z) * k;
+    probe.current.set(x, 0, z);
+    group.current.position.set(x, trackSurfaceYAt(probe.current), z);
     // interpolação angular curta (não cobre wrap > π, mas voltas reais variam pouco entre samples)
     let dy = b.rotY - a.rotY;
     if (dy > Math.PI) dy -= Math.PI * 2;
@@ -52,21 +53,21 @@ export function GhostKart() {
   return (
     <group ref={group}>
       <mesh position={[0, 0.35, 0]} castShadow={false}>
-        <boxGeometry args={[1.4, 0.55, 2.4]} />
+        <boxGeometry args={[0.98, 0.45, 1.55]} />
         <meshBasicMaterial color="#22d3ee" transparent opacity={0.32} depthWrite={false} />
       </mesh>
-      <mesh position={[0, 0.95, -0.4]}>
-        <boxGeometry args={[0.6, 0.7, 0.6]} />
+      <mesh position={[0, 0.78, -0.25]}>
+        <boxGeometry args={[0.45, 0.55, 0.45]} />
         <meshBasicMaterial color="#22d3ee" transparent opacity={0.28} depthWrite={false} />
       </mesh>
       {[
-        [-0.7, 0.25, 0.9],
-        [0.7, 0.25, 0.9],
-        [-0.7, 0.25, -0.9],
-        [0.7, 0.25, -0.9],
+        [-0.395, 0.14, 0.495],
+        [0.395, 0.14, 0.495],
+        [-0.41, 0.14, -0.495],
+        [0.41, 0.14, -0.495],
       ].map((p, idx) => (
         <mesh key={idx} position={p as [number, number, number]} rotation={[0, 0, Math.PI / 2]}>
-          <cylinderGeometry args={[0.28, 0.28, 0.22, 14]} />
+          <cylinderGeometry args={[0.14, 0.14, 0.1, 14]} />
           <meshBasicMaterial color="#67e8f9" transparent opacity={0.35} depthWrite={false} />
         </mesh>
       ))}

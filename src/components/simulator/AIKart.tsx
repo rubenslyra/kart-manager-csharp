@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Group, MathUtils, Vector3 } from "three";
-import { trackCurve } from "./track";
+import { TRACK_SURFACE_OFFSET, trackCurve } from "./track";
 import { raceStore, rankedRacers } from "./raceStore";
 import { KartModel } from "./KartModel";
 import { Nameplate } from "./Nameplate";
@@ -84,7 +84,7 @@ export function AIKart({ id, name, color, startOffset, baseSpeed, aggression = 0
     const tan = curve.getTangentAt(t.current);
     const perp = new Vector3(-tan.z, 0, tan.x).normalize();
     const offset = perp.multiplyScalar(lane.current * TRACK_LANE);
-    group.current.position.set(point.x + offset.x, point.y + 0.4, point.z + offset.z);
+    group.current.position.set(point.x + offset.x, point.y + TRACK_SURFACE_OFFSET, point.z + offset.z);
     group.current.rotation.y = Math.atan2(tan.x, tan.z);
     if (prevT > 0.85 && t.current < 0.15) lap.current += 1;
     group.current.userData.prevT = t.current;

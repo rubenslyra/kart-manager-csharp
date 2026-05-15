@@ -1,9 +1,10 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Group } from "three";
+import { Group, Vector3 } from "three";
 import { KartModel } from "./KartModel";
 import { useRaceState } from "./raceStore";
 import { interpolate, replayRecordStore, type RecordedRacer } from "./replayRecordStore";
+import { trackSurfaceYAt } from "./track";
 
 /**
  * Renderiza os karts a partir do RaceRecord salvo, durante playback.
@@ -41,12 +42,14 @@ function RecordedKart({
   speed: number;
 }) {
   const group = useRef<Group>(null);
+  const probe = useRef(new Vector3());
   useFrame(() => {
     if (!group.current) return;
     const elapsed = Math.min((performance.now() - startedAt) * speed, duration);
     const p = interpolate(racer.samples, elapsed);
     if (!p) return;
-    group.current.position.set(p.x, 0.4, p.z);
+    probe.current.set(p.x, 0, p.z);
+    group.current.position.set(p.x, trackSurfaceYAt(probe.current), p.z);
     group.current.rotation.y = p.rotY;
   });
   return (

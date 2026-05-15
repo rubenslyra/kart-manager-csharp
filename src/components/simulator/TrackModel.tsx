@@ -1,9 +1,16 @@
 import { useMemo } from "react";
 import * as THREE from "three";
-import { trackCurve, CHECKPOINTS, TRACK_HALF_WIDTH } from "./track";
+import {
+  trackCurve,
+  CHECKPOINTS,
+  TRACK_DECAL_OFFSET,
+  TRACK_HALF_WIDTH,
+  TRACK_KERB_OFFSET,
+  TRACK_SURFACE_OFFSET,
+} from "./track";
 
 export function TrackModel() {
-  const { asphaltGeo, innerKerb, outerKerb, tireBarriers } = useMemo(() => {
+  const { asphaltGeo, innerKerb, outerKerb, tireBarriers, safetyFence } = useMemo(() => {
     const curve = trackCurve();
     const samples = 200;
     const halfWidth = TRACK_HALF_WIDTH;
@@ -23,8 +30,8 @@ export function TrackModel() {
     const positions: number[] = [];
     const indices: number[] = [];
     for (let i = 0; i < samples; i++) {
-      positions.push(innerPts[i].x, innerPts[i].y + 0.02, innerPts[i].z);
-      positions.push(outerPts[i].x, outerPts[i].y + 0.02, outerPts[i].z);
+      positions.push(innerPts[i].x, innerPts[i].y + TRACK_SURFACE_OFFSET, innerPts[i].z);
+      positions.push(outerPts[i].x, outerPts[i].y + TRACK_SURFACE_OFFSET, outerPts[i].z);
     }
     for (let i = 0; i < samples; i++) {
       const a = i * 2;
@@ -40,6 +47,7 @@ export function TrackModel() {
 
     // Tire barriers along outer edge
     const tireBarriers: THREE.Vector3[] = [];
+    const safetyFence: { pos: THREE.Vector3; rot: number }[] = [];
     for (let i = 0; i < samples; i += 4) {
       const t = i / samples;
       const p = curve.getPointAt(t);
@@ -48,7 +56,18 @@ export function TrackModel() {
       tireBarriers.push(p.clone().add(normal.clone().multiplyScalar(halfWidth + 1.2)));
     }
 
-    return { asphaltGeo, innerKerb: innerPts, outerKerb: outerPts, tireBarriers };
+    for (let i = 0; i < samples; i += 5) {
+      const t = i / samples;
+      const p = curve.getPointAt(t);
+      const tan = curve.getTangentAt(t);
+      const normal = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
+      safetyFence.push({
+        pos: p.clone().add(normal.clone().multiplyScalar(halfWidth + 2.0)),
+        rot: Math.atan2(tan.x, tan.z),
+      });
+    }
+
+    return { asphaltGeo, innerKerb: innerPts, outerKerb: outerPts, tireBarriers, safetyFence };
   }, []);
 
   // Kerb segments at curve positions (every Nth segment alternating red/white)
@@ -103,7 +122,7 @@ export function TrackModel() {
         const tan = curve.getTangentAt(t);
         const rot = Math.atan2(tan.x, tan.z);
         return (
-          <mesh key={`cl-${i}`} position={[p.x, p.y + 0.04, p.z]} rotation={[-Math.PI / 2, 0, rot]}>
+          <mesh key={`cl-${i}`} position={[p.x, p.y + TRACK_DECAL_OFFSET, p.z]} rotation={[-Math.PI / 2, 0, rot]}>
             <planeGeometry args={[0.18, 1.4]} />
             <meshStandardMaterial color="#fafafa" emissive="#fafafa" emissiveIntensity={0.2} />
           </mesh>
@@ -112,8 +131,8 @@ export function TrackModel() {
 
       {/* Kerbs (red/white) along outer edge */}
       {kerbs.map((k, i) => (
-        <mesh key={i} position={[k.pos.x, k.pos.y + 0.06, k.pos.z]} rotation={[0, k.rot, 0]}>
-          <boxGeometry args={[0.6, 0.08, 1.4]} />
+        <mesh key={i} position={[k.pos.x, k.pos.y + TRACK_KERB_OFFSET, k.pos.z]} rotation={[-Math.PI / 2, 0, k.rot]}>
+          <planeGeometry args={[0.6, 1.4]} />
           <meshStandardMaterial color={k.color} emissive={k.color} emissiveIntensity={0.25} />
         </mesh>
       ))}
@@ -126,12 +145,36 @@ export function TrackModel() {
         </mesh>
       ))}
 
-      {/* Tire barriers */}
-      {tireBarriers.map((p, i) => (
-        <mesh key={i} position={[p.x, 0.4, p.z]} castShadow>
-          <cylinderGeometry args={[0.45, 0.45, 0.8, 16]} />
-          <meshStandardMaterial color="#0a0a0a" roughness={1} />
-        </mesh>
+      {/* Safety containment: low wall + debris fence outside the tire barriers. */}
+      {safetyFence.map((f, i) => (
+        <group key={`safe-${i}`} position={[f.pos.x, f.pos.y, f.pos.z]} rotation={[0, f.rot, 0]}>
+          <mesh position={[0, 0.25, 0]} castShadow receiveShadow>
+            <boxGeometry args={[1.4, 0.5, 0.18]} />
+            <meshStandardMaterial color="#d1d5db" roughness={0.55} metalness={0.08} />
+          </mesh>
+          <mesh position={[0, 1.55, 0]} castShadow>
+            <boxGeometry args={[1.35, 2.1, 0.035]} />
+            <meshStandardMaterial
+              color="#94a3b8"
+              roughness={0.42}
+              metalness={0.55}
+              transparent
+              opacity={0.36}
+            />
+          </mesh>
+          {[-0.62, 0, 0.62].map((x) => (
+            <mesh key={`post-${x}`} position={[x, 1.38, 0]} castShadow>
+              <cylinderGeometry args={[0.025, 0.025, 2.25, 8]} />
+              <meshStandardMaterial color="#64748b" metalness={0.7} roughness={0.35} />
+            </mesh>
+          ))}
+          {[0.85, 1.45, 2.05].map((y) => (
+            <mesh key={`rail-${y}`} position={[0, y, 0.03]}>
+              <boxGeometry args={[1.35, 0.025, 0.035]} />
+              <meshStandardMaterial color="#cbd5e1" metalness={0.65} roughness={0.35} />
+            </mesh>
+          ))}
+        </group>
       ))}
 
       {/* Start / finish line — checkered tiles laid across track width */}
@@ -146,7 +189,7 @@ export function TrackModel() {
           return (
             <mesh
               key={`sf-${i}`}
-              position={[startPos.x + perpX * offset, startPos.y + 0.05, startPos.z + perpZ * offset]}
+              position={[startPos.x + perpX * offset, startPos.y + TRACK_DECAL_OFFSET, startPos.z + perpZ * offset]}
               rotation={[-Math.PI / 2, 0, startRot]}
             >
               <planeGeometry args={[tileW, 1.2]} />
@@ -193,7 +236,7 @@ export function TrackModel() {
                   </mesh>
                 ))}
                 {/* Checkpoint number marker */}
-                <mesh position={[0, 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                <mesh position={[0, TRACK_DECAL_OFFSET, 0]} rotation={[-Math.PI / 2, 0, 0]}>
                   <circleGeometry args={[0.6, 16]} />
                   <meshStandardMaterial
                     color="#22d3ee"

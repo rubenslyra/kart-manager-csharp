@@ -21,8 +21,8 @@ export function PitBoxes() {
       {BOXES.map((b, i) => (
         <group key={i} position={b.pos}>
           {/* Floor pad */}
-          <mesh position={[0, 0.03, 0]} receiveShadow>
-            <boxGeometry args={[5, 0.06, 3]} />
+          <mesh position={[0, -0.01, 0]} receiveShadow>
+            <boxGeometry args={[5, 0.02, 3]} />
             <meshStandardMaterial color="#1f2937" />
           </mesh>
           {/* Roof */}

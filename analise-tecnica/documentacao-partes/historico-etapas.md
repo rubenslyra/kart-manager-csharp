@@ -115,3 +115,25 @@
   - Materiais internos da sala acustica foram clareados sem perder o visual industrial.
   - Sala acustica recebeu luzes internas adicionais para vidro, bancada, duto e paineis.
   - Luz de status da bancada foi reforcada quando o teste Wankel esta rodando.
+
+### Etapa 12 - Primeira pista em escala para o RL Kart 26A
+
+- Arquivos principais:
+  - `src/components/simulator/track.ts`
+  - `src/components/simulator/trackConfig.json`
+  - `src/components/simulator/TrackModel.tsx`
+  - `src/components/simulator/KartRig.tsx`
+  - `src/components/simulator/KartModel.tsx`
+  - `src/components/simulator/AIKart.tsx`
+  - `src/components/simulator/GhostKart.tsx`
+  - `src/components/simulator/RecordedRace.tsx`
+- Alteracoes:
+  - Criado contrato de superficie da pista para contato dos pneus.
+  - Pista ajustada para um kartodromo compacto em escala de metros.
+  - Asfalto deixou de ser renderizado acima do ponto de contato.
+  - Zebras, linhas e marcadores passaram a usar apenas offset de decalque.
+  - Player, IA, fantasma e replay passaram a consultar a mesma altura de pista.
+  - Rodas do kart procedural da corrida passaram a usar `wheelRadius = 0.14`.
+  - Pads de boxes foram nivelados para nao ficarem acima do plano trafegavel.
+  - Circuito foi ampliado com mais curvas, chicane tecnica e hairpins.
+  - Adicionadas muretas, postes e cercas/rede de contencao externas para conter pecas soltas antes da area de torcida.

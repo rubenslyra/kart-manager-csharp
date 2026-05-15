@@ -1,19 +1,21 @@
 {
-  "trackName": "Circuito das Curvas Maiores",
+  "trackName": "Kartodromo RL 26A",
   "points": [
     { "x": 0, "y": 0, "z": 0, "label": "START_GRID" },
-    { "x": 40, "y": 0, "z": 10, "label": "STRAIGHT_1" },
-    { "x": 80, "y": 3, "z": 40, "label": "ASCENDING_RAMP" },
-    { "x": 100, "y": 5, "z": 80, "label": "MAJOR_CURVE_APEX" },
-    { "x": 60, "y": 3, "z": 110, "label": "DESCENDING_SECTION" },
-    { "x": 20, "y": -1, "z": 70, "label": "TUNNEL_UNDERPASS" },
-    { "x": -30, "y": 0, "z": 40, "label": "WORKSHOP_BEND" },
-    { "x": -10, "y": 0, "z": 10, "label": "FINAL_CORNER" }
+    { "x": 34, "y": 0, "z": -2, "label": "MAIN_STRAIGHT" },
+    { "x": 62, "y": 0.25, "z": 12, "label": "FAST_RIGHT" },
+    { "x": 72, "y": 0.45, "z": 38, "label": "OUTER_HAIRPIN" },
+    { "x": 52, "y": 0.35, "z": 62, "label": "DESCENT_SWEEPER" },
+    { "x": 22, "y": 0.1, "z": 70, "label": "LEFT_APEX" },
+    { "x": -10, "y": 0, "z": 58, "label": "TECHNICAL_CHICANE_IN" },
+    { "x": -32, "y": 0, "z": 38, "label": "TECHNICAL_CHICANE_OUT" },
+    { "x": -42, "y": 0.15, "z": 14, "label": "WORKSHOP_BEND" },
+    { "x": -24, "y": 0.05, "z": -8, "label": "FINAL_HAIRPIN" }
   ],
-  "checkpoints": [0.125, 0.375, 0.625, 0.875],
-  "trackHalfWidth": 6.5,
+  "checkpoints": [0.1, 0.28, 0.48, 0.68, 0.86],
+  "trackHalfWidth": 3.6,
   "assets": {
-    "workshop": { "x": -45, "y": 0, "z": 30 },
-    "bleachers": { "x": 110, "y": 5, "z": 120 }
+    "workshop": { "x": -54, "y": 0, "z": 22 },
+    "bleachers": { "x": 88, "y": 0.45, "z": 58 }
   }
 }
