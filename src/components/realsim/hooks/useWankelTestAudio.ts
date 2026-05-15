@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AUDIO_ASSETS } from "@/components/audio/audioAssets";
 
 interface UseWankelTestAudioArgs {
   running: boolean;
@@ -14,6 +15,7 @@ export function useWankelTestAudio({ running, throttle, health }: UseWankelTestA
   const rotorGainRef = useRef<GainNode | null>(null);
   const pulseGainRef = useRef<GainNode | null>(null);
   const filterRef = useRef<BiquadFilterNode | null>(null);
+  const testRoomEngineRef = useRef<HTMLAudioElement | null>(null);
   const runningRef = useRef(running);
   const throttleRef = useRef(throttle);
   const healthRef = useRef(health);
@@ -35,6 +37,10 @@ export function useWankelTestAudio({ running, throttle, health }: UseWankelTestA
     } catch {
       /* noop */
     }
+    if (testRoomEngineRef.current) {
+      testRoomEngineRef.current.pause();
+      testRoomEngineRef.current.currentTime = 0;
+    }
     ctxRef.current?.close();
     ctxRef.current = null;
     masterGainRef.current = null;
@@ -43,6 +49,7 @@ export function useWankelTestAudio({ running, throttle, health }: UseWankelTestA
     rotorGainRef.current = null;
     pulseGainRef.current = null;
     filterRef.current = null;
+    testRoomEngineRef.current = null;
   }, []);
 
   const start = useCallback(() => {
@@ -63,6 +70,13 @@ export function useWankelTestAudio({ running, throttle, health }: UseWankelTestA
     master.gain.value = 0.42;
     master.connect(ctx.destination);
     masterGainRef.current = master;
+
+    const testRoomEngine = new Audio(AUDIO_ASSETS.wankelTestRoomEngine);
+    testRoomEngine.loop = true;
+    testRoomEngine.preload = "auto";
+    testRoomEngine.volume = 0;
+    testRoomEngineRef.current = testRoomEngine;
+    void testRoomEngine.play().catch(() => undefined);
 
     const filter = ctx.createBiquadFilter();
     filter.type = "lowpass";
@@ -117,6 +131,11 @@ export function useWankelTestAudio({ running, throttle, health }: UseWankelTestA
       rotorGainRef.current?.gain.setTargetAtTime(gain, now, 0.08);
       pulseGainRef.current?.gain.setTargetAtTime(pulseGain, now, 0.08);
       filterRef.current?.frequency.setTargetAtTime(cutoff, now, 0.12);
+
+      if (testRoomEngineRef.current) {
+        testRoomEngineRef.current.volume = on ? 0.16 + t * 0.54 : 0;
+        testRoomEngineRef.current.playbackRate = on ? 0.86 + t * 0.32 : 0.86;
+      }
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);

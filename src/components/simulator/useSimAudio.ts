@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AUDIO_ASSETS } from "@/components/audio/audioAssets";
 import { TRACK_CONFIG } from "./track";
 
 /**
@@ -17,8 +18,14 @@ export function useSimAudio() {
   const crowdGainRef = useRef<GainNode | null>(null);
   const crowdSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const masterGainRef = useRef<GainNode | null>(null);
+  const raceLoopRef = useRef<HTMLAudioElement | null>(null);
+  const sideCarsRef = useRef<HTMLAudioElement | null>(null);
+  const crowdBaseRef = useRef<HTMLAudioElement | null>(null);
+  const crowdNearRef = useRef<HTMLAudioElement | null>(null);
+  const checkeredFlagRef = useRef<HTMLAudioElement | null>(null);
   const speedRef = useRef(0);
   const camDistRef = useRef(60);
+  const nearbyRacerRef = useRef(0);
   const enabledRef = useRef(false);
   const [enabled, setEnabled] = useState(false);
 
@@ -31,10 +38,22 @@ export function useSimAudio() {
     } catch {
       /* noop */
     }
+    [raceLoopRef.current, sideCarsRef.current, crowdBaseRef.current, crowdNearRef.current, checkeredFlagRef.current].forEach(
+      (audio) => {
+        if (!audio) return;
+        audio.pause();
+        audio.currentTime = 0;
+      },
+    );
     ctxRef.current?.close();
     ctxRef.current = null;
     engineOscRef.current = null;
     crowdSourceRef.current = null;
+    raceLoopRef.current = null;
+    sideCarsRef.current = null;
+    crowdBaseRef.current = null;
+    crowdNearRef.current = null;
+    checkeredFlagRef.current = null;
   }, []);
 
   const start = useCallback(() => {
@@ -53,6 +72,30 @@ export function useSimAudio() {
     master.gain.value = 0.45;
     master.connect(ctx.destination);
     masterGainRef.current = master;
+
+    const makeAudio = (src: string, loop: boolean, volume = 0) => {
+      const audio = new Audio(src);
+      audio.loop = loop;
+      audio.preload = "auto";
+      audio.volume = volume;
+      return audio;
+    };
+
+    const raceLoop = makeAudio(AUDIO_ASSETS.goKartPassing, true);
+    const sideCars = makeAudio(AUDIO_ASSETS.goKartRacingOutdoors, true);
+    const crowdBase = makeAudio(AUDIO_ASSETS.fansInTheStadiumLow, true);
+    const crowdNear = makeAudio(AUDIO_ASSETS.crowdNearTurn, true);
+    const checkered = makeAudio(AUDIO_ASSETS.crowdCheckeredFlag, false, 0.78);
+    raceLoopRef.current = raceLoop;
+    sideCarsRef.current = sideCars;
+    crowdBaseRef.current = crowdBase;
+    crowdNearRef.current = crowdNear;
+    checkeredFlagRef.current = checkered;
+
+    void raceLoop.play().catch(() => undefined);
+    void sideCars.play().catch(() => undefined);
+    void crowdBase.play().catch(() => undefined);
+    void crowdNear.play().catch(() => undefined);
 
     // ---------- Engine ----------
     const osc = ctx.createOscillator();
@@ -112,7 +155,7 @@ export function useSimAudio() {
       const speed = Math.abs(v);
       // Engine pitch: 70 Hz idle → ~360 Hz at 70 km/h
       const targetFreq = 70 + speed * 4.2;
-      const targetGain = 0.05 + Math.min(0.35, speed / 200);
+      const targetGain = 0.02 + Math.min(0.16, speed / 340);
       const targetCutoff = 500 + speed * 25;
       const now = ctx.currentTime;
       engineOscRef.current?.frequency.setTargetAtTime(targetFreq, now, 0.08);
@@ -122,7 +165,24 @@ export function useSimAudio() {
       // Crowd: louder when camera is near bleachers (positional approx)
       const d = camDistRef.current;
       const crowdVol = Math.max(0, Math.min(0.45, 1 - d / 120)) * 0.6;
-      crowdGainRef.current?.gain.setTargetAtTime(crowdVol, now, 0.25);
+      crowdGainRef.current?.gain.setTargetAtTime(crowdVol * 0.25, now, 0.25);
+
+      if (raceLoopRef.current) {
+        raceLoopRef.current.volume = Math.min(0.5, 0.04 + speed / 180);
+        raceLoopRef.current.playbackRate = Math.max(0.82, Math.min(1.24, 0.9 + speed / 220));
+      }
+      if (sideCarsRef.current) {
+        const sideIntensity = nearbyRacerRef.current * Math.min(1, speed / 20);
+        sideCarsRef.current.volume = Math.max(0, Math.min(0.48, sideIntensity * 0.48));
+        sideCarsRef.current.playbackRate = Math.max(0.9, Math.min(1.18, 0.96 + speed / 360));
+      }
+      if (crowdBaseRef.current) {
+        crowdBaseRef.current.volume = Math.max(0, Math.min(0.18, 1 - d / 180));
+      }
+      if (crowdNearRef.current) {
+        const nearTurnBoost = Math.max(0, Math.min(0.55, 1 - d / 48));
+        crowdNearRef.current.volume = nearTurnBoost;
+      }
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
@@ -137,6 +197,9 @@ export function useSimAudio() {
     const dy = y - a.y;
     const dz = z - a.z;
     camDistRef.current = Math.sqrt(dx * dx + dy * dy + dz * dz);
+  }, []);
+  const setNearbyRacerIntensity = useCallback((intensity: number) => {
+    nearbyRacerRef.current = Math.max(0, Math.min(1, intensity));
   }, []);
 
   // Short tyre screech (call when drifting)
@@ -193,7 +256,31 @@ export function useSimAudio() {
     setTimeout(() => tone(1568, 0.6, "sawtooth", 0.18), seq.length * 130);
   }, [tone]);
 
+  const checkeredFlag = useCallback(() => {
+    if (!enabledRef.current) return;
+    const audio = checkeredFlagRef.current;
+    if (!audio) {
+      fanfare();
+      return;
+    }
+    audio.currentTime = 0;
+    void audio.play().catch(() => fanfare());
+  }, [fanfare]);
+
   useEffect(() => () => stop(), [stop]);
 
-  return { start, stop, enabled, setSpeed, setCamPosition, screech, tone, checkpointBeep, lapJingle, fanfare };
+  return {
+    start,
+    stop,
+    enabled,
+    setSpeed,
+    setCamPosition,
+    setNearbyRacerIntensity,
+    screech,
+    tone,
+    checkpointBeep,
+    lapJingle,
+    fanfare,
+    checkeredFlag,
+  };
 }

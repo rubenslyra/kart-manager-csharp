@@ -28,6 +28,8 @@ interface Props {
   setEngineRunning: (v: boolean) => void;
   setEngineThrottle: (v: number) => void;
   toggleEngineAudio: () => void;
+  presentationAudioEnabled: boolean;
+  playPresentationAudio: () => void;
 }
 
 const stateColor: Record<KartTelemetry["vehicleState"], string> = {
@@ -67,6 +69,8 @@ export function RealSimUI({
   setEngineRunning,
   setEngineThrottle,
   toggleEngineAudio,
+  presentationAudioEnabled,
+  playPresentationAudio,
 }: Props) {
   const m = telemetry.modules;
   const checklist = buildChecklist(telemetry);
@@ -289,6 +293,17 @@ export function RealSimUI({
           }`}
         >
           Liberar para pista
+        </button>
+        <button
+          disabled={!releasable || !presentationAudioEnabled}
+          onClick={playPresentationAudio}
+          className={`mt-2 w-full corner-cut px-3 py-2 text-[10px] uppercase tracking-widest ${
+            releasable && presentationAudioEnabled
+              ? "border border-accent/70 bg-accent/10 text-accent hover:bg-accent/20"
+              : "border border-border bg-background/40 text-muted-foreground"
+          }`}
+        >
+          Apresentar carrinho
         </button>
       </div>
 

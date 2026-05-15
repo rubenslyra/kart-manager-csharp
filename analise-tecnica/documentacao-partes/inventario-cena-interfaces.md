@@ -100,14 +100,45 @@ Este documento registra elementos do ambiente 3D que nao sao partes fisicas do k
   - `audioEnabled`
 - Comportamento:
   - Botao `Ligar bancada` inicia o teste local.
-  - Botao `Audio ON/OFF` inicia ou para o som sintetizado do motor.
+  - Botao `Audio ON/OFF` inicia ou para o som do motor da bancada.
   - Slider de aceleracao controla RPM, carga, temperatura e timbre do audio.
   - Leituras de RPM, saude, temperatura e carga aparecem fora da cena, em painel de controle.
   - A sala acustica reflete o estado do teste em luzes, leitura interna e bancada.
+  - O audio usa o MP3 `wankel-test-room-engine.mp3` como camada principal e mantem o sintetizador Web Audio como apoio/fallback.
+  - O mesmo gesto de audio habilita o riser de apresentacao do carrinho quando o checklist fica completo.
 - Requisito tecnico:
   - O teste da bancada nao altera `KartTelemetry`.
   - O audio depende de gesto do usuario por restricao dos navegadores.
-  - O som e sintetizado via Web Audio, sem assets externos.
+  - Os MP3 sao servidos por `public/sounds/` para nao entrarem no bundle JS.
+
+### Audio de apresentacao e corrida
+
+- Codigo:
+  - `src/components/audio/audioAssets.ts`
+  - `src/components/realsim/hooks/usePresentationRiserAudio.ts`
+  - `src/components/simulator/useSimAudio.ts`
+- Assets:
+  - `public/sounds/wankel-test-room-engine.mp3`
+  - `public/sounds/kart-tested-presentation-riser.mp3`
+  - `public/sounds/go-kart-passing.mp3`
+  - `public/sounds/crowd-checkered-flag.mp3`
+  - `public/sounds/fans-in-the-stadium-low.mp3`
+  - `public/sounds/crowd-near-turn.mp3`
+  - `public/sounds/go-kart-racing-outdoors.mp3`
+- Comportamento:
+  - `kart-tested-presentation-riser.mp3` toca quando o checklist de modulos fica completo, apos audio habilitado por gesto do usuario.
+  - `go-kart-passing.mp3` toca em loop no simulador como camada de carros em corrida.
+  - `go-kart-racing-outdoors.mp3` sobe quando outros karts ficam ao lado da protagonista.
+  - `fans-in-the-stadium-low.mp3` e a torcida ambiente base em volume baixo.
+  - `crowd-near-turn.mp3` sobe quando a camera/kart se aproxima da arquibancada.
+  - `crowd-checkered-flag.mp3` toca na fase final/replay de bandeirada.
+- Creditos:
+  - `freesound_community` / Pixabay: som do motor.
+  - `ALEXIS_GAMING_CAM` / Pixabay: Riser long Classique 1.
+  - `Mauricio Povoa` / Pixabay: Som da torcida.
+  - `Mauricio Povoa` / Pixabay: Fans_in_the_Stadium.
+  - `Alexander Jauk` / Pixabay: Go-Kart Passing.
+  - Pixabay: 015522_Go Kart Racing Outdoors.
 
 ## Convencao
 

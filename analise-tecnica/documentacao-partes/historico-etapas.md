@@ -137,3 +137,21 @@
   - Pads de boxes foram nivelados para nao ficarem acima do plano trafegavel.
   - Circuito foi ampliado com mais curvas, chicane tecnica e hairpins.
   - Adicionadas muretas, postes e cercas/rede de contencao externas para conter pecas soltas antes da area de torcida.
+
+### Etapa 13 - Integracao de sons fornecidos
+
+- Arquivos principais:
+  - `src/components/audio/audioAssets.ts`
+  - `src/components/simulator/useSimAudio.ts`
+  - `src/components/realsim/hooks/useWankelTestAudio.ts`
+  - `src/components/realsim/hooks/usePresentationRiserAudio.ts`
+  - `src/components/realsim/RealSimulator.tsx`
+  - `src/components/realsim/RealSimUI.tsx`
+  - `public/sounds/`
+- Alteracoes:
+  - MP3 fornecidos foram publicados em `public/sounds/` com nomes seguros para URL.
+  - Simulador passou a usar camadas reais de kart passando, torcida ambiente, torcida na curva e bandeirada.
+  - Audio `015522_Go Kart Racing Outdoors` foi integrado como camada de carros ao lado da protagonista.
+  - Bancada Wankel passou a usar o som de motor fornecido como camada principal.
+  - Riser de apresentacao toca quando os modulos C# ficam prontos para liberacao.
+  - Creditos dos audios Pixabay foram registrados no inventario tecnico.

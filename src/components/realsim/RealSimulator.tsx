@@ -14,6 +14,7 @@ import { DllImportPanel } from "./dll/DllImportPanel";
 import { useAuditLog } from "./hooks/useAuditLog";
 import { deriveEngineTestState } from "./engineTest";
 import { useWankelTestAudio } from "./hooks/useWankelTestAudio";
+import { usePresentationRiserAudio } from "./hooks/usePresentationRiserAudio";
 import { useExternalData } from "@/bridge/useExternalData";
 import { mockBridge } from "@/bridge/mockExternalData";
 import { canLeavePit } from "@/bridge/moduleValidator";
@@ -28,6 +29,8 @@ export function RealSimulator() {
   const [engineRunning, setEngineRunning] = useState(false);
   const [engineThrottle, setEngineThrottle] = useState(0.18);
   const audit = useAuditLog(ext.telemetry, focus);
+  const releasable = canLeavePit(ext.telemetry);
+  const presentationAudio = usePresentationRiserAudio(releasable);
   const engineTestModel = useMemo(
     () =>
       deriveEngineTestState({
@@ -53,7 +56,8 @@ export function RealSimulator() {
   );
 
   const onRelease = () => {
-    if (!canLeavePit(ext.telemetry)) return;
+    if (!releasable) return;
+    presentationAudio.play();
     if (ext.source === "mock") {
       mockBridge.setIgnition(true);
       mockBridge.setGear("D");
@@ -104,7 +108,12 @@ export function RealSimulator() {
         engineTest={engineTest}
         setEngineRunning={setEngineRunning}
         setEngineThrottle={setEngineThrottle}
-        toggleEngineAudio={audio.start}
+        toggleEngineAudio={() => {
+          presentationAudio.start();
+          audio.start();
+        }}
+        presentationAudioEnabled={presentationAudio.enabled}
+        playPresentationAudio={presentationAudio.play}
       />
       <AuditLog events={audit.events} onClear={audit.clear} />
       <DllImportPanel />

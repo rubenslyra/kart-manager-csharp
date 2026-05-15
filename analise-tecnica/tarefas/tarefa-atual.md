@@ -5,149 +5,180 @@ Aberta em: 2026-05-15
 
 ## Titulo
 
-Criar primeira versao da pista para uso do kart RL Kart 26A em escala real
+Integrar arquivos de `sounds-trilha` na aplicacao conforme uso sugerido pelos nomes
 
 ## Objetivo
 
-Construir a primeira versao de uma pista para posicionar e usar o kart RL Kart 26A em escala real, mantendo coerencia fisica e visual entre rodas, solo e superficie da pista.
+Adicionar os audios fornecidos em `sounds-trilha/` aos pontos corretos da experiencia: sala de teste, apresentacao do carro, corrida, torcida base, aproximacao da torcida e bandeirada.
 
 ## Escopo
 
-- Avaliar a cena atual do simulador/pista e como o kart e posicionado nela.
-- Avaliar componentes existentes de pista, layout, boxes, arquibancada, IA e modelo do kart.
-- Definir uma primeira versao de pista compatível com a escala real do RL Kart 26A.
-- Aplicar a mesma regra usada na oficina: as rodas devem tocar a superficie correta sem afundar e sem flutuar.
-- Identificar se o ajuste deve acontecer na malha da pista, no posicionamento do kart, no raio das rodas, no rig ou em algum offset visual.
-- Planejar criterio claro para superficie de referencia da pista, zebras, areas de escape e boxes.
-- Definir checks e validacao visual antes de implementar.
+- Avaliar os arquivos de audio adicionados pelo usuario em `sounds-trilha/`.
+- Identificar como o projeto carrega assets estaticos de audio.
+- Avaliar o sistema atual de audio do simulador e da sala de teste.
+- Planejar a integracao sem quebrar os sons sintetizados existentes.
+- Definir gatilhos coerentes para cada arquivo pelo nome:
+  - `motor-para-a-sala-de-teste.mp3`
+  - `som-apresentação-carro-testado.mp3`
+  - `som-motor-durante-corrida.mp3`
+  - `torcida-na-bandeirada.mp3`
+  - `torcida1.mp3`
+  - `torcida2-sobreposição-quando-carros-se-aproximam-da-torcida.mp3`
+- Definir se os arquivos devem permanecer em `sounds-trilha/` ou ser movidos/copiadose para `public/` ou outro local servido pelo build.
+- Manter controle de volume, loop e disparos para evitar sobreposicao excessiva.
 
 ## Subtarefas
 
 - Concluido: executar Research.
 - Concluido: executar Plan.
-- Concluido: implementar pista apos aprovacao por `[Concluir RPI]`.
+- Concluido: implementar integracao apos aprovacao por `[Concluir RPI]`.
 
 ## RPI
 
 ### Research
 
-- `SimulatorScene.tsx` monta a cena de corrida em `/simulator` com `TrackModel`, `PitBoxes`, `Grandstand`, `KartRig`, `AIKart`, `GhostKart` e `RecordedRace`.
-- `trackConfig.json` ja define uma pista fechada por pontos 3D, chamada `Circuito das Curvas Maiores`, com variacao vertical:
-  - inicio em `y = 0`;
-  - rampa ate `y = 5`;
-  - trecho em `y = -1`;
-  - `trackHalfWidth = 6.5`, ou largura total de 13 m.
-- `track.ts` usa `CatmullRomCurve3` em escala 1 unidade = 1 metro e expoe:
-  - `trackCurve()`;
-  - `nearestOnTrack()`;
-  - `spawnPose()`, que posiciona o kart em `p.y`, sem compensar a altura visual do asfalto.
-- `TrackModel.tsx` gera o asfalto como ribbon entre bordas internas/externas, mas eleva os vertices para `p.y + 0.02`.
-  - Isso cria um desvio de 2 cm entre a superficie visual da pista e a altura usada por `spawnPose()`/`nearestOnTrack()`.
-  - E o mesmo tipo de risco ja corrigido na plataforma da oficina.
-- Marcadores da pista tambem usam offsets independentes:
-  - linha central em `p.y + 0.04`;
-  - zebras em `p.y + 0.06`;
-  - linha de largada em `startPos.y + 0.05`.
-- `TrackModel.tsx` renderiza barreiras de pneus duas vezes:
-  - uma em `p.y + 0.4`;
-  - outra em `y = 0.4`.
-  - Em trechos com elevacao, a segunda serie fica desalinhada da pista.
-- O solo/grama e um plano grande em `position={[40, -1.2, 50]}`. Ele fica abaixo da pista, mas nao acompanha os trechos elevados ou o trecho em `y = -1`.
-- `KartRig.tsx` renderiza o player com `KartModel position={[0, 0, -0.6]}` dentro de um grupo posicionado em `probe.point.y`.
-  - Durante movimento, `next.y = group.current.position.y * 0.85 + probe.point.y * 0.15`, sem compensar a superficie visual `+0.02`.
-  - `grounded` considera apenas distancia XZ ao centro da pista, nao a diferenca vertical entre roda e asfalto.
-- `KartModel.tsx` do simulador nao esta em escala oficial do RL Kart 26A:
-  - rodas dianteiras tem raio visual `0.22`;
-  - rodas traseiras tem raio visual `0.26`;
-  - eixos ficam em `y = 0.22` e `y = 0.24`;
-  - o arquivo oficial `RLKart26ADimensions.ts` define `wheelDiameter = 0.28`, logo `wheelRadius = 0.14`.
-- `KartRig.tsx` usa `PHYS.visualScale = 2.2`, o que acelera o deslocamento visual em relacao a velocidade fisica.
-- O modelo tecnico oficial da oficina esta em `RealKart.tsx`:
-  - usa `RL_KART_DIMENSIONS`;
-  - tem pivot na origem do chassi ao nivel do solo;
-  - usa roda oficial com centro em `wheelRadius = 0.14`.
-- Atualmente a pista usa `KartModel`, nao `RealKart`. Portanto, o "carrinho que estamos fazendo" ainda nao e o modelo principal da cena de pista.
-- `AIKart.tsx` posiciona adversarios em `point.y + 0.4`, ignorando a altura real da superficie e a escala oficial das rodas.
-- `GhostKart.tsx` posiciona o fantasma em `y = 0.4`, ignorando totalmente elevacao da pista.
-- `RecordedRace.tsx` tambem posiciona replays em `y = 0.4`.
-- `raceStore.ts` e `replayRecordStore.ts` guardam pose apenas como `x`, `z` e `rotY`; altura nao e persistida.
-- `PitBoxes.tsx` usa floor pads com topo em `y = 0.06` (`position.y = 0.03`, altura `0.06`), acima do plano de referencia `y = 0`.
-  - Se algum kart entrar nesses pads, ha risco visual de pneu atravessado, igual ao pad antigo da oficina.
-- `catalogo-partes.md` ja documenta a regra do kart tecnico:
-  - com centro em `wheelRadius`, pneu toca o piso em `y = 0`;
-  - plataformas visuais nao devem subir acima desse plano.
+- `sounds-trilha/` contem 6 MP3 adicionados pelo usuario:
+  - `motor-para-a-sala-de-teste.mp3`;
+  - `som-apresentação-carro-testado.mp3`;
+  - `som-motor-durante-corrida.mp3`;
+  - `torcida-na-bandeirada.mp3`;
+  - `torcida1.mp3`;
+  - `torcida2-sobreposição-quando-carros-se-aproximam-da-torcida.mp3`.
+- `public/` ja existe e e o local adequado para arquivos servidos diretamente pelo Vite/TanStack sem entrar no bundle JS.
+  - Estrutura atual contem `public/docs/` e `public/models/`.
+  - Nao ha pasta `public/sounds/` ainda.
+- `vite.config.ts` nao customiza tratamento de assets; usar `public/sounds/...` evita importacao dos MP3 e aumento do bundle.
+- Os nomes originais tem acentos e cedilha. Funcionam no filesystem, mas sao mais frageis como URLs.
+  - Melhor criar nomes publicos ASCII/kebab-case em `public/sounds/` e manter a origem em `sounds-trilha/` apenas como fonte fornecida.
+- `src/components/simulator/useSimAudio.ts` atualmente cria audio sintetizado via Web Audio:
+  - motor por oscilador `sawtooth`;
+  - torcida por ruido filtrado;
+  - bips/jingle/fanfare sintetizados;
+  - requer gesto do usuario por `audio.start`, acionado no botao `Audio 3D`.
+- `useSimAudio.ts` ja recebe velocidade (`setSpeed`) e posicao da camera (`setCamPosition`), e calcula distancia ate `TRACK_CONFIG.assets.bleachers`.
+- `SimulatorScene.tsx` ja dispara eventos de audio:
+  - `audio.setSpeed(t.speed)` a cada atualizacao de velocidade;
+  - checkpoint: `checkpointBeep`;
+  - fechamento de volta: `lapJingle`;
+  - replay/final: `fanfare`;
+  - botao `Audio 3D` chama `audio.start`.
+- `raceStore.ts` registra `finished`, `lastCheckpoint`, `replayPhase`, `playbackActive` e `lastImpact`.
+  - Ha ponto claro para usar `torcida-na-bandeirada.mp3` quando a corrida acaba ou entra no podium/replay final.
+  - Ha ponto claro para usar uma camada de torcida por proximidade da arquibancada usando a mesma distancia que ja existe em `useSimAudio`.
+- `src/components/realsim/hooks/useWankelTestAudio.ts` tambem usa Web Audio sintetizado:
+  - botao `Audio ON/OFF` em `RealSimUI.tsx` chama `audio.start`;
+  - o audio acompanha `running`, `throttle` e `health`;
+  - o som e sintetico e pode ser substituido ou complementado por MP3 em loop.
+- `RealSimulator.tsx` instancia `useWankelTestAudio` e passa `toggleEngineAudio={audio.start}` para `RealSimUI`.
+- `RealSimUI.tsx` tem controles claros:
+  - `Ligar bancada`;
+  - `Audio ON/OFF`;
+  - slider de aceleracao.
+- `som-apresentação-carro-testado.mp3` nao tem hoje um botao dedicado.
+  - Candidatos coerentes: tocar quando o usuario usa `Liberar para pista`, ou adicionar um botao pequeno de apresentacao na oficina.
+  - Como o nome sugere apresentacao do carro testado, o melhor gatilho e uma acao explicita na oficina, evitando autoplay.
+- `inventario-cena-interfaces.md` documenta que a sala acustica usa audio sintetizado sem assets externos; precisa ser atualizado se MP3 forem integrados.
+- O usuario forneceu os creditos/licencas de origem e corrigiu a intencao de aplicacao:
+  - `[som do motor]`: Sound Effect by `freesound_community` from Pixabay.
+  - `[Riser long Classique 1]`: Sound Effect by `ALEXIS_GAMING_CAM` from Pixabay.
+    - Uso correto: preparar a cena para a apresentacao do carrinho quando todos os codigos/modulos C# forem lidos corretamente.
+  - `[Som da torcida]`: Sound Effect by `Mauricio Povoa` from Pixabay.
+    - Uso correto: quando o carro faz a curva perto da torcida.
+  - `[Fans_in_the_Stadium]`: Sound Effect by `Mauricio Povoa` from Pixabay.
+    - Uso correto: torcida ambiente normal, em volume mais baixo.
+  - `[Go-Kart Passing]`: Sound Effect by `Alexander Jauk` from Pixabay.
+    - Uso correto: carros normalmente durante corrida.
+  - `[015522_Go Kart Racing Outdoors]`: link Pixabay `https://pixabay.com/pt/sound-effects/cidade-015522-go-kart-racing-outdoors-54107/`.
+    - Uso correto: carros ao lado da protagonista durante a corrida.
+    - Ponto a confirmar na implementacao: identificar qual MP3 em `sounds-trilha/` corresponde a este item, ou se falta um arquivo separado.
 
 ### Plan
 
-Implementar a primeira versao da pista com uma regra unica de superficie.
+Implementar integracao dos MP3 como assets publicos e camadas de audio controladas.
 
 Escopo dentro:
 
-1. Definir uma constante/fonte unica para a superficie da pista:
-   - tratar `trackCurve().getPointAt(t).y` como altura de contato do pneu;
-   - desenhar o asfalto no mesmo plano visual da superficie, sem elevar a pista acima do contato;
-   - manter linhas, zebras e decalques com offsets minimos apenas para evitar z-fighting, sem criar "degraus" que atravessem pneus.
-2. Criar ou ajustar a primeira versao da pista para uso em escala real:
-   - manter unidade 1 metro;
-   - revisar largura para kart real, area de escape, boxes e leitura visual;
-   - suavizar ou limitar elevacoes se necessario para uma primeira pista coerente;
-   - preservar um circuito fechado com checkpoints.
-3. Corrigir contato vertical de todos os carrinhos:
-   - player: usar a altura de superficie da pista de forma consistente;
-   - IA: remover offset fixo `+0.4` e usar a mesma regra do player;
-   - fantasma e replay: recomputar altura pela pista a partir de `x/z` ou passar a armazenar altura se isso for necessario;
-   - nao alterar `wheelRadius` oficial para resolver contato.
-4. Alinhar o carrinho da pista ao RL Kart 26A:
-   - preferencial: introduzir um componente/adaptador para usar `RealKart` ou um `RaceKartModel` baseado nas dimensoes oficiais;
-   - alternativa incremental: corrigir `KartModel` do simulador para respeitar `RL_KART_DIMENSIONS`, mantendo animacoes de direcao/rodagem;
-   - evitar misturar raio visual `0.22/0.26` com documentacao oficial `0.14`.
-5. Ajustar elementos laterais:
-   - remover duplicidade das barreiras de pneus;
-   - alinhar barreiras, arquibancada e boxes com a altura/escala da pista;
-   - nivelar pads de box para nao ficarem acima do plano de contato quando servirem como area trafegavel.
+1. Preparar assets estaticos:
+   - criar `public/sounds/`;
+   - copiar os MP3 de `sounds-trilha/` para nomes ASCII/kebab-case:
+     - `wankel-test-room-engine.mp3`;
+     - `kart-tested-presentation.mp3`;
+     - `race-engine-loop.mp3`;
+     - `crowd-checkered-flag.mp3`;
+     - `crowd-base.mp3`;
+     - `crowd-near-bleachers-layer.mp3`;
+   - manter `sounds-trilha/` fora do codigo como origem do usuario ou incluir apenas se for desejado no commit final.
+2. Criar um pequeno catalogo de paths de audio:
+   - preferencialmente `src/components/audio/audioAssets.ts`;
+   - usar URLs absolutas `/sounds/<arquivo>.mp3`.
+3. Integrar simulador de corrida em `useSimAudio.ts`:
+   - carregar o audio `[Go-Kart Passing]` como camada de carros normalmente durante a corrida;
+   - carregar o audio `[015522_Go Kart Racing Outdoors]`, se presente, como camada de carros ao lado da protagonista durante a corrida;
+   - manter ou ajustar loop/ganho/pitch de motor conforme a disponibilidade real dos arquivos;
+   - manter sintetizador atual como fallback ou camada discreta, caso arquivo nao carregue;
+   - usar `[Fans_in_the_Stadium]` como torcida ambiente normal, mais baixa;
+   - usar `[Som da torcida]` como camada adicional quando o carro fizer a curva perto da arquibancada;
+   - disparar `crowd-checkered-flag.mp3` na bandeirada/final, no lugar ou junto da fanfare sintetizada.
+4. Integrar sala de teste Wankel em `useWankelTestAudio.ts`:
+   - carregar `wankel-test-room-engine.mp3` como loop da bancada;
+   - ajustar ganho conforme `running`, `throttle` e `health`;
+   - manter o som sintetizado como fallback ou subcamada tecnica leve.
+5. Integrar apresentacao do carro:
+   - usar `[Riser long Classique 1]` para preparar a cena de apresentacao;
+   - gatilho correto: quando todos os codigos/modulos C# forem lidos corretamente, ou seja, quando o checklist permitir a liberacao;
+   - evitar repeticao infinita: tocar uma vez por transicao de checklist incompleto -> completo;
+   - tambem permitir uma acao explicita de replay/apresentacao se necessario, sem autoplay fora do gesto habilitador de audio.
 6. Documentar:
-   - atualizar `catalogo-partes.md` com regra de pista/superficie, se a implementacao criar contrato novo;
-   - atualizar `historico-etapas.md` com a primeira versao da pista e validacao de contato.
+   - atualizar `inventario-cena-interfaces.md` removendo a afirmacao de "sem assets externos";
+   - atualizar `historico-etapas.md`;
+   - atualizar `tarefa-atual.md`.
 
 Escopo fora:
 
-- Nao alterar dimensoes oficiais do RL Kart 26A.
-- Nao resolver fisica completa de suspensao, colisao 3D ou banking real nesta primeira versao.
-- Nao criar assets GLB novos.
-- Nao refazer a UI do simulador.
-- Nao fazer uma pista definitiva; esta entrega deve ser a primeira versao funcional e escalavel.
+- Nao editar o conteudo dos MP3.
+- Nao criar mixagem profissional ou normalizacao offline.
+- Nao trocar toda a arquitetura de audio por uma biblioteca externa.
+- Nao adicionar autoplay.
+- Nao mexer em fisica, pista ou modelo visual fora do necessario para gatilhos de audio.
 
-Arquivos provaveis:
+Mapeamento proposto:
 
-- `src/components/simulator/track.ts`
-- `src/components/simulator/trackConfig.json`
-- `src/components/simulator/TrackModel.tsx`
-- `src/components/simulator/KartRig.tsx`
-- `src/components/simulator/KartModel.tsx` ou novo componente de kart de corrida baseado no RL Kart 26A
-- `src/components/simulator/AIKart.tsx`
-- `src/components/simulator/GhostKart.tsx`
-- `src/components/simulator/RecordedRace.tsx`
-- `src/components/simulator/PitBoxes.tsx`
-- `analise-tecnica/documentacao-partes/catalogo-partes.md`
-- `analise-tecnica/documentacao-partes/historico-etapas.md`
-- `analise-tecnica/tarefas/tarefa-atual.md`
+- `motor-para-a-sala-de-teste.mp3` -> `[som do motor]`, loop/camada da bancada Wankel quando `Audio ON` estiver ligado; volume acompanha `running/throttle`.
+- `som-apresentação-carro-testado.mp3` -> `[Riser long Classique 1]`, one-shot quando todos os modulos/codigos C# forem lidos corretamente e a cena puder preparar a apresentacao do carrinho.
+- `som-motor-durante-corrida.mp3` -> `[Go-Kart Passing]`, carros normalmente durante a corrida.
+- `torcida1.mp3` -> `[Fans_in_the_Stadium]`, torcida ambiente normal em volume mais baixo.
+- `torcida2-sobreposição-quando-carros-se-aproximam-da-torcida.mp3` -> `[Som da torcida]`, camada extra quando o carro faz a curva perto da torcida.
+- `torcida-na-bandeirada.mp3` -> one-shot na finalizacao da corrida/bandeirada.
+- `[015522_Go Kart Racing Outdoors]` -> carros ao lado da protagonista durante a corrida; confirmar se corresponde a algum arquivo ja presente ou se sera necessario adicionar/copiar um MP3 separado.
+
+Creditos a registrar na documentacao/manifesto de audio:
+
+- `freesound_community` / Pixabay: `[som do motor]`.
+- `ALEXIS_GAMING_CAM` / Pixabay: `[Riser long Classique 1]`.
+- `Mauricio Povoa` / Pixabay: `[Som da torcida]`.
+- `Mauricio Povoa` / Pixabay: `[Fans_in_the_Stadium]`.
+- `Alexander Jauk` / Pixabay: `[Go-Kart Passing]`.
+- Pixabay URL informada: `[015522_Go Kart Racing Outdoors]`.
 
 Criterios de aceite:
 
-- O kart principal toca a pista sem afundar e sem flutuar em retas, curvas e trechos com elevacao.
-- IA, fantasma e replay seguem a mesma altura visual do player.
-- Zebras, linha de largada, boxes e pads nao atravessam pneus.
-- A pista usa escala coerente em metros e comporta o RL Kart 26A sem parecer uma pista gigante demais para o kart.
-- A regra de contato nao altera raio das rodas nem pivots oficiais do kart.
+- Os arquivos de audio ficam acessiveis no build por `/sounds/...`.
+- `Audio 3D` liga/desliga motor de corrida e torcida sem autoplay.
+- Motor de corrida responde a velocidade de forma perceptivel.
+- Torcida base e camada de aproximacao nao estouram volume quando sobrepostas.
+- Bandeirada toca uma vez no final da corrida.
+- Audio da sala Wankel usa o MP3 da sala de teste e continua respondendo ao botao `Audio ON/OFF`.
+- Riser de apresentacao toca quando a leitura dos modulos C# fica completa, sem repetir continuamente enquanto o estado permanece completo.
+- Creditos dos audios ficam documentados no repositorio.
 - `npm run build` passa.
-- Validacao visual/manual confirma contato coerente em pelo menos largada, reta, curva, rampa e trecho de box.
 
 Riscos e mitigacoes:
 
-- Trocar `KartModel` por `RealKart` pode exigir adaptacao de props/telemetria; se ficar grande demais, fazer componente intermediario de corrida com dimensoes oficiais.
-- Corrigir escala do kart pode afetar camera e hitbox; revisar cameras e `COLLISION_R` depois da alteracao.
-- Remover offsets fixos pode revelar z-fighting; usar offsets de decalque pequenos e documentados.
-- Replays antigos salvos em `localStorage` podem ficar desalinhados se o formato mudar; tratar como dado temporario ou recomputar altura em runtime.
+- MP3 pode falhar em algum navegador/ambiente: manter fallback sintetizado.
+- Loops podem ter cortes perceptiveis: usar ganho/fade simples, aceitar para primeira integracao.
+- Pitches de `HTMLAudioElement.playbackRate` podem soar artificiais: aplicar faixa estreita de playback rate.
+- Caminhos com acentos podem quebrar URL: copiar para nomes ASCII em `public/sounds/`.
+- Fim de corrida pode disparar mais de uma vez: usar refs de ultimo evento, como ja ocorre com checkpoint/replay.
 
 ### Status RPI
 
@@ -156,56 +187,68 @@ Concluido. Implementacao liberada por `[Concluir RPI]`.
 ## Arquivos Impactados
 
 - `analise-tecnica/tarefas/tarefa-atual.md`
+- `public/sounds/wankel-test-room-engine.mp3`
+- `public/sounds/kart-tested-presentation-riser.mp3`
+- `public/sounds/go-kart-passing.mp3`
+- `public/sounds/crowd-checkered-flag.mp3`
+- `public/sounds/fans-in-the-stadium-low.mp3`
+- `public/sounds/crowd-near-turn.mp3`
+- `public/sounds/go-kart-racing-outdoors.mp3`
+- `src/components/audio/audioAssets.ts`
+- `src/components/simulator/useSimAudio.ts`
 - `src/components/simulator/SimulatorScene.tsx`
-- `src/components/simulator/TrackModel.tsx`
-- `src/components/simulator/track.ts`
-- `src/components/simulator/trackConfig.json`
-- `src/components/simulator/KartRig.tsx`
-- `src/components/simulator/KartModel.tsx`
-- `src/components/simulator/AIKart.tsx`
-- `src/components/simulator/GhostKart.tsx`
-- `src/components/simulator/RecordedRace.tsx`
-- `src/components/simulator/PitBoxes.tsx`
-- `analise-tecnica/documentacao-partes/catalogo-partes.md`
+- `src/components/realsim/hooks/useWankelTestAudio.ts`
+- `src/components/realsim/hooks/usePresentationRiserAudio.ts`
+- `src/components/realsim/RealSimulator.tsx`
+- `src/components/realsim/RealSimUI.tsx`
+- `analise-tecnica/documentacao-partes/inventario-cena-interfaces.md`
 - `analise-tecnica/documentacao-partes/historico-etapas.md`
 
 ## Riscos Tecnicos
 
-- Incompatibilidade entre escala real do kart e escala atual da pista existente.
-- Offset vertical duplicado entre pista, rig do kart e modelo visual.
-- Zebras ou elementos decorativos acima da pista atravessando pneus.
-- IA, fantasma ou replay usando alturas diferentes do kart principal.
-- Alterar o contato visual das rodas quebrando a calibracao ja documentada no kart/oficina.
-- Pista grande demais afetar performance, cameras ou leitura visual.
+- Navegadores bloquearem autoplay sem gesto do usuario.
+- Arquivos com acentos no nome exigirem cuidado em URL/paths.
+- Audio de motor em loop conflitar com audio sintetizado atual.
+- Torcida base, aproximacao e bandeirada se sobreporem alto demais.
+- Adicionar assets em local nao servido pelo build.
+- Aumentar bundle se audios forem importados de forma inadequada.
 
 ## Checks Planejados
 
 - `git status --short --branch` antes de alterar codigo.
-- Research dos componentes de pista, kart e simulador.
+- Research de audio atual e fluxo de assets.
 - Revisao de diff apos implementacao.
 - `npm run build` apos implementacao.
-- Validacao visual/manual da pista com kart principal, IA/fantasma quando aplicavel.
+- Validacao manual de audio no simulador e na sala de teste.
 
 ## Checks Executados
 
-- `git status --short --branch`: branch `main` limpa na abertura da tarefa.
-- Research de `SimulatorScene.tsx`, `TrackModel.tsx`, `track.ts`, `trackConfig.json`, `KartRig.tsx`, `KartModel.tsx`, `RLKart26ADimensions.ts`, `AIKart.tsx`, `GhostKart.tsx`, `RecordedRace.tsx`, `PitBoxes.tsx`, `RealKart.tsx`, `raceStore.ts`, `replayRecordStore.ts` e `catalogo-partes.md`.
+- `git status --short --branch`: branch `main`, apenas `sounds-trilha/` nao rastreado antes da abertura.
+- Listagem inicial dos arquivos em `sounds-trilha/`:
+  - `motor-para-a-sala-de-teste.mp3` - 279.840 bytes.
+  - `som-apresentação-carro-testado.mp3` - 509.952 bytes.
+  - `som-motor-durante-corrida.mp3` - 223.488 bytes.
+  - `torcida-na-bandeirada.mp3` - 161.280 bytes.
+  - `torcida1.mp3` - 161.332 bytes.
+  - `torcida2-sobreposição-quando-carros-se-aproximam-da-torcida.mp3` - 163.004 bytes.
+- Research de `useSimAudio.ts`, `useWankelTestAudio.ts`, `engineTest.ts`, `RealSimulator.tsx`, `RealSimUI.tsx`, `SimulatorScene.tsx`, `raceStore.ts`, `vite.config.ts`, `public/` e `inventario-cena-interfaces.md`.
 - RPI registrado com plano de implementacao bloqueado ate `[Concluir RPI]`.
+- Mapeamento e creditos informados pelo usuario registrados no RPI em 2026-05-15.
 - `[Concluir RPI]` recebido em 2026-05-15.
-- Implementado contrato de superficie em `track.ts`.
-- Implementada primeira versao do `Kartodromo RL 26A` em `trackConfig.json`.
-- Pista ampliada com reta maior, curvas rapidas, chicane tecnica e hairpins.
-- Asfalto, zebras, linha central e linha de largada foram ajustados para nao elevar a superficie trafegavel.
-- Player, IA, fantasma e replay passaram a usar a mesma altura de referencia da pista.
-- Kart procedural da corrida recebeu rodas com raio oficial `0.14`.
-- Pads de box foram nivelados para nao atravessar pneus.
-- Adicionadas protecoes externas com barreira baixa, postes e cerca/rede de contencao para reduzir risco de pecas soltas atingirem a torcida.
-- Catalogo de partes e historico de etapas atualizados.
+- MP3 copiados para `public/sounds/` com nomes ASCII/kebab-case.
+- Criado catalogo `audioAssets.ts` com paths e creditos.
+- `useSimAudio.ts` passou a usar camadas de kart passando, torcida ambiente, torcida perto da curva e bandeirada.
+- Novo arquivo `015522_Go Kart Racing Outdoors.mp3` encontrado e publicado como `go-kart-racing-outdoors.mp3`.
+- `useSimAudio.ts` passou a elevar essa camada quando outros karts ficam perto da protagonista.
+- `useWankelTestAudio.ts` passou a usar o MP3 da sala de teste Wankel.
+- Criado `usePresentationRiserAudio.ts` para tocar o riser quando os modulos ficam prontos.
+- `RealSimulator.tsx` e `RealSimUI.tsx` atualizados com habilitacao/replay de apresentacao.
+- Inventario de cena e historico de etapas atualizados.
 - `npm run build`: passou. Avisos conhecidos de `@import` CSS e chunks grandes permanecem.
-- Servidor de desenvolvimento iniciado para validacao manual em `http://127.0.0.1:8080/`.
+- `npm run build` apos integrar `015522_Go Kart Racing Outdoors`: passou. Avisos conhecidos permanecem.
 - `git diff --check`: passou; apenas avisos de conversao LF/CRLF do Windows.
-- `npm run build` apos ampliacao/protecoes: passou. Avisos conhecidos de `@import` CSS e chunks grandes permanecem.
-- Revisao final de diff: concluida, escopo restrito a pista, contato dos karts, protecoes e documentacao.
+- `npm run build` final de fechamento: passou. Avisos conhecidos de `@import` CSS e chunks grandes permanecem.
+- Revisao final de diff: concluida, escopo restrito a assets de audio, integracao, creditos e documentacao.
 
 ## Fechamento
 
@@ -214,7 +257,6 @@ Concluido. Implementacao liberada por `[Concluir RPI]`.
 
 ## Notas Para Release
 
-- **Adicionado:** primeira versao da pista em escala coerente para uso do RL Kart 26A.
-- **Adicionado:** barreiras, muretas e cercas de contencao externas para proteger a area de torcida.
-- **Corrigido:** regra unica de contato para evitar carrinhos afundando ou flutuando na pista.
-- **Tecnico:** superficie de referencia da pista documentada para player, IA, fantasma e replay.
+- **Adicionado:** sons reais/fornecidos para corrida, torcida, bandeirada, apresentacao e sala Wankel.
+- **Alterado:** audio sintetizado passa a ser fallback/camada auxiliar onde houver MP3.
+- **Tecnico:** assets de audio passam a ser servidos por `public/sounds/`.

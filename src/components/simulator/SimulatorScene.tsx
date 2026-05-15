@@ -221,6 +221,23 @@ export function SimulatorScene({ fullscreen = false }: Props) {
     audio.setSpeed(t.speed);
   }, [t.speed, audio]);
 
+  useEffect(() => {
+    const racers = Object.values(race.racers);
+    const player = racers.find((r) => r.isPlayer);
+    if (!player) {
+      audio.setNearbyRacerIntensity(0);
+      return;
+    }
+    let nearest = Infinity;
+    racers.forEach((r) => {
+      if (r.id === player.id) return;
+      const dx = r.pose.x - player.pose.x;
+      const dz = r.pose.z - player.pose.z;
+      nearest = Math.min(nearest, Math.hypot(dx, dz));
+    });
+    audio.setNearbyRacerIntensity(Number.isFinite(nearest) ? Math.max(0, 1 - nearest / 8) : 0);
+  }, [race, audio]);
+
   // Audio cues: checkpoint beep, lap jingle, race fanfare
   const lastCpAt = useRef(0);
   useEffect(() => {
@@ -244,7 +261,7 @@ export function SimulatorScene({ fullscreen = false }: Props) {
     lastPhaseKey.current = key;
     if (race.replayPhase === 0) audio.checkpointBeep();
     else if (race.replayPhase === 1) audio.lapJingle();
-    else if (race.replayPhase === 2) audio.fanfare();
+    else if (race.replayPhase === 2) audio.checkeredFlag();
   }, [race.finished, race.playbackActive, race.replayPhase, race.replayRunNonce, audio]);
 
   const ghostBest = useGhostBest();
