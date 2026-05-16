@@ -5,258 +5,190 @@ Aberta em: 2026-05-15
 
 ## Titulo
 
-Integrar arquivos de `sounds-trilha` na aplicacao conforme uso sugerido pelos nomes
+Tornar a pista de corrida visualmente mais evidente e legivel
 
 ## Objetivo
 
-Adicionar os audios fornecidos em `sounds-trilha/` aos pontos corretos da experiencia: sala de teste, apresentacao do carro, corrida, torcida base, aproximacao da torcida e bandeirada.
+Melhorar a leitura visual da pista de corrida para que a evolucao do circuito fique clara na experiencia: layout mais evidente, camera inicial mais informativa, grid de largada, sinalizacao, arquibancada e protecoes mais visiveis.
 
 ## Escopo
 
-- Avaliar os arquivos de audio adicionados pelo usuario em `sounds-trilha/`.
-- Identificar como o projeto carrega assets estaticos de audio.
-- Avaliar o sistema atual de audio do simulador e da sala de teste.
-- Planejar a integracao sem quebrar os sons sintetizados existentes.
-- Definir gatilhos coerentes para cada arquivo pelo nome:
-  - `motor-para-a-sala-de-teste.mp3`
-  - `som-apresentação-carro-testado.mp3`
-  - `som-motor-durante-corrida.mp3`
-  - `torcida-na-bandeirada.mp3`
-  - `torcida1.mp3`
-  - `torcida2-sobreposição-quando-carros-se-aproximam-da-torcida.mp3`
-- Definir se os arquivos devem permanecer em `sounds-trilha/` ou ser movidos/copiadose para `public/` ou outro local servido pelo build.
-- Manter controle de volume, loop e disparos para evitar sobreposicao excessiva.
+- Avaliar a pista atual no simulador e por que ela ainda parece visualmente parecida.
+- Revisar camera inicial, enquadramento e alvo do OrbitControls.
+- Revisar contraste e materiais do asfalto, zebras, linhas, grid e protecoes.
+- Tornar layout, curvas, chicane, hairpins e area de arquibancada mais reconheciveis.
+- Adicionar ou reforcar sinalizacao visual da pista, como placas, nome do kartodromo, setas, grid e marcadores.
+- Melhorar visibilidade de arquibancada, barreiras, muretas e cercas de contencao.
+- Preservar regra de contato dos karts com a pista e nao mexer em audio nesta tarefa.
 
 ## Subtarefas
 
 - Concluido: executar Research.
 - Concluido: executar Plan.
-- Concluido: implementar integracao apos aprovacao por `[Concluir RPI]`.
+- Concluido: implementar ajustes visuais apos aprovacao por `[Concluir RPI]`.
+- Concluido: validacao final e fechamento da tarefa apos `[Finalizar Tarefa]`.
 
 ## RPI
 
 ### Research
 
-- `sounds-trilha/` contem 6 MP3 adicionados pelo usuario:
-  - `motor-para-a-sala-de-teste.mp3`;
-  - `som-apresentação-carro-testado.mp3`;
-  - `som-motor-durante-corrida.mp3`;
-  - `torcida-na-bandeirada.mp3`;
-  - `torcida1.mp3`;
-  - `torcida2-sobreposição-quando-carros-se-aproximam-da-torcida.mp3`.
-- `public/` ja existe e e o local adequado para arquivos servidos diretamente pelo Vite/TanStack sem entrar no bundle JS.
-  - Estrutura atual contem `public/docs/` e `public/models/`.
-  - Nao ha pasta `public/sounds/` ainda.
-- `vite.config.ts` nao customiza tratamento de assets; usar `public/sounds/...` evita importacao dos MP3 e aumento do bundle.
-- Os nomes originais tem acentos e cedilha. Funcionam no filesystem, mas sao mais frageis como URLs.
-  - Melhor criar nomes publicos ASCII/kebab-case em `public/sounds/` e manter a origem em `sounds-trilha/` apenas como fonte fornecida.
-- `src/components/simulator/useSimAudio.ts` atualmente cria audio sintetizado via Web Audio:
-  - motor por oscilador `sawtooth`;
-  - torcida por ruido filtrado;
-  - bips/jingle/fanfare sintetizados;
-  - requer gesto do usuario por `audio.start`, acionado no botao `Audio 3D`.
-- `useSimAudio.ts` ja recebe velocidade (`setSpeed`) e posicao da camera (`setCamPosition`), e calcula distancia ate `TRACK_CONFIG.assets.bleachers`.
-- `SimulatorScene.tsx` ja dispara eventos de audio:
-  - `audio.setSpeed(t.speed)` a cada atualizacao de velocidade;
-  - checkpoint: `checkpointBeep`;
-  - fechamento de volta: `lapJingle`;
-  - replay/final: `fanfare`;
-  - botao `Audio 3D` chama `audio.start`.
-- `raceStore.ts` registra `finished`, `lastCheckpoint`, `replayPhase`, `playbackActive` e `lastImpact`.
-  - Ha ponto claro para usar `torcida-na-bandeirada.mp3` quando a corrida acaba ou entra no podium/replay final.
-  - Ha ponto claro para usar uma camada de torcida por proximidade da arquibancada usando a mesma distancia que ja existe em `useSimAudio`.
-- `src/components/realsim/hooks/useWankelTestAudio.ts` tambem usa Web Audio sintetizado:
-  - botao `Audio ON/OFF` em `RealSimUI.tsx` chama `audio.start`;
-  - o audio acompanha `running`, `throttle` e `health`;
-  - o som e sintetico e pode ser substituido ou complementado por MP3 em loop.
-- `RealSimulator.tsx` instancia `useWankelTestAudio` e passa `toggleEngineAudio={audio.start}` para `RealSimUI`.
-- `RealSimUI.tsx` tem controles claros:
-  - `Ligar bancada`;
-  - `Audio ON/OFF`;
-  - slider de aceleracao.
-- `som-apresentação-carro-testado.mp3` nao tem hoje um botao dedicado.
-  - Candidatos coerentes: tocar quando o usuario usa `Liberar para pista`, ou adicionar um botao pequeno de apresentacao na oficina.
-  - Como o nome sugere apresentacao do carro testado, o melhor gatilho e uma acao explicita na oficina, evitando autoplay.
-- `inventario-cena-interfaces.md` documenta que a sala acustica usa audio sintetizado sem assets externos; precisa ser atualizado se MP3 forem integrados.
-- O usuario forneceu os creditos/licencas de origem e corrigiu a intencao de aplicacao:
-  - `[som do motor]`: Sound Effect by `freesound_community` from Pixabay.
-  - `[Riser long Classique 1]`: Sound Effect by `ALEXIS_GAMING_CAM` from Pixabay.
-    - Uso correto: preparar a cena para a apresentacao do carrinho quando todos os codigos/modulos C# forem lidos corretamente.
-  - `[Som da torcida]`: Sound Effect by `Mauricio Povoa` from Pixabay.
-    - Uso correto: quando o carro faz a curva perto da torcida.
-  - `[Fans_in_the_Stadium]`: Sound Effect by `Mauricio Povoa` from Pixabay.
-    - Uso correto: torcida ambiente normal, em volume mais baixo.
-  - `[Go-Kart Passing]`: Sound Effect by `Alexander Jauk` from Pixabay.
-    - Uso correto: carros normalmente durante corrida.
-  - `[015522_Go Kart Racing Outdoors]`: link Pixabay `https://pixabay.com/pt/sound-effects/cidade-015522-go-kart-racing-outdoors-54107/`.
-    - Uso correto: carros ao lado da protagonista durante a corrida.
-    - Ponto a confirmar na implementacao: identificar qual MP3 em `sounds-trilha/` corresponde a este item, ou se falta um arquivo separado.
+Concluido em 2026-05-15.
+
+- `src/components/simulator/SimulatorScene.tsx`
+  - A camera fallback/default esta em `[-25, 25, -25]` com `fov={50}`.
+  - O `OrbitControls` mira `[15, 0, 31]`, mas a camera inicial ainda nao enquadra o circuito completo de forma claramente panoramica.
+  - `Confetti` tambem usa `[15, 0, 31]`, entao vale centralizar constantes visuais sem afetar replay.
+- `src/components/simulator/TrackModel.tsx`
+  - O circuito ja foi ampliado e usa `TRACK_SURFACE_OFFSET`, `TRACK_DECAL_OFFSET` e `TRACK_KERB_OFFSET`.
+  - O asfalto esta no plano correto de contato, mas a cor escura sobre terreno escuro reduz a leitura da pista.
+  - Ha linha tracejada central, zebras externas, pneus, muretas e cercas, porem todos sao discretos de longe.
+  - O grid atual e basicamente a faixa quadriculada; faltam slots de largada, numeros, portal e placas grandes.
+  - As zebras aparecem principalmente na borda externa; a borda interna e as areas de curva ainda nao desenham bem o circuito.
+- `src/components/simulator/trackConfig.json`
+  - Layout atual tem reta principal, curva rapida, hairpin externo, sweeper, chicane tecnica, workshop bend e hairpin final.
+  - A arquibancada fica em `[88, 0.45, 58]`, fora da borda externa da area de curva.
+- `src/components/simulator/Grandstand.tsx`
+  - A arquibancada e grande em quantidade de assentos, mas usa materiais escuros e mira `lookAt(0, 0, 0)`.
+  - Ela pode ficar pouco destacada no enquadramento inicial e pode nao apontar para o centro visual real da pista.
+- `src/components/simulator/PitBoxes.tsx`
+  - Boxes ficam proximos da largada e ja possuem textos e faixas emissivas.
+  - Pads foram mantidos nivelados; qualquer reforco visual deve continuar sem criar degrau trafegavel.
+- `src/components/simulator/ReplayCameras.tsx`
+  - Replay assume camera apenas no fim/playback; alterar a camera inicial nao deve quebrar as cameras de replay.
+- Documentacao
+  - `catalogo-partes.md` exige que asfalto permaneça no plano de contato; linhas, zebras e marcadores so podem usar pequenos offsets.
+  - Protecoes devem ficar fora da area trafegavel, acompanhar elevacao da pista e ficar entre pista e torcida.
+
+Conclusao do Research:
+
+- A pista mudou tecnicamente, mas a experiencia inicial ainda pode parecer igual porque o enquadramento e os marcos visuais nao comunicam o novo layout.
+- O foco da implementacao deve ser contraste, sinalizacao, grid e composicao da cena, nao refazer a fisica nem o contrato de contato.
 
 ### Plan
 
-Implementar integracao dos MP3 como assets publicos e camadas de audio controladas.
+Plano para executar apos `[Concluir RPI]`:
 
-Escopo dentro:
+1. Camera e enquadramento inicial
+   - Ajustar a camera fallback/default para uma vista alta e aberta do circuito.
+   - Manter `OrbitControls` mirando o centro util da pista.
+   - Preservar cameras de cockpit, chase, hood, split e replay.
 
-1. Preparar assets estaticos:
-   - criar `public/sounds/`;
-   - copiar os MP3 de `sounds-trilha/` para nomes ASCII/kebab-case:
-     - `wankel-test-room-engine.mp3`;
-     - `kart-tested-presentation.mp3`;
-     - `race-engine-loop.mp3`;
-     - `crowd-checkered-flag.mp3`;
-     - `crowd-base.mp3`;
-     - `crowd-near-bleachers-layer.mp3`;
-   - manter `sounds-trilha/` fora do codigo como origem do usuario ou incluir apenas se for desejado no commit final.
-2. Criar um pequeno catalogo de paths de audio:
-   - preferencialmente `src/components/audio/audioAssets.ts`;
-   - usar URLs absolutas `/sounds/<arquivo>.mp3`.
-3. Integrar simulador de corrida em `useSimAudio.ts`:
-   - carregar o audio `[Go-Kart Passing]` como camada de carros normalmente durante a corrida;
-   - carregar o audio `[015522_Go Kart Racing Outdoors]`, se presente, como camada de carros ao lado da protagonista durante a corrida;
-   - manter ou ajustar loop/ganho/pitch de motor conforme a disponibilidade real dos arquivos;
-   - manter sintetizador atual como fallback ou camada discreta, caso arquivo nao carregue;
-   - usar `[Fans_in_the_Stadium]` como torcida ambiente normal, mais baixa;
-   - usar `[Som da torcida]` como camada adicional quando o carro fizer a curva perto da arquibancada;
-   - disparar `crowd-checkered-flag.mp3` na bandeirada/final, no lugar ou junto da fanfare sintetizada.
-4. Integrar sala de teste Wankel em `useWankelTestAudio.ts`:
-   - carregar `wankel-test-room-engine.mp3` como loop da bancada;
-   - ajustar ganho conforme `running`, `throttle` e `health`;
-   - manter o som sintetizado como fallback ou subcamada tecnica leve.
-5. Integrar apresentacao do carro:
-   - usar `[Riser long Classique 1]` para preparar a cena de apresentacao;
-   - gatilho correto: quando todos os codigos/modulos C# forem lidos corretamente, ou seja, quando o checklist permitir a liberacao;
-   - evitar repeticao infinita: tocar uma vez por transicao de checklist incompleto -> completo;
-   - tambem permitir uma acao explicita de replay/apresentacao se necessario, sem autoplay fora do gesto habilitador de audio.
-6. Documentar:
-   - atualizar `inventario-cena-interfaces.md` removendo a afirmacao de "sem assets externos";
-   - atualizar `historico-etapas.md`;
-   - atualizar `tarefa-atual.md`.
+2. Leitura do layout
+   - Reforcar contraste do asfalto e do terreno ao redor.
+   - Adicionar linhas laterais claras nas duas bordas usando apenas offset de decalque.
+   - Adicionar zebras mais largas e mais visiveis em curvas relevantes, sem transformar em obstaculo fisico.
+   - Adicionar runoff/areas pintadas em curvas para o desenho do circuito aparecer de longe.
 
-Escopo fora:
+3. Grid, largada e sinalizacao
+   - Criar slots de grid com marcas no solo e numeros.
+   - Adicionar portal/gantry de largada com nome do kartodromo.
+   - Adicionar placas de curva, setas/chevrons e marcadores de direcao em pontos chave.
 
-- Nao editar o conteudo dos MP3.
-- Nao criar mixagem profissional ou normalizacao offline.
-- Nao trocar toda a arquitetura de audio por uma biblioteca externa.
-- Nao adicionar autoplay.
-- Nao mexer em fisica, pista ou modelo visual fora do necessario para gatilhos de audio.
+4. Arquibancada e protecoes
+   - Melhorar visibilidade da arquibancada com cores, bandeiras, banner e orientacao para o centro da pista.
+   - Reforcar visual de barreiras, muretas e cercas sem invadir a area trafegavel.
+   - Adicionar placas/sponsor boards junto das protecoes para indicar claramente a separacao pista-torcida.
 
-Mapeamento proposto:
+5. Documentacao
+   - Atualizar historico/catalogo com a melhoria visual da pista, mantendo o contrato de superficie.
 
-- `motor-para-a-sala-de-teste.mp3` -> `[som do motor]`, loop/camada da bancada Wankel quando `Audio ON` estiver ligado; volume acompanha `running/throttle`.
-- `som-apresentação-carro-testado.mp3` -> `[Riser long Classique 1]`, one-shot quando todos os modulos/codigos C# forem lidos corretamente e a cena puder preparar a apresentacao do carrinho.
-- `som-motor-durante-corrida.mp3` -> `[Go-Kart Passing]`, carros normalmente durante a corrida.
-- `torcida1.mp3` -> `[Fans_in_the_Stadium]`, torcida ambiente normal em volume mais baixo.
-- `torcida2-sobreposição-quando-carros-se-aproximam-da-torcida.mp3` -> `[Som da torcida]`, camada extra quando o carro faz a curva perto da torcida.
-- `torcida-na-bandeirada.mp3` -> one-shot na finalizacao da corrida/bandeirada.
-- `[015522_Go Kart Racing Outdoors]` -> carros ao lado da protagonista durante a corrida; confirmar se corresponde a algum arquivo ja presente ou se sera necessario adicionar/copiar um MP3 separado.
-
-Creditos a registrar na documentacao/manifesto de audio:
-
-- `freesound_community` / Pixabay: `[som do motor]`.
-- `ALEXIS_GAMING_CAM` / Pixabay: `[Riser long Classique 1]`.
-- `Mauricio Povoa` / Pixabay: `[Som da torcida]`.
-- `Mauricio Povoa` / Pixabay: `[Fans_in_the_Stadium]`.
-- `Alexander Jauk` / Pixabay: `[Go-Kart Passing]`.
-- Pixabay URL informada: `[015522_Go Kart Racing Outdoors]`.
+6. Checks
+   - Revisar diff.
+   - Rodar `npm run build`.
+   - Validar visualmente em `/simulator` se a primeira vista mostra circuito, grid, arquibancada e protecoes.
 
 Criterios de aceite:
 
-- Os arquivos de audio ficam acessiveis no build por `/sounds/...`.
-- `Audio 3D` liga/desliga motor de corrida e torcida sem autoplay.
-- Motor de corrida responde a velocidade de forma perceptivel.
-- Torcida base e camada de aproximacao nao estouram volume quando sobrepostas.
-- Bandeirada toca uma vez no final da corrida.
-- Audio da sala Wankel usa o MP3 da sala de teste e continua respondendo ao botao `Audio ON/OFF`.
-- Riser de apresentacao toca quando a leitura dos modulos C# fica completa, sem repetir continuamente enquanto o estado permanece completo.
-- Creditos dos audios ficam documentados no repositorio.
-- `npm run build` passa.
-
-Riscos e mitigacoes:
-
-- MP3 pode falhar em algum navegador/ambiente: manter fallback sintetizado.
-- Loops podem ter cortes perceptiveis: usar ganho/fade simples, aceitar para primeira integracao.
-- Pitches de `HTMLAudioElement.playbackRate` podem soar artificiais: aplicar faixa estreita de playback rate.
-- Caminhos com acentos podem quebrar URL: copiar para nomes ASCII em `public/sounds/`.
-- Fim de corrida pode disparar mais de uma vez: usar refs de ultimo evento, como ja ocorre com checkpoint/replay.
+- Ao abrir o simulador, a pista deve parecer claramente diferente e legivel ja na camera inicial.
+- O circuito deve ter curvas e layout perceptiveis de longe.
+- Grid, sinalizacao, arquibancada e protecoes devem ser reconheciveis sem depender de zoom.
+- Karts nao devem afundar nem flutuar; elementos visuais de solo devem respeitar offsets pequenos.
+- A tarefa nao deve alterar audio nem refazer a logica de corrida.
 
 ### Status RPI
 
-Concluido. Implementacao liberada por `[Concluir RPI]`.
+Research e Plan concluidos. Implementacao liberada por `[Concluir RPI]` e executada.
+
+## Implementacao
+
+Concluida em 2026-05-15.
+
+- Camera livre inicial reposicionada para vista alta e aberta, mirando o centro util do circuito.
+- Asfalto e terreno tiveram contraste ajustado.
+- Foram adicionadas linhas laterais continuas nas duas bordas da pista.
+- Zebras ficaram mais largas e agora aparecem nos dois lados do circuito.
+- Curvas principais receberam zonas de escape coloridas no solo como decalques.
+- Grid de largada recebeu slots marcados e portal `KARTODROMO RL 26A`.
+- Foram adicionadas placas grandes de curvas, setas/chevrons e placas de patrocinio junto ao perimetro de contencao.
+- Arquibancada foi reorientada para o centro da pista e recebeu banner maior, cobertura, bandeiras e materiais mais claros.
+- Contrato de superficie foi preservado: elementos de solo seguem usando offsets pequenos e nao alteram a altura trafegavel.
 
 ## Arquivos Impactados
 
 - `analise-tecnica/tarefas/tarefa-atual.md`
-- `public/sounds/wankel-test-room-engine.mp3`
-- `public/sounds/kart-tested-presentation-riser.mp3`
-- `public/sounds/go-kart-passing.mp3`
-- `public/sounds/crowd-checkered-flag.mp3`
-- `public/sounds/fans-in-the-stadium-low.mp3`
-- `public/sounds/crowd-near-turn.mp3`
-- `public/sounds/go-kart-racing-outdoors.mp3`
-- `src/components/audio/audioAssets.ts`
-- `src/components/simulator/useSimAudio.ts`
-- `src/components/simulator/SimulatorScene.tsx`
-- `src/components/realsim/hooks/useWankelTestAudio.ts`
-- `src/components/realsim/hooks/usePresentationRiserAudio.ts`
-- `src/components/realsim/RealSimulator.tsx`
-- `src/components/realsim/RealSimUI.tsx`
-- `analise-tecnica/documentacao-partes/inventario-cena-interfaces.md`
-- `analise-tecnica/documentacao-partes/historico-etapas.md`
+- Provaveis apos RPI:
+  - `src/components/simulator/SimulatorScene.tsx`
+  - `src/components/simulator/TrackModel.tsx`
+  - `src/components/simulator/trackConfig.json`
+  - `src/components/simulator/Grandstand.tsx`
+  - `src/components/simulator/PitBoxes.tsx`
+  - `analise-tecnica/documentacao-partes/historico-etapas.md`
+  - `analise-tecnica/documentacao-partes/catalogo-partes.md`
 
 ## Riscos Tecnicos
 
-- Navegadores bloquearem autoplay sem gesto do usuario.
-- Arquivos com acentos no nome exigirem cuidado em URL/paths.
-- Audio de motor em loop conflitar com audio sintetizado atual.
-- Torcida base, aproximacao e bandeirada se sobreporem alto demais.
-- Adicionar assets em local nao servido pelo build.
-- Aumentar bundle se audios forem importados de forma inadequada.
+- Melhorar a leitura visual sem quebrar escala real da pista.
+- Adicionar elementos demais e poluir a cena ou reduzir performance.
+- Aumentar contraste sem perder coerencia com o estilo tecnico/futurista do projeto.
+- Reforcar zebras/protecoes sem criar degraus que aparentem atravessar pneus.
+- Alterar camera inicial e prejudicar controles livres, split ou replay.
+- Misturar escopo de visual da pista com audio/sons ja finalizados.
 
 ## Checks Planejados
 
 - `git status --short --branch` antes de alterar codigo.
-- Research de audio atual e fluxo de assets.
+- Research dos componentes visuais da pista.
 - Revisao de diff apos implementacao.
 - `npm run build` apos implementacao.
-- Validacao manual de audio no simulador e na sala de teste.
+- Validacao visual/manual em `/simulator`.
 
 ## Checks Executados
 
 - `git status --short --branch`: branch `main`, apenas `sounds-trilha/` nao rastreado antes da abertura.
-- Listagem inicial dos arquivos em `sounds-trilha/`:
-  - `motor-para-a-sala-de-teste.mp3` - 279.840 bytes.
-  - `som-apresentação-carro-testado.mp3` - 509.952 bytes.
-  - `som-motor-durante-corrida.mp3` - 223.488 bytes.
-  - `torcida-na-bandeirada.mp3` - 161.280 bytes.
-  - `torcida1.mp3` - 161.332 bytes.
-  - `torcida2-sobreposição-quando-carros-se-aproximam-da-torcida.mp3` - 163.004 bytes.
-- Research de `useSimAudio.ts`, `useWankelTestAudio.ts`, `engineTest.ts`, `RealSimulator.tsx`, `RealSimUI.tsx`, `SimulatorScene.tsx`, `raceStore.ts`, `vite.config.ts`, `public/` e `inventario-cena-interfaces.md`.
-- RPI registrado com plano de implementacao bloqueado ate `[Concluir RPI]`.
-- Mapeamento e creditos informados pelo usuario registrados no RPI em 2026-05-15.
-- `[Concluir RPI]` recebido em 2026-05-15.
-- MP3 copiados para `public/sounds/` com nomes ASCII/kebab-case.
-- Criado catalogo `audioAssets.ts` com paths e creditos.
-- `useSimAudio.ts` passou a usar camadas de kart passando, torcida ambiente, torcida perto da curva e bandeirada.
-- Novo arquivo `015522_Go Kart Racing Outdoors.mp3` encontrado e publicado como `go-kart-racing-outdoors.mp3`.
-- `useSimAudio.ts` passou a elevar essa camada quando outros karts ficam perto da protagonista.
-- `useWankelTestAudio.ts` passou a usar o MP3 da sala de teste Wankel.
-- Criado `usePresentationRiserAudio.ts` para tocar o riser quando os modulos ficam prontos.
-- `RealSimulator.tsx` e `RealSimUI.tsx` atualizados com habilitacao/replay de apresentacao.
-- Inventario de cena e historico de etapas atualizados.
-- `npm run build`: passou. Avisos conhecidos de `@import` CSS e chunks grandes permanecem.
-- `npm run build` apos integrar `015522_Go Kart Racing Outdoors`: passou. Avisos conhecidos permanecem.
-- `git diff --check`: passou; apenas avisos de conversao LF/CRLF do Windows.
-- `npm run build` final de fechamento: passou. Avisos conhecidos de `@import` CSS e chunks grandes permanecem.
-- Revisao final de diff: concluida, escopo restrito a assets de audio, integracao, creditos e documentacao.
+- Research concluido nos componentes:
+  - `src/components/simulator/SimulatorScene.tsx`
+  - `src/components/simulator/TrackModel.tsx`
+  - `src/components/simulator/trackConfig.json`
+  - `src/components/simulator/Grandstand.tsx`
+  - `src/components/simulator/PitBoxes.tsx`
+  - `src/components/simulator/ReplayCameras.tsx`
+  - `analise-tecnica/documentacao-partes/historico-etapas.md`
+  - `analise-tecnica/documentacao-partes/catalogo-partes.md`
+- Ultimos commits de referencia:
+  - `758899f` - integracao de audio fornecido.
+  - `74a638d` - primeira pista em escala do RL Kart.
+  - `8e0b823` - iluminacao da sala e contato das rodas.
+- `npm run build`: aprovado.
+  - Avisos residuais existentes/fora do escopo: `@import` de CSS fora da primeira posicao e chunks acima de 500 kB.
+- `npm run lint`: falhou por erros de Prettier preexistentes e amplos no repositorio.
+- `npx eslint src\components\simulator\TrackModel.tsx src\components\simulator\Grandstand.tsx`: aprovado apos formatacao dos componentes alterados.
+- Dev server iniciado em `http://127.0.0.1:5173/`; rota `/simulator` respondeu `200`.
+- `[Finalizar Tarefa]` recebido em 2026-05-16.
+- Revisao final de diff: concluida, escopo restrito a leitura visual da pista, camera, sinalizacao, arquibancada e documentacao.
+- `git diff --check`: aprovado, com apenas avisos LF/CRLF do Windows.
+- `npm run build`: aprovado no fechamento.
+  - Avisos residuais existentes/fora do escopo: `@import` de CSS fora da primeira posicao e chunks acima de 500 kB.
+- `npx eslint src\components\simulator\TrackModel.tsx src\components\simulator\Grandstand.tsx`: aprovado no fechamento.
+- `npx eslint src\components\simulator\TrackModel.tsx src\components\simulator\Grandstand.tsx src\components\simulator\SimulatorScene.tsx`: falhou por erros de Prettier preexistentes em `SimulatorScene.tsx`.
+- `npm run lint`: falhou por erros de Prettier preexistentes e amplos no repositorio.
 
 ## Fechamento
 
-- Finalizada em: 2026-05-15
+- Finalizada em: 2026-05-16.
 - Commit: criado no fechamento da tarefa; hash final informado ao usuario.
 
 ## Notas Para Release
 
-- **Adicionado:** sons reais/fornecidos para corrida, torcida, bandeirada, apresentacao e sala Wankel.
-- **Alterado:** audio sintetizado passa a ser fallback/camada auxiliar onde houver MP3.
-- **Tecnico:** assets de audio passam a ser servidos por `public/sounds/`.
+- Simulador de corrida agora abre com uma leitura mais clara do kartodromo.
+- Pista recebeu camera inicial panoramica, grid, portal, sinalizacao de curvas, bordas continuas, zebras reforcadas, zonas de escape, arquibancada mais evidente e perimetro de protecao mais visivel.
+- Audio e logica de corrida nao foram alterados nesta tarefa.

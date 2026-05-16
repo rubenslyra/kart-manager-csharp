@@ -155,3 +155,18 @@
   - Bancada Wankel passou a usar o som de motor fornecido como camada principal.
   - Riser de apresentacao toca quando os modulos C# ficam prontos para liberacao.
   - Creditos dos audios Pixabay foram registrados no inventario tecnico.
+
+### Etapa 14 - Leitura visual da pista de corrida
+
+- Arquivos principais:
+  - `src/components/simulator/SimulatorScene.tsx`
+  - `src/components/simulator/TrackModel.tsx`
+  - `src/components/simulator/Grandstand.tsx`
+- Alteracoes:
+  - Camera inicial reposicionada para uma vista alta e aberta do circuito.
+  - Pista recebeu bordas continuas, zebras em ambos os lados e zonas de escape coloridas.
+  - Grid de largada ganhou slots marcados e portal com identificacao `KARTODROMO RL 26A`.
+  - Curvas principais ganharam placas grandes com nome e chevrons direcionais.
+  - Perimetro de contencao recebeu placas visuais para separar pista e torcida.
+  - Arquibancada passou a mirar o centro da pista e recebeu banner, cobertura, materiais mais claros e bandeiras.
+  - Contrato de superficie foi preservado: asfalto continua no plano de contato e marcas de solo usam apenas offsets pequenos.

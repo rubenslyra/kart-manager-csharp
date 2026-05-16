@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Text } from "@react-three/drei";
 import * as THREE from "three";
 import {
   trackCurve,
@@ -8,6 +9,26 @@ import {
   TRACK_KERB_OFFSET,
   TRACK_SURFACE_OFFSET,
 } from "./track";
+
+const TRACK_CENTER = new THREE.Vector3(15, 0, 31);
+
+const TURN_BOARDS = [
+  { t: 0.18, side: 1, label: "T1", arrows: ">>>", color: "#facc15" },
+  { t: 0.3, side: 1, label: "HAIRPIN", arrows: "<<<", color: "#38bdf8" },
+  { t: 0.52, side: -1, label: "SWEEPER", arrows: ">>>", color: "#f97316" },
+  { t: 0.68, side: -1, label: "CHICANE", arrows: "<<<", color: "#22c55e" },
+  { t: 0.88, side: 1, label: "FINAL", arrows: ">>>", color: "#ef4444" },
+];
+
+const RUNOFF_ZONES = [
+  { t: 0.18, side: 1, width: 3.2, length: 9, color: "#2563eb" },
+  { t: 0.31, side: 1, width: 3.6, length: 10, color: "#f97316" },
+  { t: 0.51, side: -1, width: 3.2, length: 10, color: "#2563eb" },
+  { t: 0.68, side: -1, width: 2.8, length: 8, color: "#facc15" },
+  { t: 0.88, side: 1, width: 3.4, length: 9, color: "#ef4444" },
+];
+
+const SPONSOR_LABELS = ["RL KART 26A", "SAFETY CELL", "REAL SCALE", "PIT LANE", "RACE CONTROL"];
 
 export function TrackModel() {
   const { asphaltGeo, innerKerb, outerKerb, tireBarriers, safetyFence } = useMemo(() => {
@@ -70,28 +91,92 @@ export function TrackModel() {
     return { asphaltGeo, innerKerb: innerPts, outerKerb: outerPts, tireBarriers, safetyFence };
   }, []);
 
-  // Kerb segments at curve positions (every Nth segment alternating red/white)
-  const kerbs = useMemo(() => {
-    const segs: { pos: THREE.Vector3; rot: number; color: string }[] = [];
-    for (let i = 0; i < outerKerb.length; i++) {
-      const a = outerKerb[i];
-      const b = outerKerb[(i + 1) % outerKerb.length];
-      const dir = new THREE.Vector3().subVectors(b, a);
-      const rot = Math.atan2(dir.x, dir.z);
-      segs.push({
-        pos: a.clone().add(b).multiplyScalar(0.5),
-        rot,
-        color: i % 2 === 0 ? "#ef4444" : "#f9fafb",
+  const edgeLines = useMemo(() => {
+    const build = (pts: THREE.Vector3[], prefix: "inner" | "outer") =>
+      pts.map((a, i) => {
+        const b = pts[(i + 1) % pts.length];
+        const dir = new THREE.Vector3().subVectors(b, a);
+        return {
+          key: `${prefix}-${i}`,
+          pos: a.clone().add(b).multiplyScalar(0.5),
+          rot: Math.atan2(dir.x, dir.z),
+          len: dir.length(),
+        };
       });
-    }
+    return [...build(innerKerb, "inner"), ...build(outerKerb, "outer")];
+  }, [innerKerb, outerKerb]);
+
+  const kerbs = useMemo(() => {
+    const segs: { key: string; pos: THREE.Vector3; rot: number; color: string }[] = [];
+    const addKerb = (pts: THREE.Vector3[], side: string) => {
+      for (let i = 0; i < pts.length; i += 2) {
+        const a = pts[i];
+        const b = pts[(i + 1) % pts.length];
+        const dir = new THREE.Vector3().subVectors(b, a);
+        segs.push({
+          key: `${side}-${i}`,
+          pos: a.clone().add(b).multiplyScalar(0.5),
+          rot: Math.atan2(dir.x, dir.z),
+          color: Math.floor(i / 2) % 2 === 0 ? "#ef4444" : "#f9fafb",
+        });
+      }
+    };
+    addKerb(outerKerb, "outer");
+    addKerb(innerKerb, "inner");
     return segs;
-  }, [outerKerb]);
+  }, [innerKerb, outerKerb]);
+
+  const runoffZones = useMemo(() => {
+    const curve = trackCurve();
+    return RUNOFF_ZONES.map((zone, i) => {
+      const p = curve.getPointAt(zone.t);
+      const tan = curve.getTangentAt(zone.t);
+      const normal = new THREE.Vector3(-tan.z, 0, tan.x).normalize().multiplyScalar(zone.side);
+      const pos = p.clone().add(normal.multiplyScalar(TRACK_HALF_WIDTH + zone.width * 0.6));
+      return {
+        ...zone,
+        key: `runoff-${i}`,
+        pos,
+        rot: Math.atan2(tan.x, tan.z),
+      };
+    });
+  }, []);
+
+  const turnBoards = useMemo(() => {
+    const curve = trackCurve();
+    return TURN_BOARDS.map((board, i) => {
+      const p = curve.getPointAt(board.t);
+      const tan = curve.getTangentAt(board.t);
+      const normal = new THREE.Vector3(-tan.z, 0, tan.x).normalize().multiplyScalar(board.side);
+      const pos = p.clone().add(normal.multiplyScalar(TRACK_HALF_WIDTH + 3.4));
+      return {
+        ...board,
+        key: `turn-${i}`,
+        pos,
+        rot: Math.atan2(TRACK_CENTER.x - pos.x, TRACK_CENTER.z - pos.z),
+      };
+    });
+  }, []);
+
+  const sponsorBoards = useMemo(() => {
+    const curve = trackCurve();
+    return [0.08, 0.16, 0.24, 0.56, 0.74, 0.82].map((t, i) => {
+      const p = curve.getPointAt(t);
+      const tan = curve.getTangentAt(t);
+      const normal = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
+      const pos = p.clone().add(normal.multiplyScalar(TRACK_HALF_WIDTH + 2.75));
+      return {
+        key: `sponsor-${i}`,
+        label: SPONSOR_LABELS[i % SPONSOR_LABELS.length],
+        pos,
+        rot: Math.atan2(tan.x, tan.z),
+      };
+    });
+  }, []);
 
   // Start/finish line position (first sample)
   const startPos = innerKerb[0]
-    ? new THREE.Vector3()
-        .addVectors(innerKerb[0], outerKerb[0])
-        .multiplyScalar(0.5)
+    ? new THREE.Vector3().addVectors(innerKerb[0], outerKerb[0]).multiplyScalar(0.5)
     : new THREE.Vector3();
   const startRot = (() => {
     if (!innerKerb[1]) return 0;
@@ -106,13 +191,38 @@ export function TrackModel() {
       {/* Ground — grass-like (large enough for elevated track) */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[40, -1.2, 50]} receiveShadow>
         <planeGeometry args={[600, 600]} />
-        <meshStandardMaterial color="#1f3d2b" roughness={1} />
+        <meshStandardMaterial color="#24472f" roughness={1} />
       </mesh>
+
+      {/* Painted runoff patches make each major corner readable from the first camera. */}
+      {runoffZones.map((zone) => (
+        <mesh
+          key={zone.key}
+          position={[zone.pos.x, zone.pos.y + TRACK_DECAL_OFFSET * 0.55, zone.pos.z]}
+          rotation={[-Math.PI / 2, 0, zone.rot]}
+          receiveShadow
+        >
+          <planeGeometry args={[zone.width, zone.length]} />
+          <meshStandardMaterial color={zone.color} roughness={0.92} transparent opacity={0.74} />
+        </mesh>
+      ))}
 
       {/* Asphalt */}
       <mesh geometry={asphaltGeo} receiveShadow>
-        <meshStandardMaterial color="#2a2d34" roughness={0.85} metalness={0.05} />
+        <meshStandardMaterial color="#343944" roughness={0.82} metalness={0.04} />
       </mesh>
+
+      {/* Continuous border lines on both track edges. */}
+      {edgeLines.map((line) => (
+        <mesh
+          key={line.key}
+          position={[line.pos.x, line.pos.y + TRACK_DECAL_OFFSET, line.pos.z]}
+          rotation={[-Math.PI / 2, 0, line.rot]}
+        >
+          <planeGeometry args={[0.12, line.len]} />
+          <meshStandardMaterial color="#f8fafc" emissive="#f8fafc" emissiveIntensity={0.12} />
+        </mesh>
+      ))}
 
       {/* Center racing line */}
       {Array.from({ length: 80 }).map((_, i) => {
@@ -122,18 +232,26 @@ export function TrackModel() {
         const tan = curve.getTangentAt(t);
         const rot = Math.atan2(tan.x, tan.z);
         return (
-          <mesh key={`cl-${i}`} position={[p.x, p.y + TRACK_DECAL_OFFSET, p.z]} rotation={[-Math.PI / 2, 0, rot]}>
+          <mesh
+            key={`cl-${i}`}
+            position={[p.x, p.y + TRACK_DECAL_OFFSET, p.z]}
+            rotation={[-Math.PI / 2, 0, rot]}
+          >
             <planeGeometry args={[0.18, 1.4]} />
             <meshStandardMaterial color="#fafafa" emissive="#fafafa" emissiveIntensity={0.2} />
           </mesh>
         );
       })}
 
-      {/* Kerbs (red/white) along outer edge */}
+      {/* Kerbs (red/white) on both edges. */}
       {kerbs.map((k, i) => (
-        <mesh key={i} position={[k.pos.x, k.pos.y + TRACK_KERB_OFFSET, k.pos.z]} rotation={[-Math.PI / 2, 0, k.rot]}>
-          <planeGeometry args={[0.6, 1.4]} />
-          <meshStandardMaterial color={k.color} emissive={k.color} emissiveIntensity={0.25} />
+        <mesh
+          key={k.key}
+          position={[k.pos.x, k.pos.y + TRACK_KERB_OFFSET, k.pos.z]}
+          rotation={[-Math.PI / 2, 0, k.rot]}
+        >
+          <planeGeometry args={[0.85, 1.65]} />
+          <meshStandardMaterial color={k.color} emissive={k.color} emissiveIntensity={0.32} />
         </mesh>
       ))}
 
@@ -177,6 +295,29 @@ export function TrackModel() {
         </group>
       ))}
 
+      {/* Sponsor boards help the containment perimeter stand out from the spectator area. */}
+      {sponsorBoards.map((board) => (
+        <group
+          key={board.key}
+          position={[board.pos.x, board.pos.y, board.pos.z]}
+          rotation={[0, board.rot, 0]}
+        >
+          <mesh position={[0, 1.15, 0]} castShadow>
+            <boxGeometry args={[3.9, 1.05, 0.12]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.45} metalness={0.05} />
+          </mesh>
+          <Text
+            position={[0, 1.16, 0.07]}
+            fontSize={0.34}
+            color="#0f172a"
+            anchorX="center"
+            anchorY="middle"
+          >
+            {board.label}
+          </Text>
+        </group>
+      ))}
+
       {/* Start / finish line — checkered tiles laid across track width */}
       {(() => {
         const tiles = 16;
@@ -189,7 +330,11 @@ export function TrackModel() {
           return (
             <mesh
               key={`sf-${i}`}
-              position={[startPos.x + perpX * offset, startPos.y + TRACK_DECAL_OFFSET, startPos.z + perpZ * offset]}
+              position={[
+                startPos.x + perpX * offset,
+                startPos.y + TRACK_DECAL_OFFSET,
+                startPos.z + perpZ * offset,
+              ]}
               rotation={[-Math.PI / 2, 0, startRot]}
             >
               <planeGeometry args={[tileW, 1.2]} />
@@ -198,6 +343,130 @@ export function TrackModel() {
           );
         });
       })()}
+
+      {/* Start grid slots and gantry. */}
+      {(() => {
+        const rows = 6;
+        const laneOffset = TRACK_HALF_WIDTH * 0.32;
+        const forwardX = Math.sin(startRot);
+        const forwardZ = Math.cos(startRot);
+        const perpX = Math.cos(startRot);
+        const perpZ = -Math.sin(startRot);
+        return (
+          <group>
+            {Array.from({ length: rows }).map((_, row) =>
+              [-1, 1].map((side) => {
+                const back = 3.1 + row * 2.25;
+                const lateral = side * laneOffset;
+                const pos = new THREE.Vector3(
+                  startPos.x - forwardX * back + perpX * lateral,
+                  startPos.y + TRACK_DECAL_OFFSET,
+                  startPos.z - forwardZ * back + perpZ * lateral,
+                );
+                const slot = row * 2 + (side < 0 ? 1 : 2);
+                return (
+                  <group
+                    key={`grid-${slot}`}
+                    position={[pos.x, pos.y, pos.z]}
+                    rotation={[-Math.PI / 2, 0, startRot]}
+                  >
+                    <mesh>
+                      <planeGeometry args={[1.25, 1.75]} />
+                      <meshStandardMaterial
+                        color="#0f172a"
+                        emissive="#0f172a"
+                        emissiveIntensity={0.08}
+                      />
+                    </mesh>
+                    <mesh position={[0, 0, 0.01]}>
+                      <ringGeometry args={[0.34, 0.45, 24]} />
+                      <meshStandardMaterial
+                        color="#facc15"
+                        emissive="#facc15"
+                        emissiveIntensity={0.45}
+                      />
+                    </mesh>
+                  </group>
+                );
+              }),
+            )}
+            <group position={[startPos.x, startPos.y, startPos.z]} rotation={[0, startRot, 0]}>
+              {[-TRACK_HALF_WIDTH - 0.8, TRACK_HALF_WIDTH + 0.8].map((x) => (
+                <mesh key={`gantry-post-${x}`} position={[x, 2.2, 0]} castShadow>
+                  <boxGeometry args={[0.35, 4.4, 0.35]} />
+                  <meshStandardMaterial color="#e5e7eb" metalness={0.55} roughness={0.35} />
+                </mesh>
+              ))}
+              <mesh position={[0, 4.35, 0]} castShadow>
+                <boxGeometry args={[TRACK_HALF_WIDTH * 2 + 2.4, 1.15, 0.35]} />
+                <meshStandardMaterial color="#111827" emissive="#111827" emissiveIntensity={0.25} />
+              </mesh>
+              <Text
+                position={[0, 4.45, 0.22]}
+                fontSize={0.52}
+                color="#facc15"
+                anchorX="center"
+                anchorY="middle"
+              >
+                KARTODROMO RL 26A
+              </Text>
+              <Text
+                position={[0, 3.92, 0.23]}
+                fontSize={0.22}
+                color="#e2e8f0"
+                anchorX="center"
+                anchorY="middle"
+              >
+                START GRID
+              </Text>
+            </group>
+          </group>
+        );
+      })()}
+
+      {/* Large turn boards and chevrons. */}
+      {turnBoards.map((board) => (
+        <group
+          key={board.key}
+          position={[board.pos.x, board.pos.y, board.pos.z]}
+          rotation={[0, board.rot, 0]}
+        >
+          <mesh position={[0, 1.2, 0]} castShadow>
+            <boxGeometry args={[3.3, 1.2, 0.12]} />
+            <meshStandardMaterial
+              color={board.color}
+              emissive={board.color}
+              emissiveIntensity={0.35}
+            />
+          </mesh>
+          <Text
+            position={[0, 1.42, 0.08]}
+            fontSize={0.32}
+            color="#0f172a"
+            anchorX="center"
+            anchorY="middle"
+          >
+            {board.label}
+          </Text>
+          <Text
+            position={[0, 1.0, 0.08]}
+            fontSize={0.46}
+            color="#0f172a"
+            anchorX="center"
+            anchorY="middle"
+          >
+            {board.arrows}
+          </Text>
+          <mesh position={[-1.78, 0.65, 0]} castShadow>
+            <cylinderGeometry args={[0.04, 0.04, 1.3, 8]} />
+            <meshStandardMaterial color="#f8fafc" metalness={0.45} roughness={0.35} />
+          </mesh>
+          <mesh position={[1.78, 0.65, 0]} castShadow>
+            <cylinderGeometry args={[0.04, 0.04, 1.3, 8]} />
+            <meshStandardMaterial color="#f8fafc" metalness={0.45} roughness={0.35} />
+          </mesh>
+        </group>
+      ))}
 
       {/* Checkpoint flag posts (visible markers along the track) */}
       {CHECKPOINTS.map((tt, i) => {

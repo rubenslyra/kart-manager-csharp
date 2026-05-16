@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
+import { Text } from "@react-three/drei";
 import { Color, InstancedMesh, MeshStandardMaterial, Object3D } from "three";
 import { perfStore } from "./perfStore";
 import { usePerf } from "./perfStore";
@@ -15,6 +16,7 @@ import { TRACK_CONFIG } from "./track";
 const ROWS = 20;
 const COLS = 100;
 const COUNT = ROWS * COLS; // 2000
+const TRACK_CENTER = { x: 15, z: 31 };
 
 const PALETTE = [
   "#e11d48",
@@ -72,8 +74,8 @@ export function Grandstand() {
 
   const anchor = TRACK_CONFIG.assets.bleachers;
   const lookAt = useMemo(() => {
-    const dx = 0 - anchor.x;
-    const dz = 0 - anchor.z;
+    const dx = TRACK_CENTER.x - anchor.x;
+    const dz = TRACK_CENTER.z - anchor.z;
     return Math.atan2(dx, dz);
   }, [anchor]);
 
@@ -148,28 +150,59 @@ export function Grandstand() {
       {/* Base platform */}
       <mesh position={[0, 0, -standDepth / 2 + 0.5]} receiveShadow>
         <boxGeometry args={[standWidth, 0.4, standDepth]} />
-        <meshStandardMaterial color="#0f172a" roughness={0.9} />
+        <meshStandardMaterial color="#172033" roughness={0.9} />
       </mesh>
 
       {/* Bleacher steps */}
       {Array.from({ length: ROWS }).map((_, r) => (
         <mesh key={r} position={[0, 0.25 + r * 0.55, -r * 0.95]} receiveShadow>
           <boxGeometry args={[standWidth, 0.5, 0.95]} />
-          <meshStandardMaterial color={r % 2 === 0 ? "#1e293b" : "#0b1220"} roughness={0.85} />
+          <meshStandardMaterial color={r % 2 === 0 ? "#334155" : "#1f2937"} roughness={0.82} />
         </mesh>
       ))}
 
       {/* Back wall */}
       <mesh position={[0, ROWS * 0.3 + 1.5, -ROWS * 0.95 - 0.5]} castShadow>
         <boxGeometry args={[standWidth + 0.5, ROWS * 0.55 + 4, 0.4]} />
-        <meshStandardMaterial color="#111827" />
+        <meshStandardMaterial color="#0f172a" emissive="#0f172a" emissiveIntensity={0.15} />
       </mesh>
 
       {/* Sponsor sign */}
       <mesh position={[0, ROWS * 0.55 + 1.2, -ROWS * 0.95 - 0.3]}>
-        <planeGeometry args={[14, 2]} />
-        <meshStandardMaterial color="#1d4ed8" emissive="#1d4ed8" emissiveIntensity={0.6} />
+        <planeGeometry args={[26, 2.4]} />
+        <meshStandardMaterial color="#facc15" emissive="#facc15" emissiveIntensity={0.55} />
       </mesh>
+      <Text
+        position={[0, ROWS * 0.55 + 1.2, -ROWS * 0.95 - 0.05]}
+        fontSize={0.85}
+        color="#111827"
+        anchorX="center"
+        anchorY="middle"
+      >
+        ARQUIBANCADA RL KART
+      </Text>
+
+      {/* Roof and flags to make the spectator sector visible from the opening view. */}
+      <mesh position={[0, ROWS * 0.55 + 3.25, -standDepth / 2 + 0.2]} castShadow>
+        <boxGeometry args={[standWidth + 2, 0.28, standDepth + 2.2]} />
+        <meshStandardMaterial color="#e5e7eb" roughness={0.58} metalness={0.22} />
+      </mesh>
+      {[-standWidth / 2 + 6, -standWidth / 4, 0, standWidth / 4, standWidth / 2 - 6].map((x, i) => (
+        <group key={`flag-${i}`} position={[x, ROWS * 0.55 + 4.1, 1.1]}>
+          <mesh position={[0, 0.65, 0]}>
+            <cylinderGeometry args={[0.04, 0.04, 1.3, 8]} />
+            <meshStandardMaterial color="#f8fafc" metalness={0.65} roughness={0.3} />
+          </mesh>
+          <mesh position={[0.42, 1.02, 0]} rotation={[0, 0, -0.1]}>
+            <planeGeometry args={[0.85, 0.45]} />
+            <meshStandardMaterial
+              color={PALETTE[(i * 3) % PALETTE.length]}
+              emissive={PALETTE[(i * 3) % PALETTE.length]}
+              emissiveIntensity={0.25}
+            />
+          </mesh>
+        </group>
+      ))}
 
       {crowdOn && (
         <>

@@ -343,8 +343,9 @@ export function SimulatorScene({ fullscreen = false }: Props) {
               {/* Fallback camera (used by OrbitControls and as default before split cams mount) */}
               <PerspectiveCamera
                 makeDefault
-                position={[-25, 25, -25]}
-                fov={50}
+                position={[18, 82, 132]}
+                fov={46}
+                onUpdate={(c) => c.lookAt(15, 0, 31)}
                 ref={(c) => {
                   fallbackCamRef.current = c as ThreePerspectiveCamera | null;
                 }}
@@ -355,7 +356,7 @@ export function SimulatorScene({ fullscreen = false }: Props) {
                 target={[15, 0, 31]}
                 maxPolarAngle={Math.PI / 2.1}
                 minDistance={8}
-                maxDistance={300}
+                maxDistance={360}
               />
 
               <Sky sunPosition={[100, 40, 100]} turbidity={6} rayleigh={2} />

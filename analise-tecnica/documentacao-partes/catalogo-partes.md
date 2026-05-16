@@ -62,8 +62,22 @@
   - A altura de contato deve vir da curva central da pista, via `trackCurve()`/`nearestOnTrack()`.
   - O asfalto deve ser desenhado no mesmo plano da superficie de contato, sem offset vertical positivo.
   - Linhas, zebras e marcadores podem usar apenas offsets pequenos de decalque para evitar z-fighting.
+  - Zonas de escape pintadas, slots de grid e bordas visuais tambem devem permanecer como decalques sem volume trafegavel.
   - Player, IA, fantasma e replay devem usar a mesma referencia de altura.
   - Pads trafegaveis, como boxes, nao devem ter topo acima do plano de contato dos pneus.
+
+### Sinalizacao visual da pista
+
+- Funcao: tornar layout, curvas, grid e setores de torcida reconheciveis ja na camera inicial.
+- Codigo:
+  - `src/components/simulator/SimulatorScene.tsx`
+  - `src/components/simulator/TrackModel.tsx`
+  - `src/components/simulator/Grandstand.tsx`
+- Requisitos:
+  - Camera livre inicial deve abrir em vista alta e mirar o centro util do circuito.
+  - Grid, portal de largada, placas de curva e chevrons devem ficar legiveis sem interferir na area trafegavel.
+  - Elementos verticais de sinalizacao devem ficar fora da faixa de corrida ou sobre o portal.
+  - Arquibancada deve apontar para o centro visual da pista e manter separacao clara por barreiras/cercas.
 
 ### Contencao de seguranca da pista
 
@@ -73,6 +87,7 @@
   - Barreiras de pneus devem ficar antes das cercas externas.
   - Muretas baixas devem proteger a base da cerca.
   - Cercas/rede de contencao devem ficar fora da area trafegavel e entre pista/torcida.
+  - Placas de patrocinio e orientacao podem reforcar visualmente o perimetro, desde que fiquem fora da area trafegavel.
   - Protecoes devem acompanhar a elevacao da pista para nao flutuar em rampas.
 
 ## Motor E Testes
