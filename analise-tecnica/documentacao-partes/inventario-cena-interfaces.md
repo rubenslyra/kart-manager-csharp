@@ -82,14 +82,15 @@ Este documento registra elementos do ambiente 3D que nao sao partes fisicas do k
   - Nao adicionar a sala acustica como modulo do kart.
   - Preservar labels, cabos, raio-X e auditoria como recursos dos modulos do kart.
 
-### Painel externo `Teste Motor Wankel`
+### Monitor/balcao `Wankel Test Bench`
 
 - Codigo:
+  - `src/components/realsim/Workshop.tsx`
   - `src/components/realsim/RealSimUI.tsx`
   - `src/components/realsim/RealSimulator.tsx`
   - `src/components/realsim/hooks/useWankelTestAudio.ts`
   - `src/components/realsim/engineTest.ts`
-- Funcao: controlar o teste local da bancada Wankel na sala acustica.
+- Funcao: controlar e monitorar o teste local da bancada Wankel a partir de um monitor tecnico posicionado em um balcao da oficina.
 - Dados locais:
   - `running`
   - `throttle`
@@ -99,12 +100,12 @@ Este documento registra elementos do ambiente 3D que nao sao partes fisicas do k
   - `load`
   - `audioEnabled`
 - Comportamento:
-  - Botao `Ligar bancada` inicia o teste local.
-  - Botao `Audio ON/OFF` inicia ou para o som do motor da bancada.
-  - Slider de aceleracao controla RPM, carga, temperatura e timbre do audio.
-  - Leituras de RPM, saude, temperatura e carga aparecem fora da cena, em painel de controle.
+  - Monitor na cena usa area dominante para informacoes, telemetria, graficos simples e dados de stress/capacidade.
+  - Faixa lateral do monitor contem controles touchscreen reais, incluindo ligar/parar, audio, stress, capacidade e aceleracao.
+  - Controles touchscreen chamam os mesmos estados locais do teste Wankel usados pela sala acustica.
+  - No modo fullscreen da Oficina, o antigo painel externo de teste fica oculto para evitar controles fora da area de trabalho.
   - A sala acustica reflete o estado do teste em luzes, leitura interna e bancada.
-  - O audio usa o MP3 `wankel-test-room-engine.mp3` como camada principal e mantem o sintetizador Web Audio como apoio/fallback.
+  - O audio usa o MP3 `wankel-test-room-engine.mp3` como camada principal conectada ao grafo Web Audio e mantem o sintetizador Web Audio como apoio/fallback.
   - O mesmo gesto de audio habilita o riser de apresentacao do carrinho quando o checklist fica completo.
 - Requisito tecnico:
   - O teste da bancada nao altera `KartTelemetry`.

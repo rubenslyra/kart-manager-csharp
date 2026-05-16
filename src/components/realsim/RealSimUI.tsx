@@ -30,6 +30,7 @@ interface Props {
   toggleEngineAudio: () => void;
   presentationAudioEnabled: boolean;
   playPresentationAudio: () => void;
+  showEngineOverlay?: boolean;
 }
 
 const stateColor: Record<KartTelemetry["vehicleState"], string> = {
@@ -71,6 +72,7 @@ export function RealSimUI({
   toggleEngineAudio,
   presentationAudioEnabled,
   playPresentationAudio,
+  showEngineOverlay = true,
 }: Props) {
   const m = telemetry.modules;
   const checklist = buildChecklist(telemetry);
@@ -82,7 +84,9 @@ export function RealSimUI({
       <div className="pointer-events-auto absolute left-3 top-3 z-30 flex flex-wrap items-center gap-2">
         <div className="corner-cut border border-primary/40 bg-background/80 px-3 py-2 font-mono text-[10px] uppercase tracking-widest backdrop-blur-sm">
           <span className="text-muted-foreground">Estado:</span>{" "}
-          <span className={`font-bold ${stateColor[telemetry.vehicleState]}`}>{telemetry.vehicleState}</span>
+          <span className={`font-bold ${stateColor[telemetry.vehicleState]}`}>
+            {telemetry.vehicleState}
+          </span>
         </div>
         <div className="corner-cut flex gap-1 border border-border bg-background/80 p-1 font-mono text-[10px] uppercase tracking-widest backdrop-blur-sm">
           <button
@@ -195,16 +199,26 @@ export function RealSimUI({
       </div>
       {/* Telemetry panel */}
       <div className="pointer-events-auto absolute right-3 top-3 z-30 w-72 corner-cut border border-primary/40 bg-background/85 p-3 font-mono text-[10px] backdrop-blur-sm">
-        <div className="mb-2 text-[9px] uppercase tracking-widest text-primary">Telemetria Técnica</div>
+        <div className="mb-2 text-[9px] uppercase tracking-widest text-primary">
+          Telemetria Técnica
+        </div>
         <Row k="Velocidade" v={`${(telemetry.speedKmh ?? 0).toFixed(1)} km/h`} />
         <Row k="Marcha" v={m.gearbox.currentGear} />
-        <Row k="Bateria" v={`${m.battery.level.toFixed(0)}%  ${m.battery.voltage.toFixed(1)}V`} tone={m.battery.status} />
+        <Row
+          k="Bateria"
+          v={`${m.battery.level.toFixed(0)}%  ${m.battery.voltage.toFixed(1)}V`}
+          tone={m.battery.status}
+        />
         <Row k="Temp. Bateria" v={`${m.battery.temperature.toFixed(0)} °C`} />
         <Row k="Freio (pedal)" v={`${(m.brakes.pedalPressure * 100).toFixed(0)}%`} />
         <Row k="Disco freio" v={`${m.brakes.discTemperature.toFixed(0)} °C`} />
         <Row k="Regen" v={`${(m.brakes.regenLevel * 100).toFixed(0)}%`} />
         <Row k="Direção" v={`${m.steering.angle.toFixed(1)}°`} />
-        <Row k="Ignição" v={m.ignition.enabled ? "ON" : "OFF"} tone={m.ignition.enabled ? "ok" : undefined} />
+        <Row
+          k="Ignição"
+          v={m.ignition.enabled ? "ON" : "OFF"}
+          tone={m.ignition.enabled ? "ok" : undefined}
+        />
         <Row
           k="Módulos"
           v={
@@ -223,63 +237,83 @@ export function RealSimUI({
       </div>
 
       {/* Wankel bench controls */}
-      <div className="pointer-events-auto absolute left-3 top-24 z-30 w-80 corner-cut border border-accent/50 bg-background/85 p-3 font-mono text-[10px] backdrop-blur-sm">
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <div className="text-[9px] uppercase tracking-widest text-accent">Teste Motor Wankel</div>
-          <span className={engineTest.running ? "text-success" : "text-muted-foreground"}>
-            {engineTest.running ? "RODANDO" : "STANDBY"}
-          </span>
+      {showEngineOverlay && (
+        <div className="pointer-events-auto absolute left-3 top-24 z-30 w-80 corner-cut border border-accent/50 bg-background/85 p-3 font-mono text-[10px] backdrop-blur-sm">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <div className="text-[9px] uppercase tracking-widest text-accent">
+              Teste Motor Wankel
+            </div>
+            <span className={engineTest.running ? "text-success" : "text-muted-foreground"}>
+              {engineTest.running ? "RODANDO" : "STANDBY"}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-1">
+            <button
+              onClick={() => setEngineRunning(!engineTest.running)}
+              className={`corner-cut px-2 py-1 uppercase tracking-widest ${
+                engineTest.running
+                  ? "bg-warning text-background"
+                  : "border border-border text-muted-foreground hover:text-accent"
+              }`}
+            >
+              {engineTest.running ? "Parar teste" : "Ligar bancada"}
+            </button>
+            <button
+              onClick={toggleEngineAudio}
+              className={`corner-cut px-2 py-1 uppercase tracking-widest ${
+                engineTest.audioEnabled
+                  ? "bg-accent text-accent-foreground"
+                  : "border border-border text-muted-foreground hover:text-accent"
+              }`}
+            >
+              Audio {engineTest.audioEnabled ? "ON" : "OFF"}
+            </button>
+          </div>
+          <label className="mt-2 block text-muted-foreground">
+            Aceleracao ({(engineTest.throttle * 100).toFixed(0)}%)
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={engineTest.throttle}
+              onChange={(e) => setEngineThrottle(Number(e.target.value))}
+              className="w-full"
+            />
+          </label>
+          <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
+            <Row
+              k="RPM"
+              v={engineTest.running ? engineTest.rpm.toFixed(0) : "0"}
+              tone={engineTest.running ? "ok" : undefined}
+            />
+            <Row
+              k="Saude"
+              v={`${engineTest.health.toFixed(0)}%`}
+              tone={engineTest.health < 70 ? "warning" : "ok"}
+            />
+            <Row
+              k="Temp."
+              v={`${engineTest.temperature.toFixed(0)} °C`}
+              tone={engineTest.temperature > 95 ? "warning" : undefined}
+            />
+            <Row k="Carga" v={`${(engineTest.load * 100).toFixed(0)}%`} />
+          </div>
         </div>
-        <div className="grid grid-cols-2 gap-1">
-          <button
-            onClick={() => setEngineRunning(!engineTest.running)}
-            className={`corner-cut px-2 py-1 uppercase tracking-widest ${
-              engineTest.running
-                ? "bg-warning text-background"
-                : "border border-border text-muted-foreground hover:text-accent"
-            }`}
-          >
-            {engineTest.running ? "Parar teste" : "Ligar bancada"}
-          </button>
-          <button
-            onClick={toggleEngineAudio}
-            className={`corner-cut px-2 py-1 uppercase tracking-widest ${
-              engineTest.audioEnabled
-                ? "bg-accent text-accent-foreground"
-                : "border border-border text-muted-foreground hover:text-accent"
-            }`}
-          >
-            Audio {engineTest.audioEnabled ? "ON" : "OFF"}
-          </button>
-        </div>
-        <label className="mt-2 block text-muted-foreground">
-          Aceleracao ({(engineTest.throttle * 100).toFixed(0)}%)
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={engineTest.throttle}
-            onChange={(e) => setEngineThrottle(Number(e.target.value))}
-            className="w-full"
-          />
-        </label>
-        <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
-          <Row k="RPM" v={engineTest.running ? engineTest.rpm.toFixed(0) : "0"} tone={engineTest.running ? "ok" : undefined} />
-          <Row k="Saude" v={`${engineTest.health.toFixed(0)}%`} tone={engineTest.health < 70 ? "warning" : "ok"} />
-          <Row k="Temp." v={`${engineTest.temperature.toFixed(0)} °C`} tone={engineTest.temperature > 95 ? "warning" : undefined} />
-          <Row k="Carga" v={`${(engineTest.load * 100).toFixed(0)}%`} />
-        </div>
-      </div>
+      )}
 
       {/* Checklist */}
       <div className="pointer-events-auto absolute right-3 bottom-3 z-30 w-72 corner-cut border border-primary/40 bg-background/85 p-3 font-mono text-[10px] backdrop-blur-sm">
-        <div className="mb-2 text-[9px] uppercase tracking-widest text-primary">Checklist de Saída</div>
+        <div className="mb-2 text-[9px] uppercase tracking-widest text-primary">
+          Checklist de Saída
+        </div>
         <ul className="space-y-1">
           {checklist.map((c) => (
             <li key={c.id} className="flex items-center justify-between">
               <span className="text-muted-foreground">{c.label}</span>
-              <span className={c.ok ? "text-success" : "text-destructive"}>{c.ok ? "OK" : "✕"}</span>
+              <span className={c.ok ? "text-success" : "text-destructive"}>
+                {c.ok ? "OK" : "✕"}
+              </span>
             </li>
           ))}
         </ul>
@@ -319,7 +353,9 @@ export function RealSimUI({
                   key={k}
                   onClick={() => mockBridge.loadModule(k, !loaded)}
                   className={`corner-cut px-2 py-1 uppercase tracking-widest ${
-                    loaded ? "bg-success text-background" : "border border-border text-muted-foreground hover:text-primary"
+                    loaded
+                      ? "bg-success text-background"
+                      : "border border-border text-muted-foreground hover:text-primary"
                   }`}
                 >
                   {loaded ? "✓ " : ""}
@@ -338,9 +374,9 @@ export function RealSimUI({
             <button
               onClick={() =>
                 mockBridge.setGear(
-                  ((["P", "R", "N", "D", "B"] as const)[
+                  (["P", "R", "N", "D", "B"] as const)[
                     (["P", "R", "N", "D", "B"].indexOf(m.gearbox.currentGear) + 1) % 5
-                  ]),
+                  ],
                 )
               }
               className="corner-cut border border-border px-2 py-1 uppercase tracking-widest text-muted-foreground hover:text-primary"

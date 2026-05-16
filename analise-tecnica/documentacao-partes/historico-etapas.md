@@ -191,3 +191,21 @@
   - Item redundante `Simulador` foi removido do menu principal.
   - Arena e oficina passaram a abrir como experiencias full body.
   - Ambas receberam botao de retorno para home com confirmacao via dialogo padronizado.
+
+### Etapa 16 - Monitor de teste Wankel e navegacao da oficina
+
+- Arquivos principais:
+  - `src/components/realsim/CameraController.tsx`
+  - `src/components/realsim/RealSimulator.tsx`
+  - `src/components/realsim/RealSimUI.tsx`
+  - `src/components/realsim/Workshop.tsx`
+  - `src/components/realsim/hooks/useWankelTestAudio.ts`
+  - `analise-tecnica/documentacao-partes/inventario-cena-interfaces.md`
+- Alteracoes:
+  - Oficina recebeu zoom por scroll do mouse no Canvas.
+  - Vista inicial fullscreen da oficina foi aberta para reduzir aproximacao excessiva.
+  - Criado monitor/balcao `Wankel Test Bench` dentro da cena.
+  - Controles Wankel em fullscreen migraram do overlay externo para botoes touchscreen no monitor.
+  - Monitor exibe RPM, temperatura, carga, saude, audio, aceleracao e grafico simples de teste.
+  - Adicionados presets touchscreen de stress e capacidade.
+  - Audio Wankel passou a conectar o MP3 ao grafo Web Audio com gain dedicado.

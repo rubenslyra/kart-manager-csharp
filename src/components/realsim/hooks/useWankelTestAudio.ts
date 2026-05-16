@@ -16,6 +16,8 @@ export function useWankelTestAudio({ running, throttle, health }: UseWankelTestA
   const pulseGainRef = useRef<GainNode | null>(null);
   const filterRef = useRef<BiquadFilterNode | null>(null);
   const testRoomEngineRef = useRef<HTMLAudioElement | null>(null);
+  const testRoomSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const testRoomGainRef = useRef<GainNode | null>(null);
   const runningRef = useRef(running);
   const throttleRef = useRef(throttle);
   const healthRef = useRef(health);
@@ -50,6 +52,8 @@ export function useWankelTestAudio({ running, throttle, health }: UseWankelTestA
     pulseGainRef.current = null;
     filterRef.current = null;
     testRoomEngineRef.current = null;
+    testRoomSourceRef.current = null;
+    testRoomGainRef.current = null;
   }, []);
 
   const start = useCallback(() => {
@@ -74,8 +78,14 @@ export function useWankelTestAudio({ running, throttle, health }: UseWankelTestA
     const testRoomEngine = new Audio(AUDIO_ASSETS.wankelTestRoomEngine);
     testRoomEngine.loop = true;
     testRoomEngine.preload = "auto";
-    testRoomEngine.volume = 0;
+    testRoomEngine.volume = 1;
     testRoomEngineRef.current = testRoomEngine;
+    const testRoomSource = ctx.createMediaElementSource(testRoomEngine);
+    const testRoomGain = ctx.createGain();
+    testRoomGain.gain.value = 0;
+    testRoomSource.connect(testRoomGain).connect(master);
+    testRoomSourceRef.current = testRoomSource;
+    testRoomGainRef.current = testRoomGain;
     void testRoomEngine.play().catch(() => undefined);
 
     const filter = ctx.createBiquadFilter();
@@ -133,7 +143,7 @@ export function useWankelTestAudio({ running, throttle, health }: UseWankelTestA
       filterRef.current?.frequency.setTargetAtTime(cutoff, now, 0.12);
 
       if (testRoomEngineRef.current) {
-        testRoomEngineRef.current.volume = on ? 0.16 + t * 0.54 : 0;
+        testRoomGainRef.current?.gain.setTargetAtTime(on ? 0.24 + t * 0.76 : 0, now, 0.08);
         testRoomEngineRef.current.playbackRate = on ? 0.86 + t * 0.32 : 0.86;
       }
     };

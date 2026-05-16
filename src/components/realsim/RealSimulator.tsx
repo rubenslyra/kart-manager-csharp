@@ -84,14 +84,25 @@ export function RealSimulator({ fullscreen = false }: RealSimulatorProps) {
         gl={{ antialias: true, powerPreference: "high-performance" }}
         camera={
           fullscreen
-            ? { position: [4.15, 1.9, 4.55], fov: 34 }
+            ? { position: [5.3, 2.2, 5.85], fov: 40 }
             : { position: [2.6, 1.6, 2.8], fov: 45 }
         }
       >
         <color attach="background" args={["#0d1826"]} />
         <fog attach="fog" args={["#0d1826", 18, 38]} />
         <Suspense fallback={null}>
-          <Workshop telemetry={ext.telemetry} engineTest={engineTest} />
+          <Workshop
+            telemetry={ext.telemetry}
+            engineTest={engineTest}
+            engineControls={{
+              setRunning: setEngineRunning,
+              setThrottle: setEngineThrottle,
+              toggleAudio: () => {
+                presentationAudio.start();
+                audio.start();
+              },
+            }}
+          />
           <BackgroundMonitors telemetry={ext.telemetry} />
           <RealKart telemetry={ext.telemetry} focus={focus} />
           <Wiring telemetry={ext.telemetry} focus={focus} visible={showWiring || xray} />
@@ -129,6 +140,7 @@ export function RealSimulator({ fullscreen = false }: RealSimulatorProps) {
         }}
         presentationAudioEnabled={presentationAudio.enabled}
         playPresentationAudio={presentationAudio.play}
+        showEngineOverlay={!fullscreen}
       />
       <AuditLog events={audit.events} onClear={audit.clear} />
       <DllImportPanel />

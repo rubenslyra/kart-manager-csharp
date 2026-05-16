@@ -5,20 +5,23 @@ Aberta em: 2026-05-16
 
 ## Titulo
 
-Corrigir escala e enquadramento da oficina em tela cheia
+Melhorar navegacao da oficina e recriar controles de teste do motor
 
 ## Objetivo
 
-Resolver o problema visual em que a sala e o espaco de trabalho da oficina parecem encolhidos apos a mudanca para tela full body. A oficina deve ocupar melhor a tela, com sala, bancada, kart e area de trabalho escalados/enquadrados de forma proporcional ao novo layout.
+Melhorar a experiencia da Oficina em tela cheia: permitir zoom por scroll do mouse, corrigir o zoom inicial que ainda parece excessivo, revisar o som da sala de motor Wankel e substituir os controles atuais do teste por um monitor/balcao dedicado com informacoes, telemetria, graficos e botoes touchscreen.
 
 ## Escopo
 
-- Investigar por que o container full body cresceu mas a cena interna da oficina nao acompanhou.
-- Revisar `RealSimulator`, camera inicial, controles de camera e dimensoes da cena da oficina.
-- Ajustar escala/enquadramento da oficina para o modo `fullscreen`.
-- Preservar comportamento da oficina quando usada sem `fullscreen`.
-- Preservar UI existente: checklist, auditoria, importacao de DLL, foco de cena, raio-X, wiring e teste Wankel.
-- Nao alterar arena de corrida, home ou navegacao nesta tarefa.
+- Adicionar controle de zoom por scroll do mouse na Oficina, semelhante ao comportamento da Arena.
+- Reduzir/ajustar o zoom inicial ao abrir `Oficina`.
+- Revisar por que o som do motor Wankel/sala de motor nao esta audivel.
+- Substituir a forma atual dos controles de teste Wankel quando estiverem fora do alcance/fora da area util.
+- Criar um monitor de teste em um balcao:
+  - 80% da tela com informacoes, telemetria, graficos e dados pertinentes a stress/capacidade do motor;
+  - 20% da tela com controles touchscreen, incluindo aceleracao, ligar/parar, audio e testes de stress/capacidade.
+- Preservar checklist, importacao de DLL, auditoria, focos, labels, wiring e demais controles da Oficina.
+- Nao alterar Arena, home ou navegacao global nesta tarefa.
 
 ## Subtarefas
 
@@ -38,106 +41,158 @@ Concluido em 2026-05-16.
 - Estado inicial do git:
   - Branch `main`.
   - `analise-tecnica/tarefas/tarefa-atual.md` modificado pela abertura da tarefa.
-  - `sounds-trilha/` permanece nao rastreado e fora do escopo.
-- `src/routes/simulador-real.tsx`
-  - A rota ja usa `RealSimulator fullscreen`.
-  - O shell da rota esta full body (`min-h-screen`) e tem apenas overlay superior com `ConfirmHomeExit` e titulo `Oficina`.
-  - Portanto o problema nao esta no shell da rota, mas no conteudo/camera da experiencia.
-- `src/components/realsim/RealSimulator.tsx`
-  - A prop `fullscreen` hoje muda apenas a classe do container:
-    - fullscreen: `relative min-h-screen w-full overflow-hidden bg-card`.
-    - nao-fullscreen: `h-[80vh] min-h-[640px] ... corner-cut border ...`.
-  - O `Canvas` usa a mesma camera nos dois modos:
-    - `camera={{ position: [2.6, 1.6, 2.8], fov: 45 }}`.
-  - A cena interna tambem e a mesma: `Workshop`, `BackgroundMonitors`, `RealKart`, labels, wiring, x-ray, `CameraController`, postfx.
-  - Conclusao: a tela cresceu, mas camera/fov/focos nao foram recalibrados para o novo aspect/area full body.
+  - Pastas nao rastreadas fora do escopo: `sounds-trilha/` e `chamado-correções-erros-prints/`.
 - `src/components/realsim/CameraController.tsx`
-  - Define `HOME = { pos: [2.6, 1.6, 2.8], look: [0, 0.45, 0] }`.
-  - No mount, a camera sempre copia `HOME.pos` e mira `HOME.look`.
-  - Focos de modulo (`battery`, `brakes`, `steering`, `ignition`, `gearbox`) e foco de cena `acousticRoom` usam posicoes fixas.
-  - Nao existe variante fullscreen para `HOME`, para o idle dolly, nem para o foco `acousticRoom`.
-  - Em telas largas, a mesma camera/fov mostra mais piso/parede lateral, fazendo sala/bancada/oficina parecerem menores.
-- `src/components/realsim/Workshop.tsx`
-  - A escala da oficina e em metros/blueprint:
-    - piso/grid: `40 x 40`;
-    - paredes laterais em `x = +/-15`, parede traseira em `z = -8`;
-    - kart e pad central perto de `[0,0,0]`;
-    - bancada em `[5,0,-1.5]`;
-    - sala acustica em `[7.2,0,3.9]`;
-    - racks em `[-5.5,0,2]` e `[5.5,0,2]`.
-  - A sala acustica em si tem dimensoes compactas (`2.6 x 2.1 x 1.8`), coerentes com a escala fisica, mas na vista fullscreen fica pequena por enquadramento.
-  - Alterar a escala fisica de `Workshop` inteiro pode distorcer relacao com o kart; o ajuste preferivel e camera/fov/enquadramento.
+  - Controla a camera por interpolacao para presets fixos (`HOME`, `HOME_FULLSCREEN`, `TARGETS`, `FULLSCREEN_TARGETS`).
+  - Nao existe controle de zoom por scroll.
+  - O idle dolly adiciona uma pequena oscilacao quando `focus === null`.
+  - A camera sempre se aproxima do `desiredPos`; portanto zoom pode ser implementado como deslocamento ao longo do vetor camera -> look target.
+  - O zoom deve respeitar limites para evitar entrar dentro do kart/sala ou afastar demais.
+- `src/components/realsim/RealSimulator.tsx`
+  - Mantem estado local do teste Wankel:
+    - `engineRunning`
+    - `engineThrottle`
+    - `engineTest`
+    - hook `useWankelTestAudio`.
+  - Passa `engineTest`, `setEngineRunning`, `setEngineThrottle`, `toggleEngineAudio` e afins para `RealSimUI`.
+  - Passa apenas `engineTest` para `Workshop`.
+  - Para criar controles reais dentro do monitor da cena, `Workshop` precisa receber callbacks de controle do teste.
 - `src/components/realsim/RealSimUI.tsx`
-  - Ha overlays absolutos:
-    - topo esquerdo;
-    - chips de foco no topo central;
-    - toggles no topo central;
-    - painel de telemetria no topo direito;
-    - controles Wankel no topo/esquerda;
-    - checklist no canto inferior direito;
-    - mock DLLs no canto inferior esquerdo.
-  - A camera fullscreen deve priorizar a area central livre, sem jogar sala/bancada diretamente atras desses paineis.
+  - Os controles Wankel atuais estao em overlay HTML absoluto:
+    - `left-3 top-24`
+    - largura `w-80`
+    - botoes `Ligar bancada`, `Audio ON/OFF`
+    - slider de aceleracao
+    - leituras de RPM, saude, temperatura e carga.
+  - Por ficarem no overlay da tela, podem parecer "dentro" ou "fora" da sala, mas nao estao associados ao balcao/monitor da cena.
+  - O novo monitor deve substituir esse painel, pelo menos na experiencia full body, para ficar no local correto da Oficina.
+- `src/components/realsim/Workshop.tsx`
+  - Ja possui `Workbench` em `[5.0, 0, -1.5]`.
+  - Sala acustica fica em `[7.2, 0, 3.9]`.
+  - Ja existe infra para telas na cena:
+    - `HoloCanvasPanel`
+    - `drawPanelShell`
+    - paineis `MODULES OK`, `LIVE TELEMETRY`, `DIAG 26A`.
+  - `HoloCanvasPanel` desenha canvas como textura, mas nao e interativo.
+  - Para botoes touchscreen reais, ha duas opcoes:
+    - meshes com `onClick`/`onPointer*` no R3F;
+    - `Html` do Drei acoplado ao monitor, com botoes HTML reais.
+  - Como o usuario pediu controles touchscreen, `Html` sobre o monitor e a opcao mais segura/ergonomica.
+- `src/components/realsim/hooks/useWankelTestAudio.ts`
+  - O hook cria um `AudioContext` para sintetizador/fallback.
+  - O MP3 `wankelTestRoomEngine` e criado como `HTMLAudioElement` separado:
+    - `new Audio(AUDIO_ASSETS.wankelTestRoomEngine)`
+    - `volume = 0`
+    - `play()`
+    - no tick, volume sobe apenas se `running`.
+  - Esse MP3 nao esta ligado ao `AudioContext`/`masterGain`.
+  - Possiveis causas de o som nao estar audivel:
+    - usuario habilita audio mas nao liga a bancada (`running=false`, volume fica 0);
+    - MP3 separado do `AudioContext` pode ser bloqueado/baixo/inconsistente dependendo do navegador;
+    - volume maximo atual do MP3 (`0.16 + throttle * 0.54`) pode ser insuficiente diante de outras camadas ou speakers;
+    - gesto do usuario e controle de `running` estao separados, entao a sequencia de uso pode nao ficar clara.
+- `src/components/audio/audioAssets.ts`
+  - O asset existe como `/sounds/wankel-test-room-engine.mp3`.
+  - Credito registrado em `AUDIO_CREDITS`.
+- `src/components/realsim/engineTest.ts`
+  - Dados disponiveis para monitor:
+    - `running`
+    - `throttle`
+    - `rpm`
+    - `health`
+    - `temperature`
+    - `load`
+    - `audioEnabled`
+  - Ainda nao ha conceito separado de modo de stress/capacidade; pode ser modelado inicialmente como presets de throttle/carga via controles.
+- Documentacao:
+  - `inventario-cena-interfaces.md` descreve o painel externo `Teste Motor Wankel`; ficara desatualizado quando esse controle migrar para monitor/balcao na cena.
 
 Conclusao do Research:
 
-- A causa raiz e que o container full body foi expandido, mas a camera principal e o controlador continuam usando o preset do card antigo.
-- A correcao deve criar presets visuais especificos para fullscreen:
-  - camera inicial mais proxima/adequada;
-  - fov menor ou diferente para aumentar presenca visual;
-  - `HOME`/focos calibrados para mostrar kart, bancada e sala com melhor ocupacao da tela;
-  - preservacao dos presets antigos no modo nao-fullscreen.
-- Nao ha necessidade de mexer na arena, home ou navegacao.
+- O zoom por scroll deve ser implementado no controle de camera da Oficina, preferencialmente escutando wheel apenas no canvas para nao interferir em sliders/inputs dos overlays.
+- A vista inicial da Oficina ainda pode estar mais aproximada que o desejado; o preset `HOME_FULLSCREEN` deve ser recuado/aberto em relacao ao ajuste anterior.
+- O painel Wankel atual deve ser substituido por um console no `Workshop`, alimentado pelo mesmo estado `engineTest` e com callbacks reais.
+- O audio Wankel deve ser tornado mais robusto conectando o MP3 ao `AudioContext` com `MediaElementSource` ou, no minimo, elevando/organizando o ganho e deixando claro que audio+running precisam estar ativos.
 
 ### Plan
 
 Plano para executar apos `[Concluir RPI]`:
 
-1. Parametrizar `CameraController`
-   - Adicionar prop opcional `fullscreen?: boolean`.
-   - Criar presets separados:
-     - `HOME_COMPACT` para o uso atual nao-fullscreen.
-     - `HOME_FULLSCREEN` para a rota full body.
-   - Ajustar `HOME_FULLSCREEN` com camera mais proxima e/ou mais baixa, mirando o miolo da oficina sem esconder a sala acustica.
-   - Manter os focos de modulo existentes por padrao.
-   - Se necessario, criar variante fullscreen apenas para `acousticRoom`, para que a sala nao pareca pequena quando o usuario escolhe esse foco.
+1. Zoom por scroll na Oficina
+   - Adicionar controle de zoom no `CameraController`.
+   - Escutar `wheel` no `gl.domElement` do Canvas, nao em `window`, para evitar conflito com inputs e overlays HTML.
+   - Aplicar zoom como deslocamento ao longo do vetor entre `desiredPos` e `desiredLook`.
+   - Definir limites conservadores:
+     - zoom in sem atravessar o kart/sala;
+     - zoom out sem perder totalmente a Oficina.
+   - Manter comportamento antigo quando nao houver scroll.
 
-2. Ajustar `RealSimulator`
-   - Passar `fullscreen` para `CameraController`.
-   - Ajustar `Canvas` camera conforme modo:
-     - modo normal preserva `[2.6, 1.6, 2.8]` e `fov 45`;
-     - modo fullscreen usa preset com `fov` menor ou posicao mais proxima.
-   - Manter `RealSimulator` nao-fullscreen funcional para usos futuros.
+2. Ajustar zoom inicial
+   - Recalibrar `HOME_FULLSCREEN` para abrir um pouco mais a cena da Oficina.
+   - Manter o modo nao-fullscreen preservado.
+   - Revisar tambem `FULLSCREEN_TARGETS.acousticRoom` para nao entrar colado demais na sala de motor.
 
-3. Ajustar composicao fullscreen da oficina
-   - Se camera/fov nao bastarem, adicionar grupo de cena `WorkshopStage` ou wrapper de `<group>` apenas para deslocamento visual fullscreen, sem alterar geometria fisica do kart.
-   - Preferencia: evitar escala global do `Workshop`, porque isso pode quebrar relacao visual entre sala, kart, labels e wiring.
-   - Se for necessario ampliar apenas contexto da oficina, aplicar deslocamento/composicao de camera antes de alterar escala.
+3. Novo monitor/balcao de teste Wankel
+   - Criar tipo de props de controle do motor, por exemplo `EngineTestControls`.
+   - Passar do `RealSimulator` para `Workshop`:
+     - `engineTest`
+     - `setEngineRunning`
+     - `setEngineThrottle`
+     - `toggleEngineAudio`
+   - Criar componente de cena no `Workshop`, por exemplo `EngineTestConsoleBench`.
+   - Posicionar esse balcao perto da sala acustica ou bancada, de forma visualmente acessivel.
+   - Compor o monitor com:
+     - base/balcao fisico;
+     - tela grande.
+   - Usar proporcao visual da tela:
+     - 80% area informativa com RPM, temperatura, carga, saude, audio, linhas/graficos simples;
+     - 20% area de controles touchscreen.
+   - Usar `Html` do Drei ou botoes R3F reais para os controles:
+     - ligar/parar;
+     - audio ON/OFF;
+     - aceleracao +/- ou presets;
+     - stress test;
+     - capacity test.
+   - Para "stress/capacidade" nesta primeira implementacao, usar presets que ajustam `running` e `throttle`:
+     - stress: liga teste e eleva throttle para faixa alta;
+     - capacity: liga teste e usa faixa media/alta estavel.
 
-4. Validacao
-   - Rodar `npm run build`.
-   - Rodar ESLint focado em `RealSimulator.tsx` e `CameraController.tsx`, se viavel.
-   - Validar `/simulador-real` por HTTP.
-   - Fazer revisao visual/manual no dev server:
-     - vista inicial da oficina ocupa melhor a tela;
-     - sala acustica e bancada nao ficam pequenas demais;
-     - paineis da UI nao encobrem o foco principal;
-     - focos de modulo continuam funcionando;
-     - foco `Sala Acustica` continua legivel.
+4. Remover/ocultar painel externo Wankel antigo
+   - Remover o bloco `Teste Motor Wankel` de `RealSimUI` ou esconder no modo fullscreen.
+   - Preferencia: esconder no modo fullscreen e manter fallback se `RealSimulator` for usado como card no futuro.
+   - Para isso, adicionar prop opcional em `RealSimUI`, por exemplo `showEngineOverlay?: boolean`.
+
+5. Audio Wankel
+   - Atualizar `useWankelTestAudio` para deixar o MP3 mais audivel e consistente.
+   - Preferencia tecnica:
+     - criar `MediaElementAudioSourceNode` para o MP3;
+     - conectar ao `masterGain`;
+     - controlar volume por gain node, nao apenas por `HTMLAudioElement.volume`.
+   - Se houver restricao de browser para reutilizacao do media element, garantir criacao unica por start/stop.
+   - Ajustar ganho para ser perceptivel quando `audioEnabled=true` e `running=true`.
+   - Manter fallback sintetizado.
+
+6. Documentacao
+   - Atualizar `analise-tecnica/tarefas/tarefa-atual.md` com implementacao/checks.
+   - Atualizar `analise-tecnica/documentacao-partes/inventario-cena-interfaces.md` substituindo "Painel externo Teste Motor Wankel" por monitor/balcao de teste.
+   - Atualizar `historico-etapas.md` se a mudanca visual/operacional for relevante para release.
 
 Escopo fora:
 
-- Nao alterar arena de corrida.
-- Nao mexer na home, menus ou CTAs.
-- Nao redimensionar fisicamente todos os objetos da oficina sem necessidade.
-- Nao formatar arquivos amplos fora dos pontos alterados.
+- Nao alterar Arena.
+- Nao alterar home/menu/navegacao global.
+- Nao criar fisica real de stress/capacidade do motor alem de presets visuais/operacionais.
+- Nao normalizar ou editar arquivos MP3.
+- Nao reformatar arquivos amplos fora dos pontos alterados.
 
 Criterios de aceite:
 
-- `/simulador-real` abre com oficina visualmente mais presente em tela cheia.
-- A sala acustica, bancada e area de trabalho aparecem em escala/enquadramento proporcional ao viewport.
-- O kart continua bem enquadrado na vista inicial.
-- Focos e overlays existentes continuam utilizaveis.
-- Modo nao-fullscreen de `RealSimulator` permanece sem regressao.
+- Scroll do mouse no Canvas da Oficina aproxima/afasta a camera.
+- Scroll sobre controles HTML/inputs nao deve alterar a camera de forma indevida.
+- Ao abrir a Oficina, o zoom inicial mostra melhor a sala, kart e area de trabalho.
+- Controles Wankel ficam acessiveis em monitor/balcao dentro da cena.
+- Monitor mostra dados de teste com area informativa dominante e controles touchscreen separados.
+- Audio do Wankel fica audivel quando audio esta ON e bancada/teste esta rodando.
 - Build passa.
 
 ### Status RPI
@@ -148,17 +203,22 @@ Concluido. Implementacao liberada por `[Concluir RPI]` e executada.
 
 Executada em 2026-05-16.
 
-- `CameraController` recebeu prop `fullscreen`.
-- Criado preset `HOME_FULLSCREEN` para aproximar e reenquadrar a oficina em tela cheia.
-- Criada variante fullscreen para o foco `acousticRoom`, melhorando a leitura da sala acustica.
-- `RealSimulator` passou a usar camera inicial especifica no modo fullscreen:
-  - posicao `[4.15, 1.9, 4.55]`;
-  - `fov` reduzido para `34`.
-- `RealSimulator` passa `fullscreen` para `CameraController`.
-- Container fullscreen da oficina trocado de `min-h-screen` para `h-screen min-h-[640px]`, garantindo altura explicita para o Canvas.
-- `Canvas` recebeu `className="h-full w-full"` para ocupar toda a altura do container fullscreen.
-- Modo nao-fullscreen preserva a camera anterior (`[2.6, 1.6, 2.8]`, `fov 45`).
-- Nao houve alteracao de escala fisica do `Workshop`, kart ou sala.
+- `CameraController` passou a escutar `wheel` no `gl.domElement` quando a Oficina esta em fullscreen.
+- Zoom por scroll agora desloca a camera ao longo do vetor camera -> alvo, com limites para evitar entrar na cena ou afastar demais.
+- `HOME_FULLSCREEN` foi recalibrado para abrir mais a vista inicial da Oficina.
+- Foco fullscreen da sala acustica foi levemente recuado.
+- `RealSimulator` passou a usar camera fullscreen mais aberta (`fov 40`) e encaminhar controles Wankel reais para `Workshop`.
+- `Workshop` recebeu `EngineTestControls` e criou o balcao/monitor `Wankel Test Bench`.
+- O monitor usa `Html` acoplado a cena para ter botoes touchscreen reais.
+- A tela do monitor prioriza dados/telemetria/grafico e reserva uma faixa lateral para controles:
+  - ligar/parar;
+  - audio;
+  - stress;
+  - capacidade;
+  - aceleracao.
+- `RealSimUI` recebeu `showEngineOverlay` e oculta o painel Wankel antigo no modo fullscreen.
+- `useWankelTestAudio` passou a conectar o MP3 `wankel-test-room-engine.mp3` ao grafo Web Audio via `MediaElementAudioSourceNode` e gain dedicado.
+- Documentacao do inventario de interfaces atualizada para substituir o painel externo pelo monitor/balcao.
 
 ## Arquivos Impactados
 
@@ -166,55 +226,57 @@ Executada em 2026-05-16.
 - Provaveis apos Research:
   - `src/components/realsim/RealSimulator.tsx`
   - `src/components/realsim/CameraController.tsx`
+  - `src/components/realsim/RealSimUI.tsx`
   - `src/components/realsim/Workshop.tsx`
-  - documentacao tecnica se o contrato visual da oficina mudar.
+  - `src/components/realsim/engineTest.ts`
+  - `src/components/realsim/hooks/useWankelTestAudio.ts`
+  - documentacao tecnica em `analise-tecnica/documentacao-partes/`.
 
 ## Riscos Tecnicos
 
-- Ampliar a cena e causar cortes em paineis ou overlays da oficina.
-- Corrigir fullscreen e quebrar a apresentacao nao-fullscreen do componente.
-- Mudar camera e prejudicar focos de modulo, sala acustica, labels ou raio-X.
-- Alterar escala fisica do kart/oficina de modo inconsistente com o blueprint.
-- Esbarrar em pendencias Prettier preexistentes nos arquivos de cena.
+- Conflitar controle de camera por scroll com inputs/sliders da UI.
+- Aproximar/afastar camera demais e prejudicar leitura de kart, sala acustica ou paineis.
+- Duplicar estado de teste Wankel entre overlay HTML e monitor 3D.
+- Criar controles 3D que parecam interativos, mas nao sejam clicaveis.
+- Mexer em audio e quebrar fallback ou gesto obrigatorio do navegador.
+- Aumentar complexidade visual da Oficina e cobrir informacoes existentes.
+- Esbarrar em pendencias Prettier preexistentes em arquivos amplos.
 
 ## Checks Planejados
 
 - `git status --short --branch` antes de alterar codigo.
-- Research de `RealSimulator`, `CameraController` e `Workshop`.
+- Research de camera, UI, som Wankel e geometria da oficina.
 - Revisao de diff apos implementacao.
 - `npm run build`.
 - Lint focado nos arquivos alterados quando viavel.
 - Validacao manual/HTTP de `/simulador-real`.
+- Validacao manual do zoom por scroll e controles/monitor do motor.
 
 ## Checks Executados
 
-- `git status --short --branch`: branch `main`, apenas `sounds-trilha/` nao rastreado no inicio da tarefa.
+- `git status --short --branch`: branch `main`, apenas pastas nao rastreadas `sounds-trilha/` e `chamado-correções-erros-prints/` no inicio da tarefa.
 - Research concluido nos arquivos:
-  - `src/routes/simulador-real.tsx`
-  - `src/components/realsim/RealSimulator.tsx`
   - `src/components/realsim/CameraController.tsx`
-  - `src/components/realsim/Workshop.tsx`
+  - `src/components/realsim/RealSimulator.tsx`
   - `src/components/realsim/RealSimUI.tsx`
+  - `src/components/realsim/Workshop.tsx`
+  - `src/components/realsim/hooks/useWankelTestAudio.ts`
+  - `src/components/realsim/engineTest.ts`
+  - `src/components/audio/audioAssets.ts`
+  - `analise-tecnica/documentacao-partes/inventario-cena-interfaces.md`
 - `[Concluir RPI]` recebido em 2026-05-16.
-- Implementacao de camera/enquadramento executada.
-- `npx eslint src\components\realsim\RealSimulator.tsx src\components\realsim\CameraController.tsx`: aprovado.
+- Implementacao de zoom, monitor/balcao e audio executada.
+- `npx eslint src\components\realsim\CameraController.tsx src\components\realsim\RealSimulator.tsx src\components\realsim\RealSimUI.tsx src\components\realsim\Workshop.tsx src\components\realsim\hooks\useWankelTestAudio.ts`: aprovado apos autofix focado.
 - `git diff --check`: aprovado, com apenas avisos LF/CRLF do Windows.
 - `npm run build`: aprovado.
   - Avisos residuais existentes/fora do escopo: `@import` de CSS fora da primeira posicao e chunks acima de 500 kB.
 - Validacao HTTP de `http://127.0.0.1:5173/simulador-real`: 200.
-- Correcao adicional apos analise visual do usuario:
-  - causa ajustada: `Canvas` fullscreen nao tinha altura explicita via pai;
-  - `RealSimulator` agora usa `h-screen` no modo fullscreen e `Canvas` com `h-full w-full`.
-- `npx eslint src\components\realsim\RealSimulator.tsx src\components\realsim\CameraController.tsx`: aprovado apos correcao adicional.
-- `git diff --check`: aprovado apos correcao adicional, com apenas avisos LF/CRLF do Windows.
-- `npm run build`: aprovado apos correcao adicional.
-  - Avisos residuais existentes/fora do escopo: `@import` de CSS fora da primeira posicao e chunks acima de 500 kB.
 - `[Finalizar Tarefa]` recebido em 2026-05-16.
-- Revisao final de diff: concluida, escopo restrito a `RealSimulator`, `CameraController` e registro da tarefa.
+- Revisao final de diff: concluida, escopo restrito a zoom da Oficina, monitor/balcao Wankel, audio Wankel e documentacao.
 - `git diff --check`: aprovado no fechamento, com apenas avisos LF/CRLF do Windows.
+- `npx eslint src\components\realsim\CameraController.tsx src\components\realsim\RealSimulator.tsx src\components\realsim\RealSimUI.tsx src\components\realsim\Workshop.tsx src\components\realsim\hooks\useWankelTestAudio.ts`: aprovado no fechamento.
 - `npm run build`: aprovado no fechamento.
   - Avisos residuais existentes/fora do escopo: `@import` de CSS fora da primeira posicao e chunks acima de 500 kB.
-- `npx eslint src\components\realsim\RealSimulator.tsx src\components\realsim\CameraController.tsx`: aprovado no fechamento.
 
 ## Fechamento
 
@@ -223,4 +285,4 @@ Executada em 2026-05-16.
 
 ## Notas Para Release
 
-- Oficina em tela cheia passa a usar melhor a area visivel, sem parecer encolhida.
+- Oficina ganha zoom por scroll e novo painel de teste do motor Wankel em formato de monitor/balcao.

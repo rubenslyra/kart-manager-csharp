@@ -1,19 +1,27 @@
 import { useMemo } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
-import { MeshReflectorMaterial, Text } from "@react-three/drei";
+import { Html, MeshReflectorMaterial, Text } from "@react-three/drei";
 import { EngineTestRig } from "./parts/MotorAssembly";
 import type { EngineTestState } from "./engineTest";
 import type { KartTelemetry, ModuleStatus } from "@/bridge/types";
 import { buildChecklist, canLeavePit } from "@/bridge/moduleValidator";
 
 /** Cinematic engineering workshop: reflective floor, hydraulic lift, racks, holo panels. */
+export interface EngineTestControls {
+  setRunning: (running: boolean) => void;
+  setThrottle: (throttle: number) => void;
+  toggleAudio: () => void;
+}
+
 export function Workshop({
   telemetry,
   engineTest,
+  engineControls,
 }: {
   telemetry: KartTelemetry;
   engineTest: EngineTestState;
+  engineControls?: EngineTestControls;
 }) {
   const stripeMatrices = useMemo(() => {
     const arr: THREE.Matrix4[] = [];
@@ -112,6 +120,11 @@ export function Workshop({
 
       <DiagnosticBay position={[-5.0, 0, -2]} telemetry={telemetry} />
       <Workbench position={[5.0, 0, -1.5]} />
+      <EngineTestConsoleBench
+        position={[5.85, 0, 1.05]}
+        engineTest={engineTest}
+        controls={engineControls}
+      />
       <AcousticEngineRoom position={[7.2, 0, 3.9]} engineTest={engineTest} />
       <ToolRack position={[-5.5, 0, 2]} />
       <ToolRack position={[5.5, 0, 2]} />
@@ -211,7 +224,11 @@ function AcousticEngineRoom({
         </mesh>
       ))}
       {foamPanels.map(([x, y, z, rot], i) => (
-        <mesh key={`foam-rib-${i}`} position={[x, y + 0.01, z + (rot === 0 ? 0.028 : 0)]} rotation={[0, rot, 0]}>
+        <mesh
+          key={`foam-rib-${i}`}
+          position={[x, y + 0.01, z + (rot === 0 ? 0.028 : 0)]}
+          rotation={[0, rot, 0]}
+        >
           <boxGeometry args={[0.26, 0.035, 0.024]} />
           <meshStandardMaterial color="#2d3b4a" roughness={0.94} metalness={0.08} />
         </mesh>
@@ -266,7 +283,11 @@ function AcousticEngineRoom({
         <meshStandardMaterial color="#111827" metalness={0.65} roughness={0.44} />
       </mesh>
       {[0, 1, 2, 3].map((i) => (
-        <mesh key={`exhaust-louver-${i}`} position={[0.62, 2.26, -0.27 + i * 0.045]} rotation={[0.4, 0, 0]}>
+        <mesh
+          key={`exhaust-louver-${i}`}
+          position={[0.62, 2.26, -0.27 + i * 0.045]}
+          rotation={[0.4, 0, 0]}
+        >
           <boxGeometry args={[0.2, 0.012, 0.018]} />
           <meshStandardMaterial color="#8da2b8" metalness={0.8} roughness={0.24} />
         </mesh>
@@ -280,10 +301,22 @@ function AcousticEngineRoom({
         <planeGeometry args={[1.25, 0.28]} />
         <meshBasicMaterial color="#0c2236" />
       </mesh>
-      <Text position={[0, 1.68, 0.91]} rotation={[0, Math.PI, 0]} fontSize={0.07} color="#9ed8ff" anchorX="center">
+      <Text
+        position={[0, 1.68, 0.91]}
+        rotation={[0, Math.PI, 0]}
+        fontSize={0.07}
+        color="#9ed8ff"
+        anchorX="center"
+      >
         SALA ACUSTICA · TESTE MOTOR WANKEL
       </Text>
-      <Text position={[0, 1.54, 0.91]} rotation={[0, Math.PI, 0]} fontSize={0.045} color="#ffb340" anchorX="center">
+      <Text
+        position={[0, 1.54, 0.91]}
+        rotation={[0, Math.PI, 0]}
+        fontSize={0.045}
+        color="#ffb340"
+        anchorX="center"
+      >
         ISOLAMENTO SONORO · DINAMOMETRO · EXAUSTAO
       </Text>
 
@@ -291,7 +324,13 @@ function AcousticEngineRoom({
         <planeGeometry args={[0.62, 0.34]} />
         <meshBasicMaterial color="#061827" />
       </mesh>
-      <Text position={[-0.83, 1.54, 0.9]} rotation={[0, Math.PI, 0]} fontSize={0.04} color="#5be39a" anchorX="center">
+      <Text
+        position={[-0.83, 1.54, 0.9]}
+        rotation={[0, Math.PI, 0]}
+        fontSize={0.04}
+        color="#5be39a"
+        anchorX="center"
+      >
         {`${(engineTest.running ? 74 + engineTest.throttle * 22 : 32).toFixed(0)} dB · ${(engineTest.rpm / 1000).toFixed(1)}k RPM`}
       </Text>
       <Text
@@ -334,7 +373,12 @@ function AcousticEngineRoom({
         <planeGeometry args={[0.38, 1.05]} />
         <meshBasicMaterial color="#93c5fd" transparent opacity={0.18} side={THREE.DoubleSide} />
       </mesh>
-      <pointLight position={[0, 1.45, 0.18]} intensity={1.85 + engineTest.throttle * 0.35} color="#d7ecff" distance={3.6} />
+      <pointLight
+        position={[0, 1.45, 0.18]}
+        intensity={1.85 + engineTest.throttle * 0.35}
+        color="#d7ecff"
+        distance={3.6}
+      />
       <pointLight position={[-0.95, 1.62, 0.42]} intensity={0.9} color="#9ed8ff" distance={2.4} />
       <pointLight position={[0.95, 1.62, 0.42]} intensity={0.9} color="#9ed8ff" distance={2.4} />
       <pointLight
@@ -383,6 +427,203 @@ function Workbench({ position }: { position: [number, number, number] }) {
         </mesh>
       ))}
     </group>
+  );
+}
+
+function EngineTestConsoleBench({
+  position,
+  engineTest,
+  controls,
+}: {
+  position: [number, number, number];
+  engineTest: EngineTestState;
+  controls?: EngineTestControls;
+}) {
+  const stress = () => {
+    controls?.setRunning(true);
+    controls?.setThrottle(0.92);
+  };
+  const capacity = () => {
+    controls?.setRunning(true);
+    controls?.setThrottle(0.68);
+  };
+
+  return (
+    <group position={position} rotation={[0, -0.35, 0]}>
+      <mesh position={[0, 0.52, 0]} castShadow receiveShadow>
+        <boxGeometry args={[2.9, 1.04, 0.92]} />
+        <meshStandardMaterial color="#1d2836" metalness={0.62} roughness={0.38} />
+      </mesh>
+      <mesh position={[0, 1.12, -0.04]} castShadow>
+        <boxGeometry args={[3.05, 0.14, 1.02]} />
+        <meshStandardMaterial color="#303947" metalness={0.74} roughness={0.28} />
+      </mesh>
+      <mesh position={[0, 1.72, -0.35]} rotation={[-0.22, 0, 0]} castShadow>
+        <boxGeometry args={[3.1, 1.24, 0.12]} />
+        <meshStandardMaterial
+          color="#07111d"
+          emissive="#07111d"
+          emissiveIntensity={0.45}
+          metalness={0.35}
+          roughness={0.42}
+        />
+      </mesh>
+      <mesh position={[0, 1.72, -0.275]} rotation={[-0.22, 0, 0]}>
+        <planeGeometry args={[2.92, 1.06]} />
+        <meshBasicMaterial color="#0b1b2a" transparent opacity={0.8} />
+      </mesh>
+      <Html
+        transform
+        occlude={false}
+        position={[0, 1.72, -0.205]}
+        rotation={[-0.22, 0, 0]}
+        distanceFactor={1.55}
+        zIndexRange={[40, 0]}
+      >
+        <div
+          className="w-[520px] select-none border border-cyan-400/50 bg-slate-950/95 p-3 font-mono text-[11px] text-slate-100 shadow-[0_0_30px_rgba(56,189,248,0.22)]"
+          onWheel={(e) => e.stopPropagation()}
+        >
+          <div className="mb-2 flex items-center justify-between border-b border-cyan-400/30 pb-2">
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.35em] text-cyan-300">
+                Wankel Test Bench
+              </div>
+              <div className="mt-1 text-[9px] uppercase tracking-widest text-slate-400">
+                Stress · capacidade · telemetria local
+              </div>
+            </div>
+            <div className={engineTest.running ? "text-emerald-300" : "text-slate-500"}>
+              {engineTest.running ? "RODANDO" : "STANDBY"}
+            </div>
+          </div>
+          <div className="grid grid-cols-[4fr_1fr] gap-3">
+            <div className="space-y-2">
+              <div className="grid grid-cols-4 gap-2">
+                <MonitorMetric label="RPM" value={engineTest.rpm.toFixed(0)} tone="cyan" />
+                <MonitorMetric
+                  label="Temp"
+                  value={`${engineTest.temperature.toFixed(0)}C`}
+                  tone={engineTest.temperature > 95 ? "amber" : "cyan"}
+                />
+                <MonitorMetric
+                  label="Carga"
+                  value={`${(engineTest.load * 100).toFixed(0)}%`}
+                  tone="cyan"
+                />
+                <MonitorMetric
+                  label="Saude"
+                  value={`${engineTest.health.toFixed(0)}%`}
+                  tone={engineTest.health < 70 ? "amber" : "green"}
+                />
+              </div>
+              <div
+                className="grid h-24 items-end gap-1 border border-slate-700/70 bg-slate-900/70 p-2"
+                style={{ gridTemplateColumns: "repeat(24, minmax(0, 1fr))" }}
+              >
+                {Array.from({ length: 24 }).map((_, i) => {
+                  const wave = Math.sin(i * 0.62 + engineTest.throttle * 4) * 0.18;
+                  const base = engineTest.running ? engineTest.throttle : 0.08;
+                  const height = Math.max(8, Math.min(92, (base + wave + i / 180) * 100));
+                  return (
+                    <div key={i} className="bg-cyan-300/80" style={{ height: `${height}%` }} />
+                  );
+                })}
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-[10px] uppercase tracking-widest">
+                <div className="border border-slate-700/70 bg-slate-900/70 p-2">
+                  Audio{" "}
+                  <span className={engineTest.audioEnabled ? "text-emerald-300" : "text-slate-500"}>
+                    {engineTest.audioEnabled ? "ON" : "OFF"}
+                  </span>
+                </div>
+                <div className="border border-slate-700/70 bg-slate-900/70 p-2">
+                  Throttle{" "}
+                  <span className="text-cyan-300">{(engineTest.throttle * 100).toFixed(0)}%</span>
+                </div>
+                <div className="border border-slate-700/70 bg-slate-900/70 p-2">
+                  Load <span className="text-cyan-300">{(engineTest.load * 100).toFixed(0)}%</span>
+                </div>
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <TouchButton
+                active={engineTest.running}
+                label={engineTest.running ? "Parar" : "Ligar"}
+                onClick={() => controls?.setRunning(!engineTest.running)}
+              />
+              <TouchButton
+                active={engineTest.audioEnabled}
+                label="Audio"
+                onClick={() => controls?.toggleAudio()}
+              />
+              <TouchButton active={engineTest.throttle > 0.85} label="Stress" onClick={stress} />
+              <TouchButton
+                active={engineTest.throttle > 0.58 && engineTest.throttle < 0.85}
+                label="Capacidade"
+                onClick={capacity}
+              />
+              <label className="mt-1 block text-[9px] uppercase tracking-widest text-slate-400">
+                Aceleracao
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={engineTest.throttle}
+                  onChange={(e) => controls?.setThrottle(Number(e.target.value))}
+                  className="mt-1 w-full"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+      </Html>
+      <pointLight position={[0, 1.9, -0.1]} color="#38bdf8" intensity={1.4} distance={3.2} />
+    </group>
+  );
+}
+
+function MonitorMetric({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "cyan" | "green" | "amber";
+}) {
+  const color =
+    tone === "green" ? "text-emerald-300" : tone === "amber" ? "text-amber-300" : "text-cyan-300";
+  return (
+    <div className="border border-slate-700/70 bg-slate-900/70 p-2">
+      <div className="text-[9px] uppercase tracking-widest text-slate-500">{label}</div>
+      <div className={`mt-1 text-sm font-bold ${color}`}>{value}</div>
+    </div>
+  );
+}
+
+function TouchButton({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`border px-2 py-2 text-[10px] font-bold uppercase tracking-widest ${
+        active
+          ? "border-cyan-300 bg-cyan-300 text-slate-950"
+          : "border-slate-600 bg-slate-900 text-slate-300 hover:border-cyan-300 hover:text-cyan-300"
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 
@@ -468,8 +709,16 @@ function TelemetryReadoutPanel({
         const rows = [
           ["SPD", `${(telemetry.speedKmh ?? 0).toFixed(1)} km/h`, "#39a8ff"],
           ["GEAR", m.gearbox.currentGear, "#ffb340"],
-          ["BAT", `${m.battery.level.toFixed(0)}%  ${m.battery.voltage.toFixed(1)}V`, statusColor(m.battery.status)],
-          ["BRAKE", `${(m.brakes.pedalPressure * 100).toFixed(0)}%  ${m.brakes.discTemperature.toFixed(0)}C`, statusColor(m.brakes.status)],
+          [
+            "BAT",
+            `${m.battery.level.toFixed(0)}%  ${m.battery.voltage.toFixed(1)}V`,
+            statusColor(m.battery.status),
+          ],
+          [
+            "BRAKE",
+            `${(m.brakes.pedalPressure * 100).toFixed(0)}%  ${m.brakes.discTemperature.toFixed(0)}C`,
+            statusColor(m.brakes.status),
+          ],
           ["STEER", `${m.steering.angle.toFixed(1)} deg`, statusColor(m.steering.status)],
         ];
         ctx.font = "700 28px ui-monospace, monospace";

@@ -21,14 +21,14 @@ const TARGETS: Record<
 
 const HOME = { pos: new THREE.Vector3(2.6, 1.6, 2.8), look: new THREE.Vector3(0, 0.45, 0) };
 const HOME_FULLSCREEN = {
-  pos: new THREE.Vector3(4.15, 1.9, 4.55),
-  look: new THREE.Vector3(1.9, 0.7, 0.85),
+  pos: new THREE.Vector3(5.3, 2.2, 5.85),
+  look: new THREE.Vector3(1.65, 0.68, 0.75),
 };
 const FULLSCREEN_TARGETS: Partial<
   Record<Exclude<CameraFocusTarget, null>, { pos: THREE.Vector3; look: THREE.Vector3 }>
 > = {
   acousticRoom: {
-    pos: new THREE.Vector3(6.25, 1.85, 5.55),
+    pos: new THREE.Vector3(6.95, 2.05, 6.35),
     look: new THREE.Vector3(7.2, 1.0, 3.9),
   },
 };
@@ -40,10 +40,12 @@ export function CameraController({
   focus: CameraFocusTarget;
   fullscreen?: boolean;
 }) {
-  const { camera } = useThree();
+  const { camera, gl } = useThree();
   const target = useRef(new THREE.Vector3());
   const desiredPos = useRef(new THREE.Vector3());
   const desiredLook = useRef(new THREE.Vector3());
+  const baseDesiredPos = useRef(new THREE.Vector3());
+  const zoomOffset = useRef(0);
 
   useEffect(() => {
     const t = focus
@@ -53,6 +55,7 @@ export function CameraController({
       : fullscreen
         ? HOME_FULLSCREEN
         : HOME;
+    baseDesiredPos.current.copy(t.pos);
     desiredPos.current.copy(t.pos);
     desiredLook.current.copy(t.look);
   }, [focus, fullscreen]);
@@ -61,10 +64,25 @@ export function CameraController({
     const home = fullscreen ? HOME_FULLSCREEN : HOME;
     camera.position.copy(home.pos);
     target.current.copy(home.look);
+    baseDesiredPos.current.copy(home.pos);
     desiredPos.current.copy(home.pos);
     desiredLook.current.copy(home.look);
+    zoomOffset.current = 0;
     camera.lookAt(home.look);
   }, [camera, fullscreen]);
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+    const onWheel = (event: WheelEvent) => {
+      if (!fullscreen) return;
+      event.preventDefault();
+      const next = zoomOffset.current + event.deltaY * 0.004;
+      zoomOffset.current = THREE.MathUtils.clamp(next, -1.25, 4.75);
+    };
+
+    canvas.addEventListener("wheel", onWheel, { passive: false });
+    return () => canvas.removeEventListener("wheel", onWheel);
+  }, [fullscreen, gl]);
 
   useFrame((s, dt) => {
     const k = 1 - Math.exp(-dt * 4);
@@ -78,6 +96,8 @@ export function CameraController({
             Math.cos(t * 0.18) * 0.35,
           )
         : new THREE.Vector3(0, 0, 0);
+    const zoomDir = baseDesiredPos.current.clone().sub(desiredLook.current).normalize();
+    desiredPos.current.copy(baseDesiredPos.current).add(zoomDir.multiplyScalar(zoomOffset.current));
     const dp = desiredPos.current.clone().add(idle);
     camera.position.lerp(dp, k);
     target.current.lerp(desiredLook.current, k);
