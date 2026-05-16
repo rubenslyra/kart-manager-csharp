@@ -73,15 +73,20 @@ export function RealSimulator({ fullscreen = false }: RealSimulatorProps) {
     <div
       className={
         fullscreen
-          ? "relative min-h-screen w-full overflow-hidden bg-card"
+          ? "relative h-screen min-h-[640px] w-full overflow-hidden bg-card"
           : "relative h-[80vh] min-h-[640px] w-full overflow-hidden corner-cut border border-primary/40 bg-card shadow-[0_0_60px_-20px_oklch(0.72_0.18_235/0.4)]"
       }
     >
       <Canvas
+        className="h-full w-full"
         shadows
         dpr={[1, 1.6]}
         gl={{ antialias: true, powerPreference: "high-performance" }}
-        camera={{ position: [2.6, 1.6, 2.8], fov: 45 }}
+        camera={
+          fullscreen
+            ? { position: [4.15, 1.9, 4.55], fov: 34 }
+            : { position: [2.6, 1.6, 2.8], fov: 45 }
+        }
       >
         <color attach="background" args={["#0d1826"]} />
         <fog attach="fog" args={["#0d1826", 18, 38]} />
@@ -92,7 +97,7 @@ export function RealSimulator({ fullscreen = false }: RealSimulatorProps) {
           <Wiring telemetry={ext.telemetry} focus={focus} visible={showWiring || xray} />
           <ModuleLabels telemetry={ext.telemetry} focus={focus} visible={showLabels} />
           <XRayOverlay telemetry={ext.telemetry} focus={focus} enabled={xray} />
-          <CameraController focus={sceneFocus ?? focus} />
+          <CameraController focus={sceneFocus ?? focus} fullscreen={fullscreen} />
           <Postfx />
         </Suspense>
       </Canvas>

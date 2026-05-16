@@ -5,23 +5,20 @@ Aberta em: 2026-05-16
 
 ## Titulo
 
-Reorganizar navegacao, arena de corrida e oficina em telas dedicadas
+Corrigir escala e enquadramento da oficina em tela cheia
 
 ## Objetivo
 
-Reduzir redundancias de navegacao e separar as experiencias principais do projeto: a arena de corrida e a oficina devem virar telas full body dedicadas, enquanto a home deve concentrar paineis de replay, metricas, telemetrias, historicos e estatisticas.
+Resolver o problema visual em que a sala e o espaco de trabalho da oficina parecem encolhidos apos a mudanca para tela full body. A oficina deve ocupar melhor a tela, com sala, bancada, kart e area de trabalho escalados/enquadrados de forma proporcional ao novo layout.
 
 ## Escopo
 
-- Renomear a entrada/botao hoje chamado `Simulador Real` para `Oficina` ou termo equivalente mais adequado ao que acontece naquela tela.
-- Remover o item `Simulador` do menu principal, ja que existe acesso dedicado no canto direito.
-- Substituir o nome atual `Simulador` da arena de corrida por uma nomenclatura mais clara dentro do refactor.
-- Tirar a arena de corrida da caixa/preview na home da SPA e apresenta-la como tela full body.
-- Tirar a oficina da caixa/preview equivalente, caso exista, e apresenta-la como tela full body.
-- Manter a home focada em replay, metricas, telemetrias, historicos e estatisticas de corridas, alem de historicos e estatisticas de reparacoes.
-- Adicionar botao de voltar a home na arena e na oficina.
-- Padronizar a saida da arena e da oficina com caixa de dialogo perguntando se o usuario realmente deseja sair.
-- Preservar rotas, estado e funcionalidades existentes sempre que possivel.
+- Investigar por que o container full body cresceu mas a cena interna da oficina nao acompanhou.
+- Revisar `RealSimulator`, camera inicial, controles de camera e dimensoes da cena da oficina.
+- Ajustar escala/enquadramento da oficina para o modo `fullscreen`.
+- Preservar comportamento da oficina quando usada sem `fullscreen`.
+- Preservar UI existente: checklist, auditoria, importacao de DLL, foco de cena, raio-X, wiring e teste Wankel.
+- Nao alterar arena de corrida, home ou navegacao nesta tarefa.
 
 ## Subtarefas
 
@@ -42,124 +39,106 @@ Concluido em 2026-05-16.
   - Branch `main`.
   - `analise-tecnica/tarefas/tarefa-atual.md` modificado pela abertura da tarefa.
   - `sounds-trilha/` permanece nao rastreado e fora do escopo.
-- Rotas principais:
-  - `src/routes/index.tsx` renderiza a home com `Nav`, `Hero`, `ProjectOverview`, `Lessons`, `States`, `Stack`, `SimulatorScene`, `Sprints` e `Footer`.
-  - A home importa diretamente `SimulatorScene`, criando a caixa/preview de corrida dentro da SPA.
-  - `src/routes/simulator.tsx` ja existe como rota dedicada para a experiencia de corrida e passa `fullscreen` para `SimulatorScene`.
-  - `src/routes/simulador-real.tsx` ja existe como rota dedicada para a oficina/simulador real.
-- Navegacao:
-  - `src/components/rl/Nav.tsx` contem links de menu: `Projeto`, `Aulas`, `Estados`, `Stack`, `Simulador`, `Sprints`.
-  - O mesmo componente tambem contem botoes de rota no canto direito: `/simulator` com label `Simulador` e `/simulador-real` com label `Simulador Real`.
-  - A redundancia apontada pelo usuario existe: ha um item de menu `#simulator` e um botao dedicado para `/simulator`.
-- Hero:
-  - `src/components/rl/Hero.tsx` tem CTA `Iniciar Simulador` para `/simulator`.
-  - Tambem tem CTA `Simulador Real (Oficina)` para `/simulador-real`.
-  - O texto menciona "do simulador 3D ao prototipo fisico".
-- Arena de corrida:
-  - `src/components/simulator/SimulatorScene.tsx` recebe `fullscreen?: boolean`.
-  - Mesmo com `fullscreen`, o componente ainda renderiza `<section id="simulator" className="relative py-24">`, container `max-w-7xl`, grid e um painel `panel corner-cut`.
-  - `fullscreen` hoje muda apenas a altura do viewport: `h-[calc(100vh-200px)] min-h-[520px]`; nao torna a cena realmente full body.
-  - O componente tambem contem titulo interno `06 / Simulador 3D` e `RL KART · Live Scene`, alem de controles, telemetria, replay, setup, ghost, HUD e debug.
-- Oficina:
-  - `src/components/realsim/RealSimulator.tsx` renderiza um container com `h-[80vh] min-h-[640px]`, `corner-cut`, borda e background.
-  - `src/routes/simulador-real.tsx` envolve `RealSimulator` em `Nav`, `Footer`, container `max-w-7xl`, titulo `Simulador Real — Oficina` e link `Ir para Simulador Atual`.
-  - Portanto a oficina tambem nao esta full body hoje.
-- Dialogo de confirmacao:
-  - `src/components/ui/alert-dialog.tsx` ja disponibiliza componentes Radix/shadcn para confirmacao: `AlertDialog`, `AlertDialogTrigger`, `AlertDialogContent`, `AlertDialogAction`, `AlertDialogCancel`, etc.
-  - E melhor reutilizar esse padrao para os botoes de voltar a home em arena e oficina.
-- Documentacao:
-  - `analise-tecnica/analise-projeto.md` lista `/simulator` como simulador 3D interativo de corrida/kart e `/simulador-real` como oficina tecnica.
-  - `historico-etapas.md`, `catalogo-partes.md` e `inventario-cena-interfaces.md` usam "simulador" em contexto tecnico. Nem todos precisam ser renomeados; o impacto de produto deve ser registrado em historico/documentacao quando a estrutura mudar.
+- `src/routes/simulador-real.tsx`
+  - A rota ja usa `RealSimulator fullscreen`.
+  - O shell da rota esta full body (`min-h-screen`) e tem apenas overlay superior com `ConfirmHomeExit` e titulo `Oficina`.
+  - Portanto o problema nao esta no shell da rota, mas no conteudo/camera da experiencia.
+- `src/components/realsim/RealSimulator.tsx`
+  - A prop `fullscreen` hoje muda apenas a classe do container:
+    - fullscreen: `relative min-h-screen w-full overflow-hidden bg-card`.
+    - nao-fullscreen: `h-[80vh] min-h-[640px] ... corner-cut border ...`.
+  - O `Canvas` usa a mesma camera nos dois modos:
+    - `camera={{ position: [2.6, 1.6, 2.8], fov: 45 }}`.
+  - A cena interna tambem e a mesma: `Workshop`, `BackgroundMonitors`, `RealKart`, labels, wiring, x-ray, `CameraController`, postfx.
+  - Conclusao: a tela cresceu, mas camera/fov/focos nao foram recalibrados para o novo aspect/area full body.
+- `src/components/realsim/CameraController.tsx`
+  - Define `HOME = { pos: [2.6, 1.6, 2.8], look: [0, 0.45, 0] }`.
+  - No mount, a camera sempre copia `HOME.pos` e mira `HOME.look`.
+  - Focos de modulo (`battery`, `brakes`, `steering`, `ignition`, `gearbox`) e foco de cena `acousticRoom` usam posicoes fixas.
+  - Nao existe variante fullscreen para `HOME`, para o idle dolly, nem para o foco `acousticRoom`.
+  - Em telas largas, a mesma camera/fov mostra mais piso/parede lateral, fazendo sala/bancada/oficina parecerem menores.
+- `src/components/realsim/Workshop.tsx`
+  - A escala da oficina e em metros/blueprint:
+    - piso/grid: `40 x 40`;
+    - paredes laterais em `x = +/-15`, parede traseira em `z = -8`;
+    - kart e pad central perto de `[0,0,0]`;
+    - bancada em `[5,0,-1.5]`;
+    - sala acustica em `[7.2,0,3.9]`;
+    - racks em `[-5.5,0,2]` e `[5.5,0,2]`.
+  - A sala acustica em si tem dimensoes compactas (`2.6 x 2.1 x 1.8`), coerentes com a escala fisica, mas na vista fullscreen fica pequena por enquadramento.
+  - Alterar a escala fisica de `Workshop` inteiro pode distorcer relacao com o kart; o ajuste preferivel e camera/fov/enquadramento.
+- `src/components/realsim/RealSimUI.tsx`
+  - Ha overlays absolutos:
+    - topo esquerdo;
+    - chips de foco no topo central;
+    - toggles no topo central;
+    - painel de telemetria no topo direito;
+    - controles Wankel no topo/esquerda;
+    - checklist no canto inferior direito;
+    - mock DLLs no canto inferior esquerdo.
+  - A camera fullscreen deve priorizar a area central livre, sem jogar sala/bancada diretamente atras desses paineis.
 
 Conclusao do Research:
 
-- A menor mudanca estrutural segura e manter os paths `/simulator` e `/simulador-real` para compatibilidade, mas alterar a linguagem visivel:
-  - `/simulator` passa a ser apresentado como `Arena` ou `Arena de Corrida`.
-  - `/simulador-real` passa a ser apresentado como `Oficina`.
-- A home deve parar de renderizar `SimulatorScene` e deve receber uma secao de dados/operacao, sem experiencia 3D interativa embutida.
-- Arena e oficina devem remover `Nav`/`Footer` e containers institucionais das suas rotas, usando controles internos de retorno com confirmacao.
-- O padrao de confirmacao pode ser um componente compartilhado simples para evitar duplicacao.
+- A causa raiz e que o container full body foi expandido, mas a camera principal e o controlador continuam usando o preset do card antigo.
+- A correcao deve criar presets visuais especificos para fullscreen:
+  - camera inicial mais proxima/adequada;
+  - fov menor ou diferente para aumentar presenca visual;
+  - `HOME`/focos calibrados para mostrar kart, bancada e sala com melhor ocupacao da tela;
+  - preservacao dos presets antigos no modo nao-fullscreen.
+- Nao ha necessidade de mexer na arena, home ou navegacao.
 
 ### Plan
 
 Plano para executar apos `[Concluir RPI]`:
 
-1. Navegacao e nomenclatura
-   - Remover `{ href: "#simulator", label: "Simulador" }` de `src/components/rl/Nav.tsx`.
-   - Alterar o botao `/simulator` para `Arena` ou `Arena de Corrida`.
-   - Alterar o botao `/simulador-real` para `Oficina`.
-   - Atualizar CTAs da `Hero`:
-     - `Iniciar Simulador` -> `Entrar na Arena` ou `Arena de Corrida`.
-     - `Simulador Real (Oficina)` -> `Abrir Oficina`.
-   - Manter os paths atuais para nao quebrar links existentes.
+1. Parametrizar `CameraController`
+   - Adicionar prop opcional `fullscreen?: boolean`.
+   - Criar presets separados:
+     - `HOME_COMPACT` para o uso atual nao-fullscreen.
+     - `HOME_FULLSCREEN` para a rota full body.
+   - Ajustar `HOME_FULLSCREEN` com camera mais proxima e/ou mais baixa, mirando o miolo da oficina sem esconder a sala acustica.
+   - Manter os focos de modulo existentes por padrao.
+   - Se necessario, criar variante fullscreen apenas para `acousticRoom`, para que a sala nao pareca pequena quando o usuario escolhe esse foco.
 
-2. Home como dashboard/central
-   - Remover import e renderizacao de `SimulatorScene` em `src/routes/index.tsx`.
-   - Criar uma secao nova na home, por exemplo `OperationsDashboard`, em `src/components/rl/OperationsDashboard.tsx`.
-   - Essa secao deve conter apenas informacao operacional, sem Canvas/cena 3D:
-     - replay e ultimas sessoes;
-     - metricas de corrida;
-     - telemetria resumida;
-     - historico/estatisticas de corridas;
-     - historico/estatisticas de reparacoes/oficina.
-   - Inserir essa secao onde a caixa do simulador aparecia, antes de `Sprints`.
-   - Ajustar indices/textos se necessario para nao ficar "06 / Simulador 3D" na home.
+2. Ajustar `RealSimulator`
+   - Passar `fullscreen` para `CameraController`.
+   - Ajustar `Canvas` camera conforme modo:
+     - modo normal preserva `[2.6, 1.6, 2.8]` e `fov 45`;
+     - modo fullscreen usa preset com `fov` menor ou posicao mais proxima.
+   - Manter `RealSimulator` nao-fullscreen funcional para usos futuros.
 
-3. Arena full body
-   - Em `src/routes/simulator.tsx`, remover `Nav`, `Footer`, container superior institucional e link simples.
-   - Apresentar a rota como tela imersiva de altura minima `100vh`, com topo compacto sobreposto ou integrado.
-   - Atualizar meta title/description para `Arena de Corrida`.
-   - Alterar `SimulatorScene` para quando `fullscreen=true`:
-     - usar `section` full body sem `py-24` e sem `max-w-7xl`;
-     - usar grid/layout que ocupe a tela inteira;
-     - remover ou reduzir moldura `panel corner-cut` do viewport principal;
-     - manter telemetria/controles em painel lateral sem encaixar a arena dentro de uma caixa de home.
-   - Preservar HUD, replay, setup, telemetria, IA, ghost, audio e controles existentes.
+3. Ajustar composicao fullscreen da oficina
+   - Se camera/fov nao bastarem, adicionar grupo de cena `WorkshopStage` ou wrapper de `<group>` apenas para deslocamento visual fullscreen, sem alterar geometria fisica do kart.
+   - Preferencia: evitar escala global do `Workshop`, porque isso pode quebrar relacao visual entre sala, kart, labels e wiring.
+   - Se for necessario ampliar apenas contexto da oficina, aplicar deslocamento/composicao de camera antes de alterar escala.
 
-4. Oficina full body
-   - Em `src/routes/simulador-real.tsx`, remover `Nav`, `Footer`, container institucional e link lateral para simulador atual.
-   - Atualizar meta title/description para `Oficina — RL Kart 26A`.
-   - Permitir que `RealSimulator` receba prop opcional, por exemplo `fullscreen`, para aplicar:
-     - `min-h-screen`;
-     - sem container externo `max-w-7xl`;
-     - sem borda/moldura de card principal quando estiver em rota dedicada;
-     - Canvas ocupando a area principal com UI sobreposta existente.
-   - Renomear titulo visivel da rota para `Oficina` se houver titulo externo mantido; preferencia: header compacto interno/overlay.
-   - Preservar checklist, importacao de DLL, auditoria, foco de cena, teste Wankel e telemetria.
-
-5. Confirmacao padronizada de saida
-   - Criar um componente compartilhado, por exemplo `src/components/rl/ConfirmHomeExit.tsx` ou `src/components/shared/ConfirmHomeExit.tsx`.
-   - Usar `AlertDialog` existente.
-   - O componente deve exibir pergunta clara, por exemplo:
-     - `Deseja realmente sair da Arena?`
-     - `Deseja realmente sair da Oficina?`
-   - A acao confirmada navega para `/`.
-   - A acao cancelar fecha o dialogo sem alterar estado.
-   - Usar o mesmo componente nas duas rotas para manter padrao.
-
-6. Documentacao
-   - Atualizar `analise-tecnica/tarefas/tarefa-atual.md` com implementacao e checks quando a fase abrir.
-   - Atualizar `analise-tecnica/documentacao-partes/historico-etapas.md` com uma nova etapa de reorganizacao estrutural da navegacao/experiencias.
-   - Atualizar `analise-tecnica/analise-projeto.md` se a descricao das rotas/home ficar desatualizada.
+4. Validacao
+   - Rodar `npm run build`.
+   - Rodar ESLint focado em `RealSimulator.tsx` e `CameraController.tsx`, se viavel.
+   - Validar `/simulador-real` por HTTP.
+   - Fazer revisao visual/manual no dev server:
+     - vista inicial da oficina ocupa melhor a tela;
+     - sala acustica e bancada nao ficam pequenas demais;
+     - paineis da UI nao encobrem o foco principal;
+     - focos de modulo continuam funcionando;
+     - foco `Sala Acustica` continua legivel.
 
 Escopo fora:
 
-- Nao renomear fisicamente as rotas nesta primeira passada, para evitar quebrar links e `routeTree.gen.ts`.
-- Nao refatorar internamente toda a arquitetura de `SimulatorScene` ou `RealSimulator` alem do necessario para full body.
-- Nao mexer nos arquivos de audio nem na pasta `sounds-trilha/`.
-- Nao corrigir todos os erros Prettier existentes do projeto nesta tarefa.
+- Nao alterar arena de corrida.
+- Nao mexer na home, menus ou CTAs.
+- Nao redimensionar fisicamente todos os objetos da oficina sem necessidade.
+- Nao formatar arquivos amplos fora dos pontos alterados.
 
 Criterios de aceite:
 
-- O menu principal nao mostra mais `Simulador` como ancora da home.
-- Os acessos dedicados mostram `Arena`/`Arena de Corrida` e `Oficina`, sem `Simulador Real` como label principal.
-- A home nao renderiza a arena de corrida em uma caixa/canvas.
-- A home mostra paineis de replay, metricas, telemetria, historicos e estatisticas de corrida/oficina.
-- `/simulator` abre a arena em tela full body.
-- `/simulador-real` abre a oficina em tela full body.
-- Arena e oficina tem botao para voltar a home.
-- Ao acionar voltar, ambas exibem caixa de confirmacao antes de navegar.
-- Build de producao passa.
+- `/simulador-real` abre com oficina visualmente mais presente em tela cheia.
+- A sala acustica, bancada e area de trabalho aparecem em escala/enquadramento proporcional ao viewport.
+- O kart continua bem enquadrado na vista inicial.
+- Focos e overlays existentes continuam utilizaveis.
+- Modo nao-fullscreen de `RealSimulator` permanece sem regressao.
+- Build passa.
 
 ### Status RPI
 
@@ -169,91 +148,73 @@ Concluido. Implementacao liberada por `[Concluir RPI]` e executada.
 
 Executada em 2026-05-16.
 
-- Removido o item `Simulador` do menu principal da home.
-- Botao dedicado de corrida renomeado para `Arena`.
-- Botao dedicado de `Simulador Real` renomeado para `Oficina`.
-- CTAs da hero ajustados para `Entrar na Arena` e `Abrir Oficina`.
-- Home deixou de renderizar `SimulatorScene` como caixa/canvas interno.
-- Criada `OperationsDashboard` para centralizar replay, metricas, telemetria, historicos e estatisticas de corrida/oficina.
-- Criado `ConfirmHomeExit` reutilizando `AlertDialog` para padronizar confirmacao de saida.
-- Rota `/simulator` passou a apresentar a arena em tela full body, sem `Nav`/`Footer` da home.
-- Rota `/simulador-real` passou a apresentar a oficina em tela full body, sem `Nav`/`Footer` da home.
-- `RealSimulator` recebeu prop `fullscreen` para adaptar o container principal.
-- `SimulatorScene` passou a adaptar section, container, grid, viewport e painel lateral no modo `fullscreen`.
-- Documentacao tecnica atualizada com nova separacao entre dashboard, arena e oficina.
+- `CameraController` recebeu prop `fullscreen`.
+- Criado preset `HOME_FULLSCREEN` para aproximar e reenquadrar a oficina em tela cheia.
+- Criada variante fullscreen para o foco `acousticRoom`, melhorando a leitura da sala acustica.
+- `RealSimulator` passou a usar camera inicial especifica no modo fullscreen:
+  - posicao `[4.15, 1.9, 4.55]`;
+  - `fov` reduzido para `34`.
+- `RealSimulator` passa `fullscreen` para `CameraController`.
+- Container fullscreen da oficina trocado de `min-h-screen` para `h-screen min-h-[640px]`, garantindo altura explicita para o Canvas.
+- `Canvas` recebeu `className="h-full w-full"` para ocupar toda a altura do container fullscreen.
+- Modo nao-fullscreen preserva a camera anterior (`[2.6, 1.6, 2.8]`, `fov 45`).
+- Nao houve alteracao de escala fisica do `Workshop`, kart ou sala.
 
 ## Arquivos Impactados
 
 - `analise-tecnica/tarefas/tarefa-atual.md`
-- `src/routes/index.tsx`
-- `src/routes/simulator.tsx`
-- `src/routes/simulador-real.tsx`
-- `src/components/rl/Nav.tsx`
-- `src/components/rl/Hero.tsx`
-- `src/components/rl/OperationsDashboard.tsx`
-- `src/components/rl/ConfirmHomeExit.tsx`
-- `src/components/simulator/SimulatorScene.tsx`
-- `src/components/realsim/RealSimulator.tsx`
-- `analise-tecnica/analise-projeto.md`
-- `analise-tecnica/documentacao-partes/historico-etapas.md`
+- Provaveis apos Research:
+  - `src/components/realsim/RealSimulator.tsx`
+  - `src/components/realsim/CameraController.tsx`
+  - `src/components/realsim/Workshop.tsx`
+  - documentacao tecnica se o contrato visual da oficina mudar.
 
 ## Riscos Tecnicos
 
-- Quebrar rotas existentes ou links de acesso rapido.
-- Misturar responsabilidade da home com experiencias imersivas full body.
-- Criar navegacao inconsistente entre arena e oficina.
-- Perder estado de simulacao/oficina ao sair sem confirmacao clara.
-- Introduzir dialogo duplicado em vez de reutilizar padroes/componentes existentes.
-- Alterar nomes visiveis sem atualizar documentacao tecnica e historico.
-- Esbarrar em erros de lint/Prettier preexistentes ao tocar arquivos amplos.
+- Ampliar a cena e causar cortes em paineis ou overlays da oficina.
+- Corrigir fullscreen e quebrar a apresentacao nao-fullscreen do componente.
+- Mudar camera e prejudicar focos de modulo, sala acustica, labels ou raio-X.
+- Alterar escala fisica do kart/oficina de modo inconsistente com o blueprint.
+- Esbarrar em pendencias Prettier preexistentes nos arquivos de cena.
 
 ## Checks Planejados
 
 - `git status --short --branch` antes de alterar codigo.
-- Research da estrutura de rotas, menu, home, arena e oficina.
+- Research de `RealSimulator`, `CameraController` e `Workshop`.
 - Revisao de diff apos implementacao.
 - `npm run build`.
 - Lint focado nos arquivos alterados quando viavel.
-- Validacao manual das rotas/telas:
-  - home;
-  - arena de corrida full body;
-  - oficina full body;
-  - dialogo de confirmacao ao voltar para home.
+- Validacao manual/HTTP de `/simulador-real`.
 
 ## Checks Executados
 
 - `git status --short --branch`: branch `main`, apenas `sounds-trilha/` nao rastreado no inicio da tarefa.
-- Protocolo de tarefas consultado.
 - Research concluido nos arquivos:
-  - `src/routes/index.tsx`
-  - `src/routes/simulator.tsx`
   - `src/routes/simulador-real.tsx`
-  - `src/routes/__root.tsx`
-  - `src/components/rl/Nav.tsx`
-  - `src/components/rl/Hero.tsx`
-  - `src/components/simulator/SimulatorScene.tsx`
   - `src/components/realsim/RealSimulator.tsx`
-  - `src/components/ui/alert-dialog.tsx`
-  - `analise-tecnica/analise-projeto.md`
+  - `src/components/realsim/CameraController.tsx`
+  - `src/components/realsim/Workshop.tsx`
+  - `src/components/realsim/RealSimUI.tsx`
 - `[Concluir RPI]` recebido em 2026-05-16.
-- Implementacao estrutural executada.
+- Implementacao de camera/enquadramento executada.
+- `npx eslint src\components\realsim\RealSimulator.tsx src\components\realsim\CameraController.tsx`: aprovado.
 - `git diff --check`: aprovado, com apenas avisos LF/CRLF do Windows.
-- `npx eslint src\routes\index.tsx src\routes\simulator.tsx src\routes\simulador-real.tsx src\components\rl\Nav.tsx src\components\rl\Hero.tsx src\components\rl\OperationsDashboard.tsx src\components\rl\ConfirmHomeExit.tsx src\components\realsim\RealSimulator.tsx`: aprovado.
-- `npx eslint src\components\simulator\SimulatorScene.tsx`: falhou por erros de Prettier preexistentes no arquivo e um warning `react-hooks/exhaustive-deps` ja existente.
 - `npm run build`: aprovado.
   - Avisos residuais existentes/fora do escopo: `@import` de CSS fora da primeira posicao e chunks acima de 500 kB.
-- Dev server iniciado em `http://127.0.0.1:5173/`.
-- Validacao HTTP:
-  - `http://127.0.0.1:5173/`: 200.
-  - `http://127.0.0.1:5173/simulator`: 200.
-  - `http://127.0.0.1:5173/simulador-real`: 200.
+- Validacao HTTP de `http://127.0.0.1:5173/simulador-real`: 200.
+- Correcao adicional apos analise visual do usuario:
+  - causa ajustada: `Canvas` fullscreen nao tinha altura explicita via pai;
+  - `RealSimulator` agora usa `h-screen` no modo fullscreen e `Canvas` com `h-full w-full`.
+- `npx eslint src\components\realsim\RealSimulator.tsx src\components\realsim\CameraController.tsx`: aprovado apos correcao adicional.
+- `git diff --check`: aprovado apos correcao adicional, com apenas avisos LF/CRLF do Windows.
+- `npm run build`: aprovado apos correcao adicional.
+  - Avisos residuais existentes/fora do escopo: `@import` de CSS fora da primeira posicao e chunks acima de 500 kB.
 - `[Finalizar Tarefa]` recebido em 2026-05-16.
-- Revisao final de diff: concluida, escopo restrito a navegacao, home operacional, tela full body de arena/oficina, confirmacao de saida e documentacao.
+- Revisao final de diff: concluida, escopo restrito a `RealSimulator`, `CameraController` e registro da tarefa.
 - `git diff --check`: aprovado no fechamento, com apenas avisos LF/CRLF do Windows.
 - `npm run build`: aprovado no fechamento.
   - Avisos residuais existentes/fora do escopo: `@import` de CSS fora da primeira posicao e chunks acima de 500 kB.
-- `npx eslint` focado em rotas, home, navegacao, dialogo e oficina: aprovado no fechamento.
-- `npx eslint src\components\simulator\SimulatorScene.tsx`: falhou no fechamento por erros de Prettier preexistentes no arquivo e um warning `react-hooks/exhaustive-deps` ja existente.
+- `npx eslint src\components\realsim\RealSimulator.tsx src\components\realsim\CameraController.tsx`: aprovado no fechamento.
 
 ## Fechamento
 
@@ -262,6 +223,4 @@ Executada em 2026-05-16.
 
 ## Notas Para Release
 
-- A home passa a priorizar dados, historicos e estatisticas.
-- Arena de corrida e oficina passam a ser acessos dedicados em tela cheia.
-- Navegacao fica menos redundante e com confirmacao padronizada ao sair de experiencias imersivas.
+- Oficina em tela cheia passa a usar melhor a area visivel, sem parecer encolhida.

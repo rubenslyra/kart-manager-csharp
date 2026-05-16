@@ -7,44 +7,77 @@ export type SceneFocusTarget = "acousticRoom" | null;
 export type CameraFocusTarget = FocusTarget | SceneFocusTarget;
 
 // Targets in blueprint scale (meters). Look points align with MODULE_ANCHORS.
-const TARGETS: Record<Exclude<CameraFocusTarget, null>, { pos: THREE.Vector3; look: THREE.Vector3 }> = {
-  battery: { pos: new THREE.Vector3(0.9, 0.85, -1.4), look: new THREE.Vector3(0.22, 0.40, -0.20) },
-  brakes: { pos: new THREE.Vector3(1.4, 0.55, -1.2), look: new THREE.Vector3(0.41, 0.30, -0.50) },
-  steering: { pos: new THREE.Vector3(0, 0.95, 1.6), look: new THREE.Vector3(0, 0.58, 0.30) },
-  ignition: { pos: new THREE.Vector3(1.0, 0.85, 1.1), look: new THREE.Vector3(0.18, 0.55, 0.20) },
-  gearbox: { pos: new THREE.Vector3(0, 0.75, -1.4), look: new THREE.Vector3(0, 0.32, -0.40) },
+const TARGETS: Record<
+  Exclude<CameraFocusTarget, null>,
+  { pos: THREE.Vector3; look: THREE.Vector3 }
+> = {
+  battery: { pos: new THREE.Vector3(0.9, 0.85, -1.4), look: new THREE.Vector3(0.22, 0.4, -0.2) },
+  brakes: { pos: new THREE.Vector3(1.4, 0.55, -1.2), look: new THREE.Vector3(0.41, 0.3, -0.5) },
+  steering: { pos: new THREE.Vector3(0, 0.95, 1.6), look: new THREE.Vector3(0, 0.58, 0.3) },
+  ignition: { pos: new THREE.Vector3(1.0, 0.85, 1.1), look: new THREE.Vector3(0.18, 0.55, 0.2) },
+  gearbox: { pos: new THREE.Vector3(0, 0.75, -1.4), look: new THREE.Vector3(0, 0.32, -0.4) },
   acousticRoom: { pos: new THREE.Vector3(5.2, 1.85, 6.0), look: new THREE.Vector3(7.2, 1.05, 3.9) },
 };
 
 const HOME = { pos: new THREE.Vector3(2.6, 1.6, 2.8), look: new THREE.Vector3(0, 0.45, 0) };
+const HOME_FULLSCREEN = {
+  pos: new THREE.Vector3(4.15, 1.9, 4.55),
+  look: new THREE.Vector3(1.9, 0.7, 0.85),
+};
+const FULLSCREEN_TARGETS: Partial<
+  Record<Exclude<CameraFocusTarget, null>, { pos: THREE.Vector3; look: THREE.Vector3 }>
+> = {
+  acousticRoom: {
+    pos: new THREE.Vector3(6.25, 1.85, 5.55),
+    look: new THREE.Vector3(7.2, 1.0, 3.9),
+  },
+};
 
-export function CameraController({ focus }: { focus: CameraFocusTarget }) {
+export function CameraController({
+  focus,
+  fullscreen = false,
+}: {
+  focus: CameraFocusTarget;
+  fullscreen?: boolean;
+}) {
   const { camera } = useThree();
   const target = useRef(new THREE.Vector3());
   const desiredPos = useRef(new THREE.Vector3());
   const desiredLook = useRef(new THREE.Vector3());
 
   useEffect(() => {
-    const t = focus ? TARGETS[focus] : HOME;
+    const t = focus
+      ? fullscreen
+        ? (FULLSCREEN_TARGETS[focus] ?? TARGETS[focus])
+        : TARGETS[focus]
+      : fullscreen
+        ? HOME_FULLSCREEN
+        : HOME;
     desiredPos.current.copy(t.pos);
     desiredLook.current.copy(t.look);
-  }, [focus]);
+  }, [focus, fullscreen]);
 
   useEffect(() => {
-    camera.position.copy(HOME.pos);
-    target.current.copy(HOME.look);
-    desiredPos.current.copy(HOME.pos);
-    desiredLook.current.copy(HOME.look);
-    camera.lookAt(HOME.look);
-  }, [camera]);
+    const home = fullscreen ? HOME_FULLSCREEN : HOME;
+    camera.position.copy(home.pos);
+    target.current.copy(home.look);
+    desiredPos.current.copy(home.pos);
+    desiredLook.current.copy(home.look);
+    camera.lookAt(home.look);
+  }, [camera, fullscreen]);
 
   useFrame((s, dt) => {
     const k = 1 - Math.exp(-dt * 4);
     // Idle cinematic dolly when not focused
     const t = s.clock.elapsedTime;
-    const idle = focus === null
-      ? new THREE.Vector3(Math.sin(t * 0.18) * 0.35, Math.sin(t * 0.13) * 0.12, Math.cos(t * 0.18) * 0.35)
-      : new THREE.Vector3(0, 0, 0);
+    const idle =
+      focus === null
+        ? new THREE.Vector3(
+            Math.sin(t * 0.18) * 0.35,
+            Math.sin(t * 0.13) * 0.12,
+            Math.cos(t * 0.18) * 0.35,
+          )
+        : new THREE.Vector3(0, 0, 0);
     const dp = desiredPos.current.clone().add(idle);
     camera.position.lerp(dp, k);
     target.current.lerp(desiredLook.current, k);
