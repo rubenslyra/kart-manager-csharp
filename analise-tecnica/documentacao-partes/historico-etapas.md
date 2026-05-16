@@ -209,3 +209,13 @@
   - Monitor exibe RPM, temperatura, carga, saude, audio, aceleracao e grafico simples de teste.
   - Adicionados presets touchscreen de stress e capacidade.
   - Audio Wankel passou a conectar o MP3 ao grafo Web Audio com gain dedicado.
+
+### Etapa 17 - Atualizacao da marca visual
+
+- Arquivos principais:
+  - `src/components/rl/Logo.tsx`
+  - `public/logo_kart_A26.png`
+- Alteracoes:
+  - Logo textual do header e footer foi substituido pela marca horizontal fornecida do `RL KART 26A`.
+  - Componente `Logo` passou a usar imagem servida pela pasta `public`.
+  - Tamanho responsivo do logo foi ajustado para preservar leitura e encaixe no layout.
