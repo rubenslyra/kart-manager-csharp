@@ -281,16 +281,29 @@ export function SimulatorScene({ fullscreen = false }: Props) {
   const hasRecord = !!replayRecordStore.getRecord();
 
   const viewportClass = fullscreen
-    ? "panel corner-cut scanline relative h-[calc(100vh-200px)] min-h-[520px] overflow-hidden"
+    ? "scanline relative h-[calc(100vh-132px)] min-h-[520px] overflow-hidden bg-card"
     : "panel corner-cut scanline relative h-[620px] overflow-hidden";
+  const sectionClass = fullscreen ? "relative min-h-screen pt-14" : "relative py-24";
+  const containerClass = fullscreen
+    ? "flex min-h-[calc(100vh-56px)] flex-col px-3 pb-3"
+    : "mx-auto max-w-7xl px-6";
+  const headerClass = fullscreen
+    ? "mb-3 flex shrink-0 items-end justify-between gap-4 border-b border-border/60 pb-3 pl-36 md:pl-0"
+    : "mb-10 flex items-end justify-between gap-4";
+  const gridClass = fullscreen
+    ? "grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_320px]"
+    : "grid gap-6 lg:grid-cols-[1fr_320px]";
+  const sidePanelClass = fullscreen
+    ? "flex min-h-0 flex-col gap-3 overflow-y-auto"
+    : "flex flex-col gap-4";
 
   return (
-    <section id="simulator" className="relative py-24">
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="mb-10 flex items-end justify-between gap-4">
+    <section id="arena" className={sectionClass}>
+      <div className={containerClass}>
+        <div className={headerClass}>
           <div>
             <div className="font-mono text-[10px] uppercase tracking-[0.4em] text-primary">
-              06 / Simulador 3D
+              Arena de Corrida
             </div>
             <h2 className="mt-2 font-display text-3xl font-black md:text-4xl">
               RL <span className="text-primary text-glow">KART</span> · Live Scene
@@ -331,7 +344,7 @@ export function SimulatorScene({ fullscreen = false }: Props) {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <div className={gridClass}>
           <div
             className={viewportClass}
             tabIndex={0}
@@ -654,7 +667,7 @@ export function SimulatorScene({ fullscreen = false }: Props) {
             )}
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className={sidePanelClass}>
             <TelemetryPanel t={t} />
             <SimulatorControls
               t={t}

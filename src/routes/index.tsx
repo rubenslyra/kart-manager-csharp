@@ -7,7 +7,7 @@ import { States } from "@/components/rl/States";
 import { Stack } from "@/components/rl/Stack";
 import { Sprints } from "@/components/rl/Sprints";
 import { Footer } from "@/components/rl/Footer";
-import { SimulatorScene } from "@/components/simulator/SimulatorScene";
+import { OperationsDashboard } from "@/components/rl/OperationsDashboard";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -38,7 +38,7 @@ function Index() {
         <Lessons />
         <States />
         <Stack />
-        <SimulatorScene />
+        <OperationsDashboard />
         <Sprints />
       </main>
       <Footer />

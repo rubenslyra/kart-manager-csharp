@@ -170,3 +170,24 @@
   - Perimetro de contencao recebeu placas visuais para separar pista e torcida.
   - Arquibancada passou a mirar o centro da pista e recebeu banner, cobertura, materiais mais claros e bandeiras.
   - Contrato de superficie foi preservado: asfalto continua no plano de contato e marcas de solo usam apenas offsets pequenos.
+
+### Etapa 15 - Reorganizacao de navegacao, arena e oficina
+
+- Arquivos principais:
+  - `src/routes/index.tsx`
+  - `src/routes/simulator.tsx`
+  - `src/routes/simulador-real.tsx`
+  - `src/components/rl/Nav.tsx`
+  - `src/components/rl/Hero.tsx`
+  - `src/components/rl/OperationsDashboard.tsx`
+  - `src/components/rl/ConfirmHomeExit.tsx`
+  - `src/components/simulator/SimulatorScene.tsx`
+  - `src/components/realsim/RealSimulator.tsx`
+- Alteracoes:
+  - Home deixou de renderizar a arena de corrida como caixa interna.
+  - Criada central operacional para replay, metricas, telemetria, historicos e estatisticas.
+  - Acesso de corrida passou a ser apresentado como `Arena`.
+  - Acesso de `Simulador Real` passou a ser apresentado como `Oficina`.
+  - Item redundante `Simulador` foi removido do menu principal.
+  - Arena e oficina passaram a abrir como experiencias full body.
+  - Ambas receberam botao de retorno para home com confirmacao via dialogo padronizado.

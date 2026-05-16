@@ -6,7 +6,6 @@ const links = [
   { href: "#aulas", label: "Aulas" },
   { href: "#estados", label: "Estados" },
   { href: "#stack", label: "Stack" },
-  { href: "#simulator", label: "Simulador" },
   { href: "#sprints", label: "Sprints" },
 ];
 
@@ -31,13 +30,13 @@ export function Nav() {
             to="/simulator"
             className="corner-cut border border-border bg-card/60 px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-widest text-muted-foreground transition-all hover:border-primary hover:text-primary"
           >
-            Simulador
+            Arena
           </Link>
           <Link
             to="/simulador-real"
             className="corner-cut bg-primary px-3 py-2 font-mono text-[11px] font-semibold uppercase tracking-widest text-primary-foreground transition-all hover:bg-primary-glow hover:glow"
           >
-            Simulador Real
+            Oficina
           </Link>
         </div>
       </div>

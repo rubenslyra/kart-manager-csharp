@@ -58,9 +58,9 @@ Tecnologias citadas no README, mas nao presentes como implementacao local neste 
 
 Principais rotas:
 
-- `/`: dashboard educacional com hero, overview, aulas, estados, stack e cena 3D.
-- `/simulator`: simulador 3D interativo de corrida/kart.
-- `/simulador-real`: oficina tecnica para validacao de modulos, checklist, telemetria e integracao mock/real.
+- `/`: dashboard educacional e operacional com hero, overview, aulas, estados, stack, replays, metricas, telemetria, historicos e estatisticas.
+- `/simulator`: arena de corrida em tela cheia para corrida/kart, replay, IA, ghost e telemetria.
+- `/simulador-real`: oficina tecnica em tela cheia para validacao de modulos, checklist, telemetria e integracao mock/real.
 
 Areas importantes do codigo:
 
@@ -252,7 +252,7 @@ Porem, a arquitetura completa descrita no README ainda nao esta materializada ne
 ## 9. Pontos Fortes
 
 - Conceito educacional forte e claro.
-- Boa separacao entre simulador comum e simulador real/oficina.
+- Boa separacao entre dashboard, arena de corrida e oficina tecnica.
 - Contrato C# bem documentado.
 - Bridge preparada para mock e WebSocket real.
 - Uso robusto de Three.js/React Three Fiber.

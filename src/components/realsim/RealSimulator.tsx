@@ -19,7 +19,11 @@ import { useExternalData } from "@/bridge/useExternalData";
 import { mockBridge } from "@/bridge/mockExternalData";
 import { canLeavePit } from "@/bridge/moduleValidator";
 
-export function RealSimulator() {
+interface RealSimulatorProps {
+  fullscreen?: boolean;
+}
+
+export function RealSimulator({ fullscreen = false }: RealSimulatorProps) {
   const ext = useExternalData();
   const [focus, setFocus] = useState<FocusTarget>(null);
   const [sceneFocus, setSceneFocus] = useState<SceneFocusTarget>(null);
@@ -66,7 +70,13 @@ export function RealSimulator() {
   };
 
   return (
-    <div className="relative h-[80vh] min-h-[640px] w-full overflow-hidden corner-cut border border-primary/40 bg-card shadow-[0_0_60px_-20px_oklch(0.72_0.18_235/0.4)]">
+    <div
+      className={
+        fullscreen
+          ? "relative min-h-screen w-full overflow-hidden bg-card"
+          : "relative h-[80vh] min-h-[640px] w-full overflow-hidden corner-cut border border-primary/40 bg-card shadow-[0_0_60px_-20px_oklch(0.72_0.18_235/0.4)]"
+      }
+    >
       <Canvas
         shadows
         dpr={[1, 1.6]}

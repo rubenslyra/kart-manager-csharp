@@ -27,9 +27,8 @@ export function Hero() {
           </p>
           <p className="mt-6 max-w-lg text-base leading-relaxed text-muted-foreground">
             O informático modela. O software dá vida.{" "}
-            <span className="text-foreground">A vida real executa.</span>{" "}
-            Cada aula compila uma DLL em C# que libera uma função real do kart —
-            do simulador 3D ao protótipo físico.
+            <span className="text-foreground">A vida real executa.</span> Cada aula compila uma DLL
+            em C# que libera uma função real do kart — da arena de corrida ao protótipo físico.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -37,13 +36,13 @@ export function Hero() {
               to="/simulator"
               className="corner-cut bg-gradient-to-r from-primary to-primary-glow px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest text-primary-foreground glow transition-transform hover:scale-[1.02]"
             >
-              Iniciar Simulador
+              Entrar na Arena
             </Link>
             <Link
               to="/simulador-real"
               className="corner-cut border border-primary/60 bg-background/60 px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest text-primary transition-colors hover:bg-primary/10"
             >
-              Simulador Real (Oficina)
+              Abrir Oficina
             </Link>
             <a
               href="#projeto"
