@@ -24,6 +24,8 @@ Composicao:
 | --- | --- | --- |
 | Dimensoes oficiais | `src/components/simulator/kart/RLKart26ADimensions.ts` | Fonte de medidas e nomes canonicos. |
 | Montagem do kart real | `src/components/realsim/RealKart.tsx` | Composicao geral e estribos. |
+| Kart da Arena | `src/components/simulator/KartModel.tsx` | Modelo procedural de corrida alinhado as dimensoes oficiais e com identidade de pista. |
+| Corredora da Arena | `src/components/simulator/Driver.tsx` | Modelo procedural da Rayssa com macacao, cabelo afro e identificacao visual. |
 | Chassi | `src/components/realsim/parts/Chassis.tsx` | Tubos, piso, eixos e arcos. |
 | Rodas | `src/components/realsim/parts/Wheels.tsx` | Rodas parametricas com calotas. |
 | Freios | `src/components/realsim/parts/BrakeSystem.tsx` | Discos, pincas, pedal e montagem das rodas. |
@@ -57,4 +59,3 @@ Os nomes usados em objetos Three.js devem continuar alinhados com `RL_KART_PART_
 - `IGNICAO_PARTIDA`
 - `CAIXA_DE_MARCHA`
 - `PAINEL_HUD`
-

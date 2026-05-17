@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import type { RefObject } from "react";
 
 export interface KartControlsState {
   forward: number;
@@ -26,7 +27,10 @@ const KEY_MAP: Record<string, keyof KartControlsState> = {
  * useKartControls — keyboard input ref. Read-only ref.current for use in useFrame.
  * Logs key presses to console while in DevMode/debug.
  */
-export function useKartControls(debug = false) {
+export function useKartControls(
+  debug = false,
+  external?: RefObject<Partial<KartControlsState> | null>,
+) {
   const state = useRef<KartControlsState>({
     forward: 0,
     reverse: 0,
@@ -58,6 +62,24 @@ export function useKartControls(debug = false) {
       window.removeEventListener("keyup", onUp);
     };
   }, [debug]);
+
+  useEffect(() => {
+    if (!external) return;
+    let raf = 0;
+    const mergeExternal = () => {
+      raf = requestAnimationFrame(mergeExternal);
+      const input = external.current;
+      if (!input) return;
+      state.current.forward = Math.max(state.current.forward, input.forward ?? 0);
+      state.current.reverse = Math.max(state.current.reverse, input.reverse ?? 0);
+      state.current.left = Math.max(state.current.left, input.left ?? 0);
+      state.current.right = Math.max(state.current.right, input.right ?? 0);
+      state.current.brake = Math.max(state.current.brake, input.brake ?? 0);
+      state.current.reset = Math.max(state.current.reset, input.reset ?? 0);
+    };
+    raf = requestAnimationFrame(mergeExternal);
+    return () => cancelAnimationFrame(raf);
+  }, [external]);
 
   return state;
 }

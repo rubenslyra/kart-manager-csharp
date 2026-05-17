@@ -4,7 +4,13 @@ import { Group, MathUtils, PerspectiveCamera as ThreePerspectiveCamera, Vector3 
 import { PerspectiveCamera } from "@react-three/drei";
 import { KartModel } from "./KartModel";
 import { useKartControls } from "./useKartControls";
-import { CHECKPOINTS, TRACK_HALF_WIDTH, TRACK_SURFACE_OFFSET, nearestOnTrack, spawnPose } from "./track";
+import {
+  CHECKPOINTS,
+  TRACK_HALF_WIDTH,
+  TRACK_SURFACE_OFFSET,
+  nearestOnTrack,
+  spawnPose,
+} from "./track";
 import type { Gear, KartState } from "./types";
 import { raceStore } from "./raceStore";
 import type { SparksHandle } from "./Sparks";
@@ -103,11 +109,27 @@ export function KartRig({
   const camChase = useRef<ThreePerspectiveCamera>(null);
   const camNose = useRef<ThreePerspectiveCamera>(null);
   const camTop = useRef<ThreePerspectiveCamera>(null);
+  const camDriver = useRef<ThreePerspectiveCamera>(null);
+  const camHelmet = useRef<ThreePerspectiveCamera>(null);
 
   useEffect(() => {
     if (!onCameras) return;
-    if (camCockpit.current && camChase.current && camNose.current && camTop.current) {
-      onCameras([camCockpit.current, camChase.current, camNose.current, camTop.current]);
+    if (
+      camCockpit.current &&
+      camChase.current &&
+      camNose.current &&
+      camTop.current &&
+      camDriver.current &&
+      camHelmet.current
+    ) {
+      onCameras([
+        camCockpit.current,
+        camChase.current,
+        camNose.current,
+        camTop.current,
+        camDriver.current,
+        camHelmet.current,
+      ]);
     }
   }, [onCameras]);
 
@@ -174,7 +196,8 @@ export function KartRig({
       const OFF_CAP = 30;
       if (Math.abs(speed.current) > OFF_CAP) {
         const decay = Math.pow(0.15, dt);
-        speed.current = Math.sign(speed.current) * (OFF_CAP + (Math.abs(speed.current) - OFF_CAP) * decay);
+        speed.current =
+          Math.sign(speed.current) * (OFF_CAP + (Math.abs(speed.current) - OFF_CAP) * decay);
         v = speed.current;
       }
       // Poeira marrom nas rodas
@@ -212,7 +235,7 @@ export function KartRig({
     const headingDelta = group.current.rotation.y - prevHeading.current;
     prevHeading.current = group.current.rotation.y;
     const yawRate = headingDelta / Math.max(dt, 1e-3); // rad/s
-    const latAcc = yawRate * (speedMs); // m/s²
+    const latAcc = yawRate * speedMs; // m/s²
     const longAcc = (_curVel.length() - _prevVel.length()) / Math.max(dt, 1e-3);
     _prevVel.copy(_curVel);
     const latG = latAcc / 9.81;
@@ -257,7 +280,12 @@ export function KartRig({
     }
     onLapProgress(myT, lap.current);
     raceStore.updateProgress(playerId, myT, lap.current);
-    raceStore.updatePose(playerId, group.current.position.x, group.current.position.z, group.current.rotation.y);
+    raceStore.updatePose(
+      playerId,
+      group.current.position.x,
+      group.current.position.z,
+      group.current.rotation.y,
+    );
     // grava trajetória do player para o Ghost Kart
     ghostStore.push(group.current.position.x, group.current.position.z, group.current.rotation.y);
 
@@ -314,7 +342,10 @@ export function KartRig({
       _desired.copy(group.current.position).add(_offset);
       const followK = 1 - Math.exp(-6 * dtRaw); // ~6Hz cutoff, sem jitter em 120Hz
       camera.position.lerp(_desired, followK);
-      _lookTarget.copy(CHASE_LOOK).applyQuaternion(group.current.quaternion).add(group.current.position);
+      _lookTarget
+        .copy(CHASE_LOOK)
+        .applyQuaternion(group.current.quaternion)
+        .add(group.current.position);
       camera.lookAt(_lookTarget);
       const persp = camera as ThreePerspectiveCamera;
       if (persp.isPerspectiveCamera) {
@@ -360,15 +391,62 @@ export function KartRig({
           driving={Math.abs(speed.current) > 0.5}
           steer={controls.current.left - controls.current.right}
           speedKmh={speed.current}
+          driverName="RAYSSA"
+          kartNumber="77"
+          tireLabel="BLENDER TIRES"
         />
       </group>
       {showHitbox && (
         <HitboxHelper color="#00e5ff" radius={1.4} autoBounds={hitboxAuto} targetRef={chassisRef} />
       )}
-      <PerspectiveCamera ref={camCockpit} position={[0, 1.05, 0.45]} rotation={[0, Math.PI, 0]} fov={78} near={0.1} far={500} />
-      <PerspectiveCamera ref={camChase} position={[0, 4, -7]} rotation={[-0.25, Math.PI, 0]} fov={55} near={0.1} far={500} />
-      <PerspectiveCamera ref={camNose} position={[0, 0.55, 1.5]} rotation={[0, Math.PI, 0]} fov={70} near={0.1} far={500} />
-      <PerspectiveCamera ref={camTop} position={[0, 22, 0]} rotation={[-Math.PI / 2, 0, 0]} fov={45} near={0.1} far={500} />
+      <PerspectiveCamera
+        ref={camCockpit}
+        position={[0, 1.05, 0.45]}
+        rotation={[0, Math.PI, 0]}
+        fov={78}
+        near={0.1}
+        far={500}
+      />
+      <PerspectiveCamera
+        ref={camChase}
+        position={[0, 4, -7]}
+        rotation={[-0.25, Math.PI, 0]}
+        fov={55}
+        near={0.1}
+        far={500}
+      />
+      <PerspectiveCamera
+        ref={camNose}
+        position={[0, 0.55, 1.5]}
+        rotation={[0, Math.PI, 0]}
+        fov={70}
+        near={0.1}
+        far={500}
+      />
+      <PerspectiveCamera
+        ref={camTop}
+        position={[0, 22, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        fov={45}
+        near={0.1}
+        far={500}
+      />
+      <PerspectiveCamera
+        ref={camDriver}
+        position={[0.18, 1.18, 0.15]}
+        rotation={[-0.04, Math.PI, -0.015]}
+        fov={72}
+        near={0.05}
+        far={500}
+      />
+      <PerspectiveCamera
+        ref={camHelmet}
+        position={[0, 1.22, 0.22]}
+        rotation={[0, Math.PI, 0]}
+        fov={88}
+        near={0.04}
+        far={500}
+      />
     </group>
   );
 }

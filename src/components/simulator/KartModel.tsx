@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
+import { Text } from "@react-three/drei";
 import { Group, MathUtils, Mesh } from "three";
 import type { KartState } from "./types";
 import { STATE_COLOR } from "./types";
@@ -17,6 +18,9 @@ interface Props {
   speedKmh?: number;
   /** Override main livery color (used for AI opponents). */
   liveryColor?: string;
+  driverName?: string;
+  kartNumber?: string;
+  tireLabel?: string;
 }
 
 const STEER_ANGLE = 0.55; // ~31°
@@ -40,6 +44,9 @@ export function KartModel({
   steer = 0,
   speedKmh = 0,
   liveryColor,
+  driverName = "RAYSSA",
+  kartNumber = "77",
+  tireLabel = "BLENDER TIRES",
 }: Props) {
   const group = useRef<Group>(null);
   const steerWheel = useRef<Group>(null);
@@ -60,13 +67,25 @@ export function KartModel({
     if (pivotFL.current && pivotFR.current) {
       // Ackermann: when turning left (steer > 0), inner = left turns more
       const inner = target;
-      const outer = target === 0 ? 0 : Math.atan(
-        (WHEELBASE * Math.tan(target)) / (WHEELBASE + (steer > 0 ? -1 : 1) * (TRACK_WIDTH / 2) * Math.tan(target)),
-      );
+      const outer =
+        target === 0
+          ? 0
+          : Math.atan(
+              (WHEELBASE * Math.tan(target)) /
+                (WHEELBASE + (steer > 0 ? -1 : 1) * (TRACK_WIDTH / 2) * Math.tan(target)),
+            );
       const leftTarget = steer > 0 ? inner : outer;
       const rightTarget = steer > 0 ? outer : inner;
-      pivotFL.current.rotation.y = MathUtils.lerp(pivotFL.current.rotation.y, leftTarget, Math.min(1, dt * 10));
-      pivotFR.current.rotation.y = MathUtils.lerp(pivotFR.current.rotation.y, rightTarget, Math.min(1, dt * 10));
+      pivotFL.current.rotation.y = MathUtils.lerp(
+        pivotFL.current.rotation.y,
+        leftTarget,
+        Math.min(1, dt * 10),
+      );
+      pivotFR.current.rotation.y = MathUtils.lerp(
+        pivotFR.current.rotation.y,
+        rightTarget,
+        Math.min(1, dt * 10),
+      );
     }
 
     // Rolling — proportional to speed; differential when turning
@@ -139,7 +158,12 @@ export function KartModel({
           </mesh>
         ))}
         {[-0.6, -0.2, 0.2, 0.6].map((z, i) => (
-          <mesh key={`cross-${i}`} rotation={[0, 0, Math.PI / 2]} position={[0, 0.13, z]} castShadow>
+          <mesh
+            key={`cross-${i}`}
+            rotation={[0, 0, Math.PI / 2]}
+            position={[0, 0.13, z]}
+            castShadow
+          >
             <cylinderGeometry args={[0.032, 0.032, 0.78, 10]} />
             <meshStandardMaterial color={tubular} metalness={0.85} roughness={0.25} />
           </mesh>
@@ -174,6 +198,17 @@ export function KartModel({
           <planeGeometry args={[0.28, 0.14]} />
           <meshStandardMaterial color="#fde047" />
         </mesh>
+        <Text
+          position={[0, 0.04, 0.18]}
+          fontSize={0.12}
+          anchorX="center"
+          anchorY="middle"
+          color="#111827"
+          outlineWidth={0.006}
+          outlineColor="#f8fafc"
+        >
+          {kartNumber}
+        </Text>
       </group>
 
       {/* Side pods */}
@@ -187,10 +222,25 @@ export function KartModel({
             <planeGeometry args={[0.72, 0.06]} />
             <meshStandardMaterial color={liveryOrange} />
           </mesh>
-          <mesh position={[x > 0 ? 0.053 : -0.053, -0.04, -0.24]} rotation={[0, x > 0 ? 0 : Math.PI, 0]}>
+          <mesh
+            position={[x > 0 ? 0.053 : -0.053, -0.04, -0.24]}
+            rotation={[0, x > 0 ? 0 : Math.PI, 0]}
+          >
             <planeGeometry args={[0.24, 0.12]} />
             <meshStandardMaterial color="#fde047" />
           </mesh>
+          <Text
+            position={[x > 0 ? 0.056 : -0.056, -0.04, -0.24]}
+            rotation={[0, x > 0 ? Math.PI / 2 : -Math.PI / 2, 0]}
+            fontSize={0.1}
+            anchorX="center"
+            anchorY="middle"
+            color="#111827"
+            outlineWidth={0.006}
+            outlineColor="#f8fafc"
+          >
+            {kartNumber}
+          </Text>
         </group>
       ))}
 
@@ -217,7 +267,7 @@ export function KartModel({
       </group>
 
       {/* Driver */}
-      <Driver driving={driving} />
+      <Driver driving={driving} name={driverName} suitColor={liveryColor ?? "#1e3a8a"} />
 
       {/* Battery */}
       <mesh position={[0, 0.19, -0.48]} castShadow>
@@ -252,21 +302,52 @@ export function KartModel({
          ========================================================== */}
 
       {/* Front-left: pivot at official axle center height. */}
-      <group ref={pivotFL} position={[RL_KART_DERIVED.halfFrontTrack, WHEEL_RADIUS, RL_KART_DERIVED.halfWheelbase]}>
+      <group
+        ref={pivotFL}
+        position={[RL_KART_DERIVED.halfFrontTrack, WHEEL_RADIUS, RL_KART_DERIVED.halfWheelbase]}
+      >
         {renderWheel(wheelFL, false)}
+        <TireLabel label={tireLabel} side={1} />
       </group>
       {/* Front-right: pivot at official axle center height. */}
-      <group ref={pivotFR} position={[-RL_KART_DERIVED.halfFrontTrack, WHEEL_RADIUS, RL_KART_DERIVED.halfWheelbase]}>
+      <group
+        ref={pivotFR}
+        position={[-RL_KART_DERIVED.halfFrontTrack, WHEEL_RADIUS, RL_KART_DERIVED.halfWheelbase]}
+      >
         {renderWheel(wheelFR, false)}
+        <TireLabel label={tireLabel} side={-1} />
       </group>
       {/* Rear-left: official axle center height. */}
-      <group position={[RL_KART_DERIVED.halfRearTrack, WHEEL_RADIUS, -RL_KART_DERIVED.halfWheelbase]}>
+      <group
+        position={[RL_KART_DERIVED.halfRearTrack, WHEEL_RADIUS, -RL_KART_DERIVED.halfWheelbase]}
+      >
         {renderWheel(wheelRL, true)}
+        <TireLabel label={tireLabel} side={1} />
       </group>
       {/* Rear-right: official axle center height. */}
-      <group position={[-RL_KART_DERIVED.halfRearTrack, WHEEL_RADIUS, -RL_KART_DERIVED.halfWheelbase]}>
+      <group
+        position={[-RL_KART_DERIVED.halfRearTrack, WHEEL_RADIUS, -RL_KART_DERIVED.halfWheelbase]}
+      >
         {renderWheel(wheelRR, true)}
+        <TireLabel label={tireLabel} side={-1} />
       </group>
     </group>
+  );
+}
+
+function TireLabel({ label, side }: { label: string; side: 1 | -1 }) {
+  return (
+    <Text
+      position={[side * 0.052, 0.02, 0]}
+      rotation={[0, side > 0 ? Math.PI / 2 : -Math.PI / 2, Math.PI / 2]}
+      fontSize={0.035}
+      anchorX="center"
+      anchorY="middle"
+      color="#f8fafc"
+      outlineWidth={0.003}
+      outlineColor="#0a0a0a"
+    >
+      {label}
+    </Text>
   );
 }

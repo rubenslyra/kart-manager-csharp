@@ -141,6 +141,63 @@ Este documento registra elementos do ambiente 3D que nao sao partes fisicas do k
   - `Alexander Jauk` / Pixabay: Go-Kart Passing.
   - Pixabay: 015522_Go Kart Racing Outdoors.
 
+## Arena De Corrida
+
+### Cameras imersivas e split-screen
+
+- Codigo:
+  - `src/components/simulator/SimulatorScene.tsx`
+  - `src/components/simulator/KartRig.tsx`
+- Comportamento:
+  - O split-screen permanece restrito as quatro cameras historicas:
+    - `COCKPIT`
+    - `CHASE`
+    - `NOSE`
+    - `TOP-DOWN`
+  - A visao em tela unica adiciona:
+    - `DRIVER`: camera na perspectiva da corredora;
+    - `HELMET`: camera de capacete/visor.
+  - `FREE` continua usando OrbitControls quando o split esta desligado.
+- Requisito tecnico:
+  - Novas cameras de single-view nao devem alterar a composicao 2x2 do split.
+  - A lista de cameras pode crescer, mas o render do split deve usar apenas as quatro primeiras cameras de competicao.
+
+### Visor de capacete e radio da engenharia
+
+- Codigo:
+  - `src/components/simulator/HelmetHud.tsx`
+  - `src/components/simulator/SimulatorScene.tsx`
+- Fonte de dados:
+  - `Telemetry` do simulador.
+  - `ExtendedPhysics` calculado em `KartRig`.
+  - Estado de volta/progresso da corrida.
+- Comportamento:
+  - Ativo apenas nas cameras `DRIVER` e `HELMET`.
+  - Exibe velocidade, marcha, RPM, grip, volta, bateria, reticulo e vinheta de visor.
+  - Mensagens de engenharia sao selecionadas por contexto:
+    - largada/ritmo;
+    - reta/alta velocidade;
+    - baixa aderencia/drift;
+    - fechamento de setor/volta.
+  - Quando o audio da Arena esta habilitado e o navegador suporta, usa `SpeechSynthesis` com voz em `pt-BR`.
+  - Quando voz nao esta disponivel ou e bloqueada, mantem o canal visual por legenda.
+- Requisito tecnico:
+  - O radio nao depende de MP3 novo.
+  - A voz sintetizada depende de suporte/permissao do navegador e deve falhar sem quebrar a corrida.
+
+### Preparacao de controle por gestos
+
+- Codigo:
+  - `src/components/simulator/gestureInput.ts`
+  - `src/components/simulator/useKartControls.ts`
+- Comportamento:
+  - Define contrato inicial `GestureInputState` e `GestureInputStatus`.
+  - `useKartControls` passa a aceitar uma fonte externa opcional no mesmo formato de entrada do teclado.
+  - A webcam real permanece desativada nesta etapa.
+- Requisito tecnico:
+  - O controle por teclado continua sendo o padrao.
+  - Implementacao real de gestos deve plugar no contrato existente, provavelmente via `navigator.mediaDevices.getUserMedia` e detector de maos/pose em tarefa posterior.
+
 ## Convencao
 
 - Elementos deste documento podem parecer "projetores", telas ou hologramas, mas devem ser tratados como interfaces tecnicas de cena.

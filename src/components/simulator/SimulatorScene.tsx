@@ -29,13 +29,18 @@ import { RecordedRace } from "./RecordedRace";
 import { replayRecordStore } from "./replayRecordStore";
 import { FpsMeter } from "./FpsMeter";
 import { perfStore, usePerf } from "./perfStore";
+import { HelmetHud } from "./HelmetHud";
+import { EMPTY_GESTURE_INPUT } from "./gestureInput";
 
 interface Props {
   fullscreen?: boolean;
 }
 
-const VIEW_LABELS = ["COCKPIT", "CHASE", "NOSE", "TOP-DOWN", "FREE"] as const;
-const FREE_VIEW = 4;
+const VIEW_LABELS = ["COCKPIT", "CHASE", "NOSE", "TOP-DOWN", "DRIVER", "HELMET", "FREE"] as const;
+const SPLIT_CAMERA_COUNT = 4;
+const DRIVER_VIEW = 4;
+const HELMET_VIEW = 5;
+const FREE_VIEW = 6;
 
 /**
  * Splitter — renders the scene into 1 or 4 viewports using gl.setScissor + setViewport.
@@ -61,9 +66,7 @@ function Splitter({
 
     if (!splitMode) {
       const cam =
-        activeView === FREE_VIEW || !cameras
-          ? fallbackCam
-          : (cameras[activeView] ?? fallbackCam);
+        activeView === FREE_VIEW || !cameras ? fallbackCam : (cameras[activeView] ?? fallbackCam);
       if (!cam) return;
       cam.aspect = w / h;
       cam.updateProjectionMatrix();
@@ -73,7 +76,7 @@ function Splitter({
       return;
     }
 
-    if (!cameras || cameras.length < 4) return;
+    if (!cameras || cameras.length < SPLIT_CAMERA_COUNT) return;
     const halfW = w / 2;
     const halfH = h / 2;
     const quads = [
@@ -82,7 +85,7 @@ function Splitter({
       { x: 0, y: 0, w: halfW, h: halfH }, // bottom-left
       { x: halfW, y: 0, w: halfW, h: halfH }, // bottom-right
     ];
-    cameras.forEach((cam, i) => {
+    cameras.slice(0, SPLIT_CAMERA_COUNT).forEach((cam, i) => {
       const q = quads[i];
       cam.aspect = q.w / q.h;
       cam.updateProjectionMatrix();
@@ -111,7 +114,8 @@ function ShadowsSync({ enabled }: { enabled: boolean }) {
   useEffect(() => {
     gl.shadowMap.enabled = enabled;
     scene.traverse((obj) => {
-      const mat = (obj as { material?: { needsUpdate?: boolean } | { needsUpdate?: boolean }[] }).material;
+      const mat = (obj as { material?: { needsUpdate?: boolean } | { needsUpdate?: boolean }[] })
+        .material;
       if (Array.isArray(mat)) mat.forEach((m) => (m.needsUpdate = true));
       else if (mat) mat.needsUpdate = true;
     });
@@ -146,11 +150,13 @@ export function SimulatorScene({ fullscreen = false }: Props) {
     telemetry.reset();
   }, [resetSignal]);
 
-  const aiOpponents = useMemo(() => generateAIList(race.setup), [race.setup, resetSignal]);
+  const aiOpponents = useMemo(() => generateAIList(race.setup), [race.setup]);
 
   const handleLap = useCallback((progress: number, count: number) => {
     setLap((prev) =>
-      prev.count === count && Math.abs(prev.progress - progress) < 0.01 ? prev : { progress, count },
+      prev.count === count && Math.abs(prev.progress - progress) < 0.01
+        ? prev
+        : { progress, count },
     );
   }, []);
 
@@ -171,7 +177,7 @@ export function SimulatorScene({ fullscreen = false }: Props) {
     setCamsReady(true);
   }, []);
 
-  // Keyboard: 1/2/3/4 swap active view; V toggles split; H toggles hitbox; B toggles auto-bounds
+  // Keyboard: 1..7 swap active view; V toggles split; H toggles hitbox; B toggles auto-bounds
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement | null)?.tagName;
@@ -180,41 +186,39 @@ export function SimulatorScene({ fullscreen = false }: Props) {
       if (e.key === "h" || e.key === "H") setShowHitbox((s) => !s);
       if (e.key === "b" || e.key === "B") setHitboxAuto((s) => !s);
       if (e.key === "p" || e.key === "P") perfStore.toggleOverlay();
-      if (["1", "2", "3", "4", "5"].includes(e.key)) setActiveView(parseInt(e.key, 10) - 1);
+      if (["1", "2", "3", "4", "5", "6", "7"].includes(e.key))
+        setActiveView(parseInt(e.key, 10) - 1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   // Debug presets (botões abaixo) — alternam combinações úteis sem depender só de teclas
-  const applyPreset = useCallback(
-    (preset: "off" | "hitbox" | "hitboxParticles" | "fpsStats") => {
-      if (preset === "off") {
-        setShowHitbox(false);
-        setDevMode(false);
-        perfStore.setToggles({ particlesEnabled: true, crowdEnabled: true });
-        return;
-      }
-      if (preset === "hitbox") {
-        setShowHitbox(true);
-        setDevMode(true);
-        perfStore.setToggles({ particlesEnabled: false });
-        return;
-      }
-      if (preset === "hitboxParticles") {
-        setShowHitbox(true);
-        setDevMode(true);
-        perfStore.setToggles({ particlesEnabled: true });
-        return;
-      }
-      if (preset === "fpsStats") {
-        setShowHitbox(false);
-        setDevMode(true);
-        perfStore.setToggles({ particlesEnabled: true, crowdEnabled: true });
-      }
-    },
-    [],
-  );
+  const applyPreset = useCallback((preset: "off" | "hitbox" | "hitboxParticles" | "fpsStats") => {
+    if (preset === "off") {
+      setShowHitbox(false);
+      setDevMode(false);
+      perfStore.setToggles({ particlesEnabled: true, crowdEnabled: true });
+      return;
+    }
+    if (preset === "hitbox") {
+      setShowHitbox(true);
+      setDevMode(true);
+      perfStore.setToggles({ particlesEnabled: false });
+      return;
+    }
+    if (preset === "hitboxParticles") {
+      setShowHitbox(true);
+      setDevMode(true);
+      perfStore.setToggles({ particlesEnabled: true });
+      return;
+    }
+    if (preset === "fpsStats") {
+      setShowHitbox(false);
+      setDevMode(true);
+      perfStore.setToggles({ particlesEnabled: true, crowdEnabled: true });
+    }
+  }, []);
 
   // Stream telemetry → audio engine
   useEffect(() => {
@@ -313,7 +317,7 @@ export function SimulatorScene({ fullscreen = false }: Props) {
               <span className="font-mono text-foreground">setas</span> ·{" "}
               <span className="font-mono text-foreground">Espaço</span> = freio.{" "}
               <span className="font-mono text-foreground">V</span> alterna split-screen ·{" "}
-              <span className="font-mono text-foreground">1-4</span> selecionam câmera.
+              <span className="font-mono text-foreground">1-7</span> selecionam câmera.
             </p>
           </div>
           <div className="hidden items-center gap-3 md:flex">
@@ -415,8 +419,14 @@ export function SimulatorScene({ fullscreen = false }: Props) {
                     showHitbox={showHitbox}
                     hitboxAuto={hitboxAuto}
                   />
-                  {aiOpponents.map((a) => (
-                    <AIKart key={a.id} {...a} showHitbox={showHitbox} hitboxAuto={hitboxAuto} />
+                  {aiOpponents.map((a, index) => (
+                    <AIKart
+                      key={a.id}
+                      {...a}
+                      kartNumber={`${21 + index}`}
+                      showHitbox={showHitbox}
+                      hitboxAuto={hitboxAuto}
+                    />
                   ))}
                   <GhostKart />
                 </group>
@@ -444,6 +454,15 @@ export function SimulatorScene({ fullscreen = false }: Props) {
             {/* Single-view: HUD */}
             {!splitMode && <HUD3D t={t} lap={lap} devMode={devMode} />}
             {!splitMode && <ExtendedHud p={physics} />}
+            {!splitMode && (
+              <HelmetHud
+                active={activeView === DRIVER_VIEW || activeView === HELMET_VIEW}
+                audioEnabled={audio.enabled}
+                t={t}
+                lap={lap}
+                physics={physics}
+              />
+            )}
             {!splitMode && <Leaderboard />}
             {!splitMode && <TelemetryCharts />}
             {devMode && <DebugPanel stats={debugStats} />}
@@ -459,12 +478,14 @@ export function SimulatorScene({ fullscreen = false }: Props) {
                 <span>Presets</span>
               </div>
               <div className="flex flex-wrap gap-1">
-                {([
-                  ["off", "Off"],
-                  ["hitbox", "Hitboxes"],
-                  ["hitboxParticles", "Hitb+Part"],
-                  ["fpsStats", "FPS+Stats"],
-                ] as const).map(([k, label]) => (
+                {(
+                  [
+                    ["off", "Off"],
+                    ["hitbox", "Hitboxes"],
+                    ["hitboxParticles", "Hitb+Part"],
+                    ["fpsStats", "FPS+Stats"],
+                  ] as const
+                ).map(([k, label]) => (
                   <button
                     key={k}
                     onClick={() => applyPreset(k)}
@@ -483,17 +504,23 @@ export function SimulatorScene({ fullscreen = false }: Props) {
                 <PerfToggleBtn
                   label="Partículas"
                   on={perf.toggles.particlesEnabled}
-                  onClick={() => perfStore.setToggle("particlesEnabled", !perf.toggles.particlesEnabled)}
+                  onClick={() =>
+                    perfStore.setToggle("particlesEnabled", !perf.toggles.particlesEnabled)
+                  }
                 />
                 <PerfToggleBtn
                   label="Sombras"
                   on={perf.toggles.shadowsEnabled}
-                  onClick={() => perfStore.setToggle("shadowsEnabled", !perf.toggles.shadowsEnabled)}
+                  onClick={() =>
+                    perfStore.setToggle("shadowsEnabled", !perf.toggles.shadowsEnabled)
+                  }
                 />
                 <PerfToggleBtn
                   label="MotionBlur"
                   on={perf.toggles.motionBlurEnabled}
-                  onClick={() => perfStore.setToggle("motionBlurEnabled", !perf.toggles.motionBlurEnabled)}
+                  onClick={() =>
+                    perfStore.setToggle("motionBlurEnabled", !perf.toggles.motionBlurEnabled)
+                  }
                 />
                 <PerfToggleBtn
                   label="Hitbox-Auto"
@@ -504,6 +531,11 @@ export function SimulatorScene({ fullscreen = false }: Props) {
                   label="Overlay (P)"
                   on={perf.toggles.overlayEnabled}
                   onClick={() => perfStore.toggleOverlay()}
+                />
+                <PerfToggleBtn
+                  label={`Gestos ${EMPTY_GESTURE_INPUT.status}`}
+                  on={false}
+                  onClick={() => undefined}
                 />
               </div>
             </div>
@@ -534,7 +566,12 @@ export function SimulatorScene({ fullscreen = false }: Props) {
             {(race.finished || race.playbackActive) && !showPodium && (
               <div className="pointer-events-auto absolute inset-x-0 top-10 z-40 flex flex-col items-center gap-2">
                 <div className="corner-cut border border-primary bg-background/70 px-5 py-2 font-mono text-[11px] uppercase tracking-[0.5em] text-primary backdrop-blur-sm animate-pulse">
-                  ◉ Replay · {race.replayPhase === 0 ? "TV" : race.replayPhase === 1 ? "Orbital" : "Helicóptero"}
+                  ◉ Replay ·{" "}
+                  {race.replayPhase === 0
+                    ? "TV"
+                    : race.replayPhase === 1
+                      ? "Orbital"
+                      : "Helicóptero"}
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-2">
                   {race.finished && !race.playbackActive && (
@@ -619,7 +656,7 @@ export function SimulatorScene({ fullscreen = false }: Props) {
             {/* Split-view overlays: 4 quadrant labels + mini HUDs */}
             {splitMode && (
               <div className="pointer-events-none absolute inset-0 grid grid-cols-2 grid-rows-2">
-                {VIEW_LABELS.slice(0, 4).map((label, i) => (
+                {VIEW_LABELS.slice(0, SPLIT_CAMERA_COUNT).map((label, i) => (
                   <div key={label} className="relative border border-primary/20">
                     <div className="absolute left-2 top-2 border border-primary/40 bg-background/60 px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-primary backdrop-blur-sm">
                       CAM {i + 1} · {label}
@@ -694,7 +731,9 @@ export function SimulatorScene({ fullscreen = false }: Props) {
               <div className="text-muted-foreground">Espaço — freio forte</div>
               <div className="text-muted-foreground">V — split-screen</div>
               <div className="text-muted-foreground">H — hitbox debug</div>
-              <div className="text-muted-foreground">1-4 — câmera ativa</div>
+              <div className="text-muted-foreground">1-7 — câmera ativa</div>
+              <div className="text-muted-foreground">5 — visão corredora</div>
+              <div className="text-muted-foreground">6 — capacete / visor</div>
               <button
                 onClick={handleResetPosition}
                 className="mt-3 w-full corner-cut border border-border bg-card/60 px-3 py-1.5 text-muted-foreground transition-colors hover:border-primary hover:text-primary md:hidden"
@@ -709,7 +748,15 @@ export function SimulatorScene({ fullscreen = false }: Props) {
   );
 }
 
-function PerfToggleBtn({ label, on, onClick }: { label: string; on: boolean; onClick: () => void }) {
+function PerfToggleBtn({
+  label,
+  on,
+  onClick,
+}: {
+  label: string;
+  on: boolean;
+  onClick: () => void;
+}) {
   return (
     <button
       onClick={onClick}

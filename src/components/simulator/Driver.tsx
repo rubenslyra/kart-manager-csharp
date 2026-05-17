@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
+import { Text } from "@react-three/drei";
 import { Group } from "three";
 
 /**
@@ -7,7 +8,15 @@ import { Group } from "three";
  * Built from primitives so it always renders, no GLTF dependency.
  * Sits inside the kart cockpit.
  */
-export function Driver({ driving }: { driving: boolean }) {
+export function Driver({
+  driving,
+  name = "RAYSSA",
+  suitColor = "#1e3a8a",
+}: {
+  driving: boolean;
+  name?: string;
+  suitColor?: string;
+}) {
   const arms = useRef<Group>(null);
 
   useFrame((_, dt) => {
@@ -22,7 +31,7 @@ export function Driver({ driving }: { driving: boolean }) {
   });
 
   // Suit colors: blue + orange (matches uploaded reference)
-  const suitBlue = "#1e3a8a";
+  const suitBlue = suitColor;
   const suitOrange = "#f97316";
   const skin = "#5b3320";
   const hair = "#1a1310";
@@ -39,11 +48,34 @@ export function Driver({ driving }: { driving: boolean }) {
         <boxGeometry args={[0.44, 0.18, 0.005]} />
         <meshStandardMaterial color={suitOrange} roughness={0.6} />
       </mesh>
+      <Text
+        position={[0, 0.46, 0.172]}
+        rotation={[0, 0, 0]}
+        fontSize={0.055}
+        anchorX="center"
+        anchorY="middle"
+        color="#f8fafc"
+        outlineWidth={0.004}
+        outlineColor="#0f172a"
+      >
+        {name}
+      </Text>
       {/* Number 77 placard */}
       <mesh position={[0, 0.28, 0.17]}>
         <planeGeometry args={[0.18, 0.1]} />
         <meshStandardMaterial color="#fde047" />
       </mesh>
+      <Text
+        position={[0, 0.28, 0.176]}
+        fontSize={0.075}
+        anchorX="center"
+        anchorY="middle"
+        color="#111827"
+        outlineWidth={0.003}
+        outlineColor="#f8fafc"
+      >
+        77
+      </Text>
 
       {/* Neck */}
       <mesh position={[0, 0.7, 0]} castShadow>
@@ -78,13 +110,25 @@ export function Driver({ driving }: { driving: boolean }) {
       ))}
 
       {/* Eyes */}
-      <mesh position={[0.05, 0.88, 0.16]}>
+      <mesh position={[0.055, 0.885, 0.16]}>
+        <sphereGeometry args={[0.026, 12, 12]} />
+        <meshStandardMaterial color="#f8fafc" />
+      </mesh>
+      <mesh position={[-0.055, 0.885, 0.16]}>
+        <sphereGeometry args={[0.026, 12, 12]} />
+        <meshStandardMaterial color="#f8fafc" />
+      </mesh>
+      <mesh position={[0.057, 0.884, 0.182]}>
         <sphereGeometry args={[0.012, 8, 8]} />
         <meshStandardMaterial color="#0a0a0a" />
       </mesh>
-      <mesh position={[-0.05, 0.88, 0.16]}>
+      <mesh position={[-0.053, 0.884, 0.182]}>
         <sphereGeometry args={[0.012, 8, 8]} />
         <meshStandardMaterial color="#0a0a0a" />
+      </mesh>
+      <mesh position={[0, 0.81, 0.176]} rotation={[0, 0, 0]}>
+        <boxGeometry args={[0.09, 0.012, 0.006]} />
+        <meshStandardMaterial color="#f8fafc" />
       </mesh>
 
       {/* Arms forward holding the wheel */}

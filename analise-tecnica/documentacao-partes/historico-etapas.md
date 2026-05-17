@@ -219,3 +219,21 @@
   - Logo textual do header e footer foi substituido pela marca horizontal fornecida do `RL KART 26A`.
   - Componente `Logo` passou a usar imagem servida pela pasta `public`.
   - Tamanho responsivo do logo foi ajustado para preservar leitura e encaixe no layout.
+
+### Etapa 18 - Cameras imersivas e visor de engenharia da Arena
+
+- Arquivos principais:
+  - `src/components/simulator/SimulatorScene.tsx`
+  - `src/components/simulator/KartRig.tsx`
+  - `src/components/simulator/HelmetHud.tsx`
+  - `src/components/simulator/KartModel.tsx`
+  - `src/components/simulator/Driver.tsx`
+  - `src/components/simulator/gestureInput.ts`
+- Alteracoes:
+  - Arena manteve o split-screen 2x2 original com `COCKPIT`, `CHASE`, `NOSE` e `TOP-DOWN`.
+  - Single-view ganhou cameras adicionais `DRIVER` e `HELMET`.
+  - Camera de capacete recebeu visor tecnico com telemetria, reticulo e mensagens da engenharia.
+  - Radio de engenharia usa legendas contextuais e voz via `SpeechSynthesis` quando disponivel.
+  - Kart e corredora procedural passaram a exibir identidade `RAYSSA`, numero `77` e pneus `BLENDER TIRES`.
+  - Adversarios preservam nomes e cores atuais, usando a mesma base visual de kart com numeracao propria.
+  - Criado contrato inicial para futura entrada por gestos via webcam sem alterar o controle por teclado.

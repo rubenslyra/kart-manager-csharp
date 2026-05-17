@@ -17,13 +17,26 @@ interface Props {
   aggression?: number;
   brakingSkill?: number; // 0..1
   overtakeSkill?: number; // 0..1
+  kartNumber?: string;
   showHitbox?: boolean;
   hitboxAuto?: boolean;
 }
 
 const TRACK_LANE = 1.6;
 
-export function AIKart({ id, name, color, startOffset, baseSpeed, aggression = 0.5, brakingSkill = 0.5, overtakeSkill = 0.5, showHitbox = false, hitboxAuto = false }: Props) {
+export function AIKart({
+  id,
+  name,
+  color,
+  startOffset,
+  baseSpeed,
+  aggression = 0.5,
+  brakingSkill = 0.5,
+  overtakeSkill = 0.5,
+  kartNumber = "21",
+  showHitbox = false,
+  hitboxAuto = false,
+}: Props) {
   const chassisRef = useRef<Group>(null);
   const group = useRef<Group>(null);
   const curve = useMemo(() => trackCurve(), []);
@@ -84,13 +97,22 @@ export function AIKart({ id, name, color, startOffset, baseSpeed, aggression = 0
     const tan = curve.getTangentAt(t.current);
     const perp = new Vector3(-tan.z, 0, tan.x).normalize();
     const offset = perp.multiplyScalar(lane.current * TRACK_LANE);
-    group.current.position.set(point.x + offset.x, point.y + TRACK_SURFACE_OFFSET, point.z + offset.z);
+    group.current.position.set(
+      point.x + offset.x,
+      point.y + TRACK_SURFACE_OFFSET,
+      point.z + offset.z,
+    );
     group.current.rotation.y = Math.atan2(tan.x, tan.z);
     if (prevT > 0.85 && t.current < 0.15) lap.current += 1;
     group.current.userData.prevT = t.current;
 
     raceStore.updateProgress(id, t.current, lap.current);
-    raceStore.updatePose(id, group.current.position.x, group.current.position.z, group.current.rotation.y);
+    raceStore.updatePose(
+      id,
+      group.current.position.x,
+      group.current.position.z,
+      group.current.rotation.y,
+    );
     perfStore.reportGrounded(id, true, speed.current * 3.6);
   });
 
@@ -104,6 +126,9 @@ export function AIKart({ id, name, color, startOffset, baseSpeed, aggression = 0
           steer={steerVisual.current}
           speedKmh={speed.current * 3.6}
           liveryColor={color}
+          driverName={name.toUpperCase()}
+          kartNumber={kartNumber}
+          tireLabel="RL RACING"
         />
       </group>
       <Nameplate name={name} color={color} />
