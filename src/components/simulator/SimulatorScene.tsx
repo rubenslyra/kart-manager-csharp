@@ -17,7 +17,7 @@ import { Sparks, type SparksHandle } from "./Sparks";
 import { AIKart } from "./AIKart";
 import { Leaderboard, Podium } from "./Leaderboard";
 import { ExtendedHud, type ExtendedPhysics } from "./ExtendedHud";
-import { raceStore, useRaceState } from "./raceStore";
+import { raceStore, rankedRacers, useRaceState } from "./raceStore";
 import { RaceSetup, generateAIList } from "./RaceSetup";
 import { TelemetryCharts } from "./TelemetryCharts";
 import { telemetry } from "./telemetry";
@@ -31,6 +31,15 @@ import { FpsMeter } from "./FpsMeter";
 import { perfStore, usePerf } from "./perfStore";
 import { HelmetHud } from "./HelmetHud";
 import { EMPTY_GESTURE_INPUT } from "./gestureInput";
+import { EngineeringPitWall } from "./EngineeringPitWall";
+import {
+  engineeringProgressStore,
+  nextUnlockLabel,
+  roleLabel,
+  useEngineeringProgress,
+  getTeamRole,
+  type ControlMode,
+} from "./engineeringProgressStore";
 
 interface Props {
   fullscreen?: boolean;
@@ -41,6 +50,7 @@ const SPLIT_CAMERA_COUNT = 4;
 const DRIVER_VIEW = 4;
 const HELMET_VIEW = 5;
 const FREE_VIEW = 6;
+const REQUIRED_MODULES = ["CORE", "GEARBOX", "BRAKES", "IGNITION"] as const;
 
 /**
  * Splitter — renders the scene into 1 or 4 viewports using gl.setScissor + setViewport.
@@ -142,13 +152,33 @@ export function SimulatorScene({ fullscreen = false }: Props) {
   const [hitboxAuto, setHitboxAuto] = useState(false);
   const perf = usePerf();
   const race = useRaceState();
+  const engineering = useEngineeringProgress();
+  const canUseDriverControl = engineering.rayssaWins >= 10;
+  const engineeringMode = engineering.controlMode === "ENGINEERING_OBSERVER";
+  const currentRole = getTeamRole(engineering.rayssaWins);
 
   // Register player and reset race + telemetry on mount/reset
   useEffect(() => {
     raceStore.reset();
-    raceStore.registerRacer({ id: "player", name: "Você", color: "#22d3ee", isPlayer: true });
+    raceStore.registerRacer({ id: "player", name: "Rayssa", color: "#22d3ee", isPlayer: true });
     telemetry.reset();
   }, [resetSignal]);
+
+  useEffect(() => {
+    if (!engineeringMode) return;
+    REQUIRED_MODULES.forEach((m) => {
+      if (!t.modules.includes(m)) sim.loadModule(m);
+    });
+    if (t.modules.includes("IGNITION") && !t.ignition) sim.ignite();
+  }, [engineeringMode, sim, t.ignition, t.modules]);
+
+  useEffect(() => {
+    if (!race.finished) return;
+    const ranked = rankedRacers(race);
+    const winner = ranked[0];
+    if (winner?.id === "player") engineeringProgressStore.recordRayssaWin(race.startedAt);
+    else engineeringProgressStore.markRaceSeen(race.startedAt);
+  }, [race]);
 
   const aiOpponents = useMemo(() => generateAIList(race.setup), [race.setup]);
 
@@ -175,6 +205,10 @@ export function SimulatorScene({ fullscreen = false }: Props) {
   const handleCameras = useCallback((cams: ThreePerspectiveCamera[]) => {
     camerasRef.current = cams;
     setCamsReady(true);
+  }, []);
+
+  const handleControlMode = useCallback((mode: ControlMode) => {
+    engineeringProgressStore.setControlMode(mode);
   }, []);
 
   // Keyboard: 1..7 swap active view; V toggles split; H toggles hitbox; B toggles auto-bounds
@@ -313,14 +347,38 @@ export function SimulatorScene({ fullscreen = false }: Props) {
               RL <span className="text-primary text-glow">KART</span> · Live Scene
             </h2>
             <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-              Dirija com <span className="font-mono text-foreground">WASD</span> ou{" "}
-              <span className="font-mono text-foreground">setas</span> ·{" "}
-              <span className="font-mono text-foreground">Espaço</span> = freio.{" "}
-              <span className="font-mono text-foreground">V</span> alterna split-screen ·{" "}
-              <span className="font-mono text-foreground">1-7</span> selecionam câmera.
+              {engineeringMode ? (
+                <>
+                  Modo engenharia: Rayssa pilota, voce escolhe feeds de camera e monitora os
+                  sistemas. <span className="font-mono text-foreground">V</span> alterna monitor
+                  wall · <span className="font-mono text-foreground">1-7</span> selecionam camera.
+                </>
+              ) : (
+                <>
+                  Dirija com <span className="font-mono text-foreground">WASD</span> ou{" "}
+                  <span className="font-mono text-foreground">setas</span> ·{" "}
+                  <span className="font-mono text-foreground">Espaco</span> = freio.{" "}
+                  <span className="font-mono text-foreground">V</span> alterna split-screen ·{" "}
+                  <span className="font-mono text-foreground">1-7</span> selecionam camera.
+                </>
+              )}
             </p>
           </div>
           <div className="hidden items-center gap-3 md:flex">
+            <button
+              onClick={() =>
+                handleControlMode(engineeringMode ? "DRIVER_CONTROL" : "ENGINEERING_OBSERVER")
+              }
+              disabled={engineeringMode ? !canUseDriverControl : false}
+              className="corner-cut border border-primary bg-primary/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-40"
+              title={
+                canUseDriverControl
+                  ? "Alternar modo de controle"
+                  : nextUnlockLabel(engineering.rayssaWins)
+              }
+            >
+              Modo: {engineeringMode ? "Engenharia" : "Piloto"}
+            </button>
             <button
               onClick={() => setSplitMode((s) => !s)}
               className="corner-cut border border-primary bg-primary/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-primary transition-colors hover:bg-primary/20"
@@ -418,6 +476,7 @@ export function SimulatorScene({ fullscreen = false }: Props) {
                     playerId="player"
                     showHitbox={showHitbox}
                     hitboxAuto={hitboxAuto}
+                    controlMode={engineeringMode ? "autopilot" : "manual"}
                   />
                   {aiOpponents.map((a, index) => (
                     <AIKart
@@ -463,8 +522,21 @@ export function SimulatorScene({ fullscreen = false }: Props) {
                 physics={physics}
               />
             )}
-            {!splitMode && <Leaderboard />}
-            {!splitMode && <TelemetryCharts />}
+            {!splitMode && !engineeringMode && <Leaderboard />}
+            {!splitMode && !engineeringMode && <TelemetryCharts />}
+            {engineeringMode && (
+              <EngineeringPitWall
+                t={t}
+                physics={physics}
+                race={race}
+                activeViewLabel={VIEW_LABELS[activeView]}
+                splitMode={splitMode}
+                rayssaWins={engineering.rayssaWins}
+                controlMode={engineering.controlMode}
+                canDrive={canUseDriverControl}
+                onSetMode={handleControlMode}
+              />
+            )}
             {devMode && <DebugPanel stats={debugStats} />}
             {(devMode || perf.toggles.overlayEnabled) && <FpsMeter />}
             {showHitbox && (
@@ -473,7 +545,11 @@ export function SimulatorScene({ fullscreen = false }: Props) {
               </div>
             )}
             {/* Presets de debug — alternâncias rápidas + toggles por subsistema */}
-            <div className="pointer-events-auto absolute left-3 bottom-3 z-50 flex flex-col gap-1.5 corner-cut border border-primary/40 bg-background/75 p-2 font-mono text-[9px] uppercase tracking-widest backdrop-blur-sm">
+            <div
+              className={`pointer-events-auto absolute left-3 z-50 flex flex-col gap-1.5 corner-cut border border-primary/40 bg-background/75 p-2 font-mono text-[9px] uppercase tracking-widest backdrop-blur-sm ${
+                engineeringMode ? "bottom-[190px]" : "bottom-3"
+              }`}
+            >
               <div className="flex items-center gap-1 text-primary/80">
                 <span>Presets</span>
               </div>
@@ -717,7 +793,7 @@ export function SimulatorScene({ fullscreen = false }: Props) {
             />
             <div className="panel corner-cut p-4 font-mono text-[10px] uppercase tracking-widest">
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-primary">Controles</span>
+                <span className="text-primary">{engineeringMode ? "Posto" : "Controles"}</span>
                 <button
                   onClick={() => setSplitMode((s) => !s)}
                   className="text-primary hover:underline"
@@ -725,10 +801,23 @@ export function SimulatorScene({ fullscreen = false }: Props) {
                   Split: {splitMode ? "ON" : "OFF"}
                 </button>
               </div>
-              <div className="text-muted-foreground">W / ↑ — acelerar</div>
-              <div className="text-muted-foreground">S / ↓ — ré · freio</div>
-              <div className="text-muted-foreground">A · D / ← → — direção</div>
-              <div className="text-muted-foreground">Espaço — freio forte</div>
+              {engineeringMode ? (
+                <>
+                  <div className="text-muted-foreground">{roleLabel(currentRole)}</div>
+                  <div className="text-muted-foreground">{engineering.rayssaWins} vitorias P1</div>
+                  <div className="text-muted-foreground">
+                    {nextUnlockLabel(engineering.rayssaWins)}
+                  </div>
+                  <div className="text-muted-foreground">Rayssa — piloto automatico</div>
+                </>
+              ) : (
+                <>
+                  <div className="text-muted-foreground">W / ↑ — acelerar</div>
+                  <div className="text-muted-foreground">S / ↓ — ré · freio</div>
+                  <div className="text-muted-foreground">A · D / ← → — direção</div>
+                  <div className="text-muted-foreground">Espaco — freio forte</div>
+                </>
+              )}
               <div className="text-muted-foreground">V — split-screen</div>
               <div className="text-muted-foreground">H — hitbox debug</div>
               <div className="text-muted-foreground">1-7 — câmera ativa</div>

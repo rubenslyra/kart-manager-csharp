@@ -1,6 +1,12 @@
 import { useRaceState, rankedRacers, raceStore } from "./raceStore";
 import { exportCSV, exportJSON, telemetry } from "./telemetry";
 import { replayRecordStore } from "./replayRecordStore";
+import {
+  getTeamRole,
+  nextUnlockLabel,
+  roleLabel,
+  useEngineeringProgress,
+} from "./engineeringProgressStore";
 
 function fmt(ms: number | null) {
   if (ms === null) return "--:--.---";
@@ -28,7 +34,9 @@ export function Leaderboard() {
             className="flex items-center justify-between rounded-sm border px-2 py-1"
             style={{
               borderColor: r.isPlayer ? "var(--primary)" : "var(--border)",
-              background: r.isPlayer ? "color-mix(in oklab, var(--primary) 12%, transparent)" : "transparent",
+              background: r.isPlayer
+                ? "color-mix(in oklab, var(--primary) 12%, transparent)"
+                : "transparent",
             }}
           >
             <div className="flex items-center gap-2">
@@ -40,7 +48,9 @@ export function Leaderboard() {
               <span>L{r.lap}</span>
               <span className="text-foreground">{fmt(r.bestLapMs)}</span>
               {r.penaltyMs > 0 && (
-                <span className="text-destructive" title="Penalidade">+{(r.penaltyMs / 1000).toFixed(1)}s</span>
+                <span className="text-destructive" title="Penalidade">
+                  +{(r.penaltyMs / 1000).toFixed(1)}s
+                </span>
               )}
             </div>
           </div>
@@ -52,10 +62,12 @@ export function Leaderboard() {
 
 export function Podium({ onRestart }: { onRestart: () => void }) {
   const state = useRaceState();
+  const engineering = useEngineeringProgress();
   if (!state.finished) return null;
   const ranked = rankedRacers(state).slice(0, 3);
   const order = [ranked[1], ranked[0], ranked[2]].filter(Boolean);
   const heights = [120, 170, 90];
+  const role = getTeamRole(engineering.rayssaWins);
   return (
     <div className="pointer-events-auto absolute inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-md font-mono">
       <div className="mb-2 text-[10px] uppercase tracking-[0.4em] text-primary">Race Complete</div>
@@ -66,9 +78,14 @@ export function Podium({ onRestart }: { onRestart: () => void }) {
           return (
             <div key={r.id} className="flex w-32 flex-col items-center">
               <div className="mb-2 text-center">
-                <div className="h-3 w-3 mx-auto rounded-full" style={{ background: r.color, boxShadow: `0 0 12px ${r.color}` }} />
+                <div
+                  className="h-3 w-3 mx-auto rounded-full"
+                  style={{ background: r.color, boxShadow: `0 0 12px ${r.color}` }}
+                />
                 <div className="mt-1 text-xs text-foreground">{r.name}</div>
-                <div className="text-[10px] text-muted-foreground">Best {r.bestLapMs ? (r.bestLapMs / 1000).toFixed(2) : "--"}s</div>
+                <div className="text-[10px] text-muted-foreground">
+                  Best {r.bestLapMs ? (r.bestLapMs / 1000).toFixed(2) : "--"}s
+                </div>
               </div>
               <div
                 className="w-full corner-cut border border-primary/50 bg-card/60 flex items-start justify-center pt-2 font-display text-2xl font-black text-primary"
@@ -96,17 +113,27 @@ export function Podium({ onRestart }: { onRestart: () => void }) {
           </button>
         )}
         <button
-          onClick={() => { telemetry.stop(); exportCSV(); }}
+          onClick={() => {
+            telemetry.stop();
+            exportCSV();
+          }}
           className="corner-cut border border-accent bg-accent/10 px-4 py-2 text-xs uppercase tracking-widest text-accent hover:bg-accent/20"
         >
           Export CSV
         </button>
         <button
-          onClick={() => { telemetry.stop(); exportJSON(); }}
+          onClick={() => {
+            telemetry.stop();
+            exportJSON();
+          }}
           className="corner-cut border border-accent bg-accent/10 px-4 py-2 text-xs uppercase tracking-widest text-accent hover:bg-accent/20"
         >
           Export JSON
         </button>
+      </div>
+      <div className="mt-4 border border-primary/40 bg-primary/10 px-4 py-2 text-center text-[10px] uppercase tracking-widest text-primary">
+        Equipe: {roleLabel(role)} · Rayssa P1: {engineering.rayssaWins} ·{" "}
+        {nextUnlockLabel(engineering.rayssaWins)}
       </div>
       <div className="mt-3 text-[10px] uppercase tracking-widest text-muted-foreground">
         {telemetry.count()} amostras gravadas

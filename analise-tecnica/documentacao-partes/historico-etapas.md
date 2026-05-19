@@ -237,3 +237,25 @@
   - Kart e corredora procedural passaram a exibir identidade `RAYSSA`, numero `77` e pneus `BLENDER TIRES`.
   - Adversarios preservam nomes e cores atuais, usando a mesma base visual de kart com numeracao propria.
   - Criado contrato inicial para futura entrada por gestos via webcam sem alterar o controle por teclado.
+
+### Etapa 19 - Modo Engenharia Observador e progressao de acesso
+
+- Arquivos principais:
+  - `src/components/simulator/SimulatorScene.tsx`
+  - `src/components/simulator/KartRig.tsx`
+  - `src/components/simulator/EngineeringPitWall.tsx`
+  - `src/components/simulator/engineeringProgressStore.ts`
+  - `src/components/simulator/useKartControls.ts`
+  - `src/components/simulator/Leaderboard.tsx`
+- Alteracoes:
+  - Arena passa a iniciar em modo `Equipe Engenharia`, com Rayssa pilotando de
+    forma autonoma e o usuario atuando como observador tecnico.
+  - Controle direto por teclado fica bloqueado no modo observador, preservando
+    atalhos de cameras, split-screen, replay e paineis.
+  - Criada progressao persistida por vitorias P1 de Rayssa: assistente,
+    assistente senior, lider de equipe e operacao direta autorizada.
+  - Controle direto atual fica disponivel apenas apos 10 vitorias de Rayssa.
+  - Adicionado pit wall `Autonomy Racing` com monitores, leitura de modulos,
+    telemetria, ranking e proximo desbloqueio.
+  - Podium passa a exibir papel atual da equipe, total de vitorias e proximo
+    marco de acesso.

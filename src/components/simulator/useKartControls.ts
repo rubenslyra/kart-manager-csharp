@@ -30,6 +30,7 @@ const KEY_MAP: Record<string, keyof KartControlsState> = {
 export function useKartControls(
   debug = false,
   external?: RefObject<Partial<KartControlsState> | null>,
+  keyboardEnabled = true,
 ) {
   const state = useRef<KartControlsState>({
     forward: 0,
@@ -42,6 +43,7 @@ export function useKartControls(
 
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
+      if (!keyboardEnabled) return;
       const k = e.key.toLowerCase();
       const action = KEY_MAP[k];
       if (!action) return;
@@ -61,7 +63,15 @@ export function useKartControls(
       window.removeEventListener("keydown", onDown);
       window.removeEventListener("keyup", onUp);
     };
-  }, [debug]);
+    if (!keyboardEnabled) {
+      state.current.forward = 0;
+      state.current.reverse = 0;
+      state.current.left = 0;
+      state.current.right = 0;
+      state.current.brake = 0;
+      state.current.reset = 0;
+    }
+  }, [debug, keyboardEnabled]);
 
   useEffect(() => {
     if (!external) return;

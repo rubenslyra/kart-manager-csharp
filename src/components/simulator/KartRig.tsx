@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Group, MathUtils, PerspectiveCamera as ThreePerspectiveCamera, Vector3 } from "three";
 import { PerspectiveCamera } from "@react-three/drei";
@@ -10,6 +10,7 @@ import {
   TRACK_SURFACE_OFFSET,
   nearestOnTrack,
   spawnPose,
+  trackCurve,
 } from "./track";
 import type { Gear, KartState } from "./types";
 import { raceStore } from "./raceStore";
@@ -46,6 +47,7 @@ interface Props {
   playerId?: string;
   showHitbox?: boolean;
   hitboxAuto?: boolean;
+  controlMode?: "manual" | "autopilot";
 }
 
 const PHYS = {
@@ -73,6 +75,7 @@ const _sparkOriginL = new Vector3();
 const _sparkOriginR = new Vector3();
 const _back = new Vector3();
 const _right = new Vector3();
+const _lookAheadTan = new Vector3();
 const CHASE_OFFSET = new Vector3(0, 2.5, -5.5);
 const CHASE_LOOK = new Vector3(0, 1.0, 2.0);
 
@@ -93,16 +96,19 @@ export function KartRig({
   playerId = "player",
   showHitbox = false,
   hitboxAuto = false,
+  controlMode = "manual",
 }: Props) {
   const group = useRef<Group>(null);
   const chassisRef = useRef<Group>(null);
-  const controls = useKartControls(devMode);
+  const controls = useKartControls(devMode, undefined, controlMode === "manual");
+  const curve = useMemo(() => trackCurve(), []);
   const speed = useRef(0);
   const lap = useRef(0);
   const checkpointIdx = useRef(0);
   const lastDebug = useRef(0);
   const lastSpark = useRef(0);
   const prevHeading = useRef(0);
+  const autoSteerVisual = useRef(0);
   const { camera } = useThree();
 
   const camCockpit = useRef<ThreePerspectiveCamera>(null);
@@ -153,15 +159,43 @@ export function KartRig({
     const c = controls.current;
 
     const stateAllowsDrive = state === "READY_TO_DRIVE" || state === "DRIVING";
-    const canDrive = devMode || (ignition && battery > 0 && stateAllowsDrive);
+    const canDrive =
+      controlMode === "autopilot" || devMode || (ignition && battery > 0 && stateAllowsDrive);
+
+    let autoSteer = 0;
+    let autoBrake = 0;
+    let autoForward = 0;
+    if (controlMode === "autopilot") {
+      const probeNow = nearestOnTrack(group.current.position);
+      const lookAheadT = (probeNow.t + 0.026) % 1;
+      _lookAheadTan.copy(curve.getTangentAt(lookAheadT)).normalize();
+      const desiredHeading = Math.atan2(_lookAheadTan.x, _lookAheadTan.z);
+      const headingError =
+        MathUtils.euclideanModulo(
+          desiredHeading - group.current.rotation.y + Math.PI,
+          Math.PI * 2,
+        ) - Math.PI;
+      const curvature =
+        1 -
+        curve
+          .getTangentAt((probeNow.t + 0.01) % 1)
+          .dot(curve.getTangentAt((probeNow.t + 0.055) % 1));
+      autoSteer = MathUtils.clamp(headingError * 1.65, -1, 1);
+      autoBrake = curvature > 0.11 || Math.abs(headingError) > 0.55 ? 1 : 0;
+      autoForward = autoBrake ? 0.35 : 1;
+      autoSteerVisual.current = autoSteer;
+    }
 
     let v = speed.current;
     if (canDrive) {
-      if (c.forward) v += PHYS.acceleration * dt;
-      if (c.reverse) v -= PHYS.reverseAccel * dt;
-      if (c.brake) {
+      const forwardInput = controlMode === "autopilot" ? autoForward : c.forward;
+      const reverseInput = controlMode === "autopilot" ? 0 : c.reverse;
+      const brakeInput = controlMode === "autopilot" ? autoBrake : c.brake;
+      if (forwardInput) v += PHYS.acceleration * forwardInput * dt;
+      if (reverseInput) v -= PHYS.reverseAccel * dt;
+      if (brakeInput) {
         const sign = Math.sign(v);
-        v -= sign * PHYS.brakeForce * dt;
+        v -= sign * PHYS.brakeForce * brakeInput * dt;
         if (Math.sign(v) !== sign) v = 0;
       }
     } else {
@@ -172,7 +206,7 @@ export function KartRig({
     if (Math.sign(v) !== sign) v = 0;
     v = Math.max(-PHYS.maxReverse, Math.min(PHYS.maxSpeed, v));
 
-    const steerInput = c.left - c.right;
+    const steerInput = controlMode === "autopilot" ? autoSteer : c.left - c.right;
     if (Math.abs(v) > 0.3) {
       const dir = v > 0 ? 1 : -1;
       const steerScale = Math.min(1, Math.abs(v) / 25);
@@ -389,7 +423,11 @@ export function KartRig({
           position={[0, 0, -0.6]}
           state={state}
           driving={Math.abs(speed.current) > 0.5}
-          steer={controls.current.left - controls.current.right}
+          steer={
+            controlMode === "autopilot"
+              ? autoSteerVisual.current
+              : controls.current.left - controls.current.right
+          }
           speedKmh={speed.current}
           driverName="RAYSSA"
           kartNumber="77"

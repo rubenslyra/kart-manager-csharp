@@ -1,47 +1,62 @@
 # Tarefa Atual
 
 Status: finalizada
-Aberta em: 2026-05-16
+Aberta em: 2026-05-19
 
 ## Titulo
 
-Preparar experiencia de corrida imersiva para alunos
+Adicionar modo Engenharia Observador e progressao de acesso da equipe
 
 ## Objetivo
 
-Preparar a Arena para uma entrega mais imersiva aos alunos, mantendo o split
-atual e adicionando bases para camera da corredora, camera de capacete com HUD
-de engenharia, futura interacao por gestos via webcam, karts da Arena com
-estrutura mais alinhada ao carrinho da Oficina e desenvolvimento visual da
-corredora Rayssa a partir da referencia fornecida.
+Transformar o fluxo inicial da Arena em uma experiencia de equipe tecnica:
+o usuario comeca dentro de uma sala/pit wall de engenharia, observando a
+corrida por monitores, paineis de telemetria e cameras selecionaveis, enquanto
+Rayssa pilota o kart de forma autonoma. A conducao direta do kart deve ser
+desbloqueada apenas depois de uma progressao baseada em vitorias da corredora.
 
 ## Escopo Inicial
 
-- Manter o split atual da Arena.
-- Adicionar ou planejar modo de camera em tela unica na visao da corredora.
-- Adicionar ou planejar camera de dentro do capacete/visor.
-- Projetar HUD estilo Formula 1 na viseira, com informacoes da equipe de
-  engenharia e instrucoes por voz.
-- Preparar arquitetura para controle por gestos via webcam.
-- Levar a estrutura visual/mecanica do carrinho da Oficina para os karts da
-  Arena.
-- Reconstruir concorrentes usando a estrutura modelo, preservando cores e nomes
-  atuais.
-- Desenvolver a corredora Rayssa com base na imagem e descricao fornecidas:
-  - personagem 3D estilo Pixar;
-  - jovem afro-brasileira;
-  - cabelo afro preto volumoso e detalhado;
-  - olhos castanho-escuros e sorriso acolhedor;
-  - macacao azul e laranja com `RAYSSA`;
-  - kart azul e laranja desgastado, numero `77`;
-  - pneus com `BLENDER TIRES`;
-  - pista externa com asfalto, bandeiras quadriculadas e barreiras de pneus.
+- Criar ou planejar dois modos iniciais de controle:
+  - modo `Equipe Engenharia` ou observador, em que o usuario atua na sala de
+    engenharia e acompanha a corrida pelos monitores;
+  - modo de conducao direta, equivalente a perspectiva atual do jogo, liberado
+    apenas posteriormente.
+- No inicio da experiencia, permitir apenas o modo observador:
+  - Rayssa opera o carrinho sozinha;
+  - o usuario aprende as mecanicas observando a corrida;
+  - o usuario pode acionar/trocar posicoes de camera;
+  - o usuario acompanha telemetria, paineis e feeds de camera.
+- Representar a primeira etapa como cadeira de engenheiro mecanico assistente,
+  com acesso a monitores e paineis de controle.
+- Reforcar a finalidade didatica:
+  - mostrar como as libs em C# desenvolvidas em aula contribuem para a corrida;
+  - destacar a importancia da qualidade de codigo por meio de telemetria,
+    diagnosticos e feedbacks da equipe.
+- Criar ou planejar progressao de acesso por vitorias de Rayssa:
+  - inicio: engenheiro mecanico assistente;
+  - apos 4 vitorias em primeiro lugar: cadeira superior a de assistente;
+  - apos 6 vitorias: cadeira de lider de equipe;
+  - a partir da 10a vitoria: liberar opcao de operar os carros na perspectiva
+    atual do jogo.
+- Projetar ambiente visual de pit wall/command station:
+  - sala de comando high-tech noturna;
+  - cinco engenheiros ou estrategistas vistos por tras;
+  - cadeiras profissionais pretas com branding `Autonomy`;
+  - uniformes claros com identidade propria do projeto;
+  - headsets de comunicacao;
+  - arrays verticais/duplos de monitores com telemetria, mapas de pista, feeds
+    ao vivo e graficos;
+  - booth metalico escuro, linhas limpas, divisorias e iluminacao cinematica.
+- Evitar uso direto de marcas reais protegidas como `PETRONAS` no produto final,
+  salvo se houver autorizacao explicita; usar identidade inspirada e propria,
+  como `Autonomy Racing` ou equivalente.
 - Nao executar implementacao nesta etapa.
 - Nao fazer commit automatico apenas por iniciar a tarefa.
 
 ## Estado Inicial Do Git
 
-Verificado em 2026-05-16:
+Verificado em 2026-05-19:
 
 - Branch: `main`.
 - Arquivos rastreados: sem modificacoes reportadas por `git status --short --branch`.
@@ -49,6 +64,43 @@ Verificado em 2026-05-16:
   - `chamado-correções-erros-prints/`
   - `image_1030ed13.png`
   - `sounds-trilha/`
+
+## Arquivos Provaveis
+
+- `src/components/simulator/SimulatorScene.tsx`
+- `src/components/simulator/KartRig.tsx`
+- `src/components/simulator/AIKart.tsx`
+- `src/components/simulator/useKartControls.ts`
+- `src/components/simulator/gestureInput.ts`
+- `src/components/simulator/HelmetHud.tsx`
+- `src/components/simulator/raceStore` ou store equivalente de corrida
+- componentes novos para pit wall, monitores, paineis e progressao
+- documentacao em `analise-tecnica/documentacao-partes/`
+
+## Riscos Iniciais
+
+- Travar o controle direto sem quebrar a experiencia atual de camera e corrida.
+- Definir uma IA/autopilot de Rayssa suficiente para o modo observador inicial.
+- Persistir contagem de vitorias sem criar estado inconsistente ou facil de
+  corromper.
+- Integrar monitores/pit wall com a cena 3D sem degradar performance.
+- Manter o valor didatico das libs C# claro sem inventar metricas tecnicas
+  desconectadas do que o projeto realmente possui.
+- Evitar marcas reais protegidas no visual final.
+- Preservar as cameras imersivas implementadas na tarefa anterior.
+
+## Checks Planejados
+
+- `git status --short --branch` antes de qualquer edicao de codigo.
+- Research da cena da Arena, controles, cameras, IA de corrida, store de
+  resultados/vitorias, HUDs e documentacao tecnica.
+- Plan tecnico com subtarefas, riscos, criterios de aceite e validacoes.
+- Apos implementacao aprovada por `[Concluir RPI]`:
+  - lint focado nos arquivos alterados;
+  - `git diff --check`;
+  - `npm run build`;
+  - validacao visual/manual do modo observador, cameras, progressao e liberacao
+    do controle direto.
 
 ## Subtarefas
 
@@ -65,11 +117,11 @@ Verificado em 2026-05-16:
 
 ## RPI
 
-Iniciado em 2026-05-16.
+Iniciado em 2026-05-19.
 
 ### Research
 
-Concluido em 2026-05-16.
+Concluido em 2026-05-19.
 
 - Estado do git no inicio do RPI:
   - Branch `main`.
@@ -78,107 +130,135 @@ Concluido em 2026-05-16.
     - `chamado-correções-erros-prints/`
     - `image_1030ed13.png`
     - `sounds-trilha/`
-- Referencia da corredora:
-  - Imagem anexada pelo usuario tambem existe como `src/assets/driver-rayssa.png`.
-  - Ha copia nao rastreada `image_1030ed13.png` com mesmo tamanho.
-  - `src/assets/driver-rayssa.png` e o melhor asset para consumo pelo projeto por ja estar dentro de `src/assets`.
+- Dependencias disponiveis:
+  - React 19, Three.js, `@react-three/fiber`, `@react-three/drei`, Radix,
+    Recharts, Lucide e Vite.
+  - Nao ha dependencia de engine de IA externa ou detector de gestos nesta etapa.
 - `src/components/simulator/SimulatorScene.tsx`
-  - E a cena principal da Arena.
-  - Mantem `splitMode`, `activeView`, `camerasRef`, `fallbackCamRef` e `camsReady`.
-  - `VIEW_LABELS` atuais:
-    - `COCKPIT`
-    - `CHASE`
-    - `NOSE`
-    - `TOP-DOWN`
-    - `FREE`
-  - `Splitter` renderiza:
-    - uma camera ativa quando `splitMode=false`;
-    - quatro viewports 2x2 quando `splitMode=true`.
-  - HUDs de single-view atuais:
-    - `HUD3D`
-    - `ExtendedHud`
-    - `Leaderboard`
-    - `TelemetryCharts`
-  - Split atual tem labels e mini HUDs por quadrante e deve ser preservado.
-  - Teclas atuais:
-    - `V`: split-screen;
-    - `1-5`: camera ativa;
-    - `H`, `B`, `P`: debug/performance.
+  - E a composicao principal da Arena.
+  - Renderiza `Canvas`, pista, boxes, arquibancada, `KartRig`, concorrentes,
+    ghost, replay, HUDs, leaderboard, setup e controles laterais.
+  - Estado local atual:
+    - `devMode`;
+    - `resetSignal`;
+    - `lap`;
+    - `splitMode`;
+    - `activeView`;
+    - `camerasRef`;
+    - `fallbackCamRef`;
+    - `showHitbox`;
+    - `hitboxAuto`.
+  - Cameras atuais:
+    - `COCKPIT`;
+    - `CHASE`;
+    - `NOSE`;
+    - `TOP-DOWN`;
+    - `DRIVER`;
+    - `HELMET`;
+    - `FREE`.
+  - O split usa somente as quatro primeiras cameras.
+  - Teclas `1-7` selecionam camera; `V` alterna split.
+  - Hoje a interface instrui o usuario a dirigir com teclado logo no topo e no
+    painel lateral.
+  - `RaceSetup` abre por padrao e o botao `Iniciar corrida` apenas fecha o modal
+    de setup.
+  - `KartRig` e sempre renderizado como `player`, e o registro do usuario no
+    `raceStore` usa nome `"Você"`, embora o modelo visual ja seja Rayssa.
+  - Esta diferenca e importante: para o modo observador, o usuario nao deve ser
+    tratado semanticamente como piloto.
 - `src/components/simulator/KartRig.tsx`
-  - Controla fisica/pose do player.
-  - Ja cria quatro `PerspectiveCamera` presas ao grupo do kart:
-    - cockpit: `[0, 1.05, 0.45]`, `fov=78`;
-    - chase;
-    - nose;
-    - top.
-  - Em single-view, somente chase tem follow suave na camera default; as demais cameras sao usadas pelo `Splitter`.
-  - Para visao da corredora/capacete, a melhor base e adicionar uma camera extra no rig ou renomear/refinar a cockpit existente sem remover as quatro cameras do split.
-  - `onCameras` hoje espera quatro cameras. Se uma quinta camera entrar, o split precisa continuar renderizando somente as quatro primeiras ou receber uma lista separada.
-- `src/components/simulator/KartModel.tsx`
-  - Modelo da Arena ja e procedural e usa `RL_KART_DIMENSIONS`.
-  - Recebe `liveryColor` para adversarios.
-  - Usa `Driver` internamente.
-  - Ja tem rodas com hierarquia de esterco/Ackermann, giro por velocidade e diferencial simples.
-  - Ainda e mais simplificado que o kart da Oficina: nao usa partes `Chassis`, `Seat`, `Steering`, `ElectricalSystem`, `MotorAssembly`, `BrakeSystem`, `Dashboard`.
-  - Tem livery azul/laranja no player e cor principal dos adversarios via `liveryColor`.
-- `src/components/realsim/RealKart.tsx`
-  - Modelo da Oficina carrega GLB se existir, senao usa `ProceduralKart`.
-  - `ProceduralKart` depende de `KartTelemetry` e `focus`.
-  - Montagem usa componentes de partes reais:
-    - `Chassis`
-    - `Seat`
-    - `Steering`
-    - `ElectricalSystem`
-    - `MotorAssembly`
-    - `GearSelector`
-    - `BrakeSystem`
-    - `Dashboard`
-  - Nao da para importar `RealKart` diretamente na Arena sem criar telemetria fake/adaptador ou separar um componente compartilhado de chassis/estrutura.
-- `src/components/simulator/AIKart.tsx`
-  - Adversarios usam `KartModel` com `liveryColor={color}`.
-  - Movimento e baseado em `trackCurve`, `startOffset`, `baseSpeed`, habilidade e faixa.
-  - Registra cada adversario no `raceStore` com `id`, `name`, `color`.
-  - Tem `Nameplate` preservando nome/cor visual.
-- `src/components/simulator/aiProfiles.ts`
-  - Nomes e cores atuais dos concorrentes:
-    - Dandara `#ef4444`
-    - Zuri `#22c55e`
-    - Bento `#facc15`
-    - Aisha `#06b6d4`
-    - Kael `#a855f7`
-    - Nzinga `#ec4899`
-  - Devem ser preservados.
-- `src/components/simulator/Driver.tsx`
-  - Personagem Rayssa ja existe como low-poly procedural.
-  - Descricao atual: `stylized low-poly character (Rayssa #77)`.
-  - Ja usa macacao azul/laranja, pele escura e cabelo afro por esferas.
-  - Ainda nao exibe texto `RAYSSA`, numero `77` real em geometria/texto, olhos detalhados, sorriso ou textura de referencia.
-  - Pode ser evoluido com primitivas/`Text` do Drei sem depender de GLTF.
-- `src/components/simulator/HUD3D.tsx` e `ExtendedHud.tsx`
-  - Ja exibem estado, velocidade, bateria, ignicao, volta, RPM, torque, grip, G lateral/longitudinal e drift.
-  - HUD atual e de tela, nao e especifico de visor/capacete.
-  - Para capacete, o ideal e criar um overlay separado, por exemplo `HelmetHud`, ativado somente em camera de visor/corredora.
-- `src/components/simulator/useSimAudio.ts`
-  - Audio da Arena ja centraliza motor, torcida, carros passando e bandeirada.
-  - Depende de gesto do usuario via `audio.start`.
-  - Tem grafo Web Audio com `masterGain` e metodo `tone`.
-  - Radio da engenharia pode entrar inicialmente como falas sintetizadas com `SpeechSynthesis` ou como bips/tons + legenda; MP3 gravado exigiria novos assets e creditos.
-  - Melhor primeira entrega: criar `useEngineerRadio`/componente de radio com fila de instrucoes e fallback visual, usando gesto de audio ja existente.
+  - Controla fisica manual do kart atual.
+  - Usa `useKartControls(devMode)` internamente e le teclado diretamente.
+  - Calcula:
+    - velocidade;
+    - marcha;
+    - progresso;
+    - voltas;
+    - checkpoints;
+    - colisao com IA;
+    - telemetria;
+    - fisica estendida para HUD.
+  - Registra progresso do `playerId` em `raceStore`.
+  - O fim da corrida pode ocorrer quando o racer `isPlayer` termina.
+  - Para modo observador, ha duas opcoes:
+    - adaptar `KartRig` para aceitar controle externo/autopilot e bloquear teclado;
+    - criar um rig autonomo separado para Rayssa reaproveitando a logica do
+      `AIKart`.
+  - A opcao menos arriscada para primeira entrega e criar uma fonte de input
+    automatica/engenharia para `KartRig`, mantendo as cameras presas ao kart da
+    Rayssa e evitando duplicar cameras.
 - `src/components/simulator/useKartControls.ts`
-  - Entrada atual e teclado direto em um ref com `forward`, `reverse`, `left`, `right`, `brake`, `reset`.
-  - Para gestos via webcam, convem separar a origem de input:
-    - teclado continua fonte padrao;
-    - gestos entram como outra fonte opcional que escreve no mesmo formato.
-  - `package.json` nao tem MediaPipe/TensorFlow.
-  - Nesta tarefa, a preparacao sem instalar dependencia pode criar tipos/interfaces e UI de placeholder.
-  - Implementacao real com webcam provavelmente exigira dependencia e autorizacao de camera do navegador.
-- `src/components/audio/audioAssets.ts`
-  - Catalogo atual nao tem audio de radio/engenharia.
-  - Qualquer MP3 novo deve ir para `public/sounds/` e ter credito registrado.
+  - Ja aceita fonte externa opcional no mesmo formato do teclado.
+  - Hoje o teclado sempre continua ativo e a fonte externa e mesclada com
+    `Math.max`.
+  - Para travar o controle direto, sera necessario adicionar uma forma explicita
+    de desabilitar teclado ou definir o modo de entrada ativo.
+- `src/components/simulator/AIKart.tsx`
+  - Ja implementa piloto autonomo por curva (`trackCurve`) com:
+    - velocidade base;
+    - reducao em curvas;
+    - troca de faixa/overtake;
+    - registro de progresso;
+    - pose;
+    - numero e identidade visual.
+  - Essa logica serve como base conceitual para um autopilot de Rayssa, mas nao
+    carrega as cameras `DRIVER`/`HELMET` do `KartRig`.
+- `src/components/simulator/raceStore.ts`
+  - Store proprio por `useSyncExternalStore`.
+  - `RaceState` atual nao possui conceito de modo de acesso, papel do usuario,
+    contagem de vitorias, persistencia de carreira ou unlock.
+  - `updateProgress` finaliza a corrida quando:
+    - todos terminam; ou
+    - um racer marcado como `isPlayer` termina.
+  - O vencedor ja e calculado por ranking e enviado ao `replayRecordStore`.
+  - Melhor ponto para progressao:
+    - registrar resultado quando `finished` muda;
+    - calcular se Rayssa venceu;
+    - incrementar contador persistido;
+    - recalcular papel/desbloqueios.
+- `src/components/simulator/replayRecordStore.ts`
+  - Persiste ultimo replay em `localStorage`.
+  - Guarda `winnerId`, `racers` e amostras.
+  - Pode ser consultado para saber vencedor do ultimo replay, mas a progressao
+    precisa de store proprio para nao depender do replay exportavel.
+- `src/components/simulator/Leaderboard.tsx`
+  - Exibe ranking e podium final.
+  - Hoje usa destaque visual para `r.isPlayer`.
+  - No modo engenharia, o destaque deve preferir Rayssa/equipe, nao "Você" como
+    piloto.
+  - `Podium` e bom ponto para exibir mudanca de nivel apos vitorias.
+- `src/components/simulator/RaceSetup.tsx`
+  - Configura adversarios, voltas, agressividade, habilidades e duracao de replay.
+  - Nao tem seletor de modo de controle.
+  - No inicio, deve comunicar que a corrida comeca em modo engenharia/observador.
+- `src/components/simulator/useKartSimulator.ts`
+  - Mantem telemetria didatica dos modulos:
+    - `CORE`;
+    - `GEARBOX`;
+    - `BRAKES`;
+    - `IGNITION`;
+    - bateria;
+    - estado do kart;
+    - alertas.
+  - Esta telemetria e adequada para explicar como as libs C# contribuem para a
+    qualidade operacional, desde que os paineis de engenharia usem os dados
+    reais do simulador.
+- `src/components/realsim/BackgroundMonitors.tsx`
+  - Ja possui padrao util para monitores 3D via `CanvasTexture`.
+  - Inclui monitor de corrida e monitor de telemetria com graficos animados.
+  - Pode inspirar ou ser adaptado para a sala de comando da Arena.
+  - Usar `CanvasTexture` e mais leve que criar varias subcenas/portais de camera
+    em uma primeira entrega.
 - Documentacao tecnica:
-  - `analise-tecnica/documentacao-partes/mapa-componentes.md` define as partes do kart real e nomes canonicos.
-  - `analise-tecnica/documentacao-partes/inventario-cena-interfaces.md` ja documenta audio de corrida e interfaces tecnicas.
-  - Mudancas de HUD/camera/audio devem atualizar inventario e historico.
+  - `inventario-cena-interfaces.md` ja documenta cameras imersivas, visor,
+    radio de engenharia e preparacao de gestos.
+  - `historico-etapas.md` registra a etapa anterior como "Cameras imersivas e
+    visor de engenharia da Arena".
+  - A nova entrega deve atualizar o inventario com:
+    - modo Engenharia Observador;
+    - pit wall/command station;
+    - progressao por vitorias;
+    - politica de desbloqueio do controle direto.
 
 ### Plan
 
@@ -186,265 +266,215 @@ Plano proposto para executar apos `[Concluir RPI]`.
 
 #### Entrega Recomendada Nesta Tarefa
 
-1. Preservar split atual
-   - Manter `splitMode` e renderizacao 2x2 existentes.
-   - Garantir que novas cameras nao alterem os quatro quadrantes atuais.
-   - Se adicionar camera extra, separar:
-     - lista de cameras do split;
-     - lista/opcoes de cameras single-view.
+1. Introduzir modelo de acesso e progressao
+   - Criar tipos para:
+     - `ControlMode`: `ENGINEERING_OBSERVER` e `DRIVER_CONTROL`;
+     - `TeamRole`: `ASSISTANT_ENGINEER`, `SENIOR_ASSISTANT`,
+       `TEAM_LEAD`, `DRIVER_AUTHORIZED`.
+   - Criar store leve, por exemplo `engineeringProgressStore.ts`, com:
+     - vitorias de Rayssa;
+     - papel atual;
+     - modo atual;
+     - desbloqueio de controle direto;
+     - persistencia em `localStorage`.
+   - Regras:
+     - 0 a 3 vitorias: `ASSISTANT_ENGINEER`;
+     - 4 a 5 vitorias: `SENIOR_ASSISTANT`;
+     - 6 a 9 vitorias: `TEAM_LEAD`;
+     - 10 ou mais vitorias: liberar `DRIVER_CONTROL`.
+   - O modo padrao deve ser `ENGINEERING_OBSERVER` ate o desbloqueio.
 
-2. Adicionar modos single-view imersivos
-   - Expandir `VIEW_LABELS`/estado de camera para incluir:
-     - `DRIVER`
-     - `HELMET`
-   - Manter `COCKPIT`, `CHASE`, `NOSE`, `TOP-DOWN`, `FREE`.
-   - No `KartRig`, adicionar cameras extras presas ao kart:
-     - `driverCam`: posicionada para simular olhar da corredora/ombro/cockpit mais humano;
-     - `helmetCam`: posicionada dentro/na altura do capacete/visor, com FOV maior e leve roll/tilt por curva.
-   - Ajustar `Splitter` para usar somente as quatro cameras legadas quando `splitMode=true`.
-   - Em single-view, permitir selecionar as novas cameras por botoes e teclas adicionais.
+2. Registrar Rayssa como protagonista da equipe
+   - Alterar o registro semantico do racer principal:
+     - `id`: manter `player` inicialmente para reduzir impacto ou migrar com
+       cuidado para `rayssa`;
+     - `name`: usar `Rayssa`;
+     - `isPlayer`: pode continuar `true` tecnicamente para preservar regra de
+       fim de corrida, mas a UI deve tratar isso como "protagonista/equipe" no
+       modo observador.
+   - Evitar que a UI diga que o usuario e o piloto antes do desbloqueio.
 
-3. HUD de capacete/visor
-   - Criar componente `HelmetHud`.
-   - Exibir somente quando `activeView` for `HELMET` ou `DRIVER`.
-   - Usar dados ja disponiveis:
-     - velocidade, marcha, bateria, volta/progresso;
-     - RPM, torque, grip, G lateral/longitudinal, drift.
+3. Travar controle manual no modo observador
+   - Evoluir `useKartControls` para aceitar opcao de teclado habilitado ou modo
+     de entrada.
+   - Em `ENGINEERING_OBSERVER`, teclado de direcao nao deve controlar o kart.
+   - Cameras, split, setup, audio, replay e paineis continuam interativos.
+   - Em `DRIVER_CONTROL`, comportamento atual de teclado deve voltar.
+
+4. Criar autopilot de Rayssa para o modo engenharia
+   - Primeira implementacao recomendada:
+     - criar fonte externa de controles para `KartRig`, por exemplo
+       `useRayssaAutopilotControls`;
+     - usar `nearestOnTrack`, `trackCurve` e lookahead para gerar `forward`,
+       `brake`, `left` e `right`;
+     - manter o `KartRig` como rig da Rayssa para preservar cameras `DRIVER` e
+       `HELMET`, telemetria, colisao, replay e HUDs.
+   - O autopilot deve ser previsivel e bom o suficiente para vitorias, mas ainda
+     responsivo a curvas e colisao.
+   - Como etapa inicial, permitir balancear dificuldade por setup ou constantes
+     locais, sem criar UI complexa.
+
+5. Criar experiencia visual do pit wall/command station
+   - Criar componente da sala tecnica da Arena, por exemplo
+     `EngineeringPitWall.tsx`.
+   - Integrar dentro da area da Arena como primeiro plano/overlay ou cena 3D
+     dedicada ao modo observador.
    - Visual:
-     - vinheta/curvatura de visor;
-     - linhas finas e reticulo estilo telemetria;
-     - bloco `ENG` com instrucoes da equipe;
-     - alertas discretos para curva, drift, bateria e checkpoint.
-   - Evitar cobrir centro da pista e preservar leitura em mobile/desktop.
+     - booth escuro, metalico, com iluminacao fria;
+     - cinco estacoes de engenharia vistas por tras ou sugeridas por cadeiras;
+     - cadeiras pretas com `Autonomy`;
+     - headsets e uniformes com identidade propria `Autonomy Racing`;
+     - monitores em arrays com telemetria, mapa da pista, feed de camera e
+       graficos.
+   - Evitar uso literal de `PETRONAS` e identidade Mercedes-AMG; manter apenas a
+     inspiracao de estrutura profissional.
+   - Para performance, preferir paineis 2D/CanvasTexture e overlays HTML antes
+     de criar varias renderizacoes de camera dentro de monitores.
 
-4. Radio/voz da engenharia
-   - Criar estrutura de mensagens de engenharia baseada em eventos/telemetria.
-   - Primeira versao:
-     - legendas no visor;
-     - chamada por `SpeechSynthesis` quando disponivel e audio estiver habilitado;
-     - fallback silencioso visual quando o navegador bloquear voz.
-   - Usar cooldown para nao falar continuamente.
-   - Exemplos de mensagens:
-     - largada: "Rayssa, mantenha linha e aqueça os pneus";
-     - alta velocidade: "Boa reta, prepara frenagem";
-     - baixa aderencia/drift: "Corrige suave, recupera tracao";
-     - checkpoint/volta: "Setor concluido, ritmo consistente".
-   - Nao adicionar MP3 nesta etapa, salvo pedido explicito.
+6. Monitores e paineis didaticos
+   - Criar paineis que usem dados reais:
+     - estado dos modulos (`CORE`, `GEARBOX`, `BRAKES`, `IGNITION`);
+     - bateria, velocidade, marcha, freio;
+     - RPM, torque, grip e Gs quando disponiveis;
+     - ranking e volta;
+     - camera ativa.
+   - Adicionar um painel de "Qualidade de Codigo / C# libs" com linguagem
+     didatica, mas alimentado por status reais dos modulos e checklist.
+   - Nao inventar integracao C# nova se ela nao existir no codigo; comunicar como
+     diagnostico operacional da simulacao atual.
 
-5. Preparar controle por gestos via webcam
-   - Criar contrato de input, por exemplo `KartInputSource` ou `GestureInputState`, alinhado com `KartControlsState`.
-   - Refatorar `useKartControls` com cuidado para aceitar fonte externa opcional sem alterar comportamento do teclado.
-   - Adicionar UI/estado de "Gestos: preparado/desativado" na Arena, sem ativar webcam ainda se a dependencia nao for instalada.
-   - Registrar em comentario/documentacao o caminho para proxima atividade:
-     - `navigator.mediaDevices.getUserMedia`;
-     - detector de maos/pose;
-     - mapeamento:
-       - palma aberta: acelerar;
-       - punho/maos fechadas: frear;
-       - inclinacao esquerda/direita: direcao.
-   - Deixar implementacao real com MediaPipe/TensorFlow para uma tarefa seguinte, porque exige dependencia nova e validacao em navegador com permissao de camera.
+7. Integrar cameras ao modo engenharia
+   - Preservar cameras existentes e atalhos `1-7`.
+   - No modo observador, renomear instrucao de uso:
+     - foco em "selecionar feed de camera" em vez de "dirigir".
+   - Manter `DRIVER` e `HELMET` como feeds que a equipe pode acompanhar.
+   - O split-screen pode representar monitor wall; nao deve ser removido.
 
-6. Estrutura visual dos karts da Arena
-   - Evitar substituir `KartModel` por `RealKart` diretamente.
-   - Evoluir `KartModel` para ficar mais proximo da Oficina usando partes compartilhaveis/conceitos:
-     - chassi tubular mais rico;
-     - estribos laterais/side steps;
-     - banco e coluna mais definidos;
-     - motor traseiro e bateria/controller mais reconheciveis;
-     - dashboard compacto.
-   - Preservar API atual de `KartModel`:
-     - `state`
-     - `driving`
-     - `steer`
-     - `speedKmh`
-     - `liveryColor`
-   - Adicionar props opcionais para identidade:
-     - `driverName`
-     - `kartNumber`
-     - `tireLabel`
-   - Player:
-     - `driverName="RAYSSA"`
-     - `kartNumber="77"`
-     - `tireLabel="BLENDER TIRES"`
-     - livery azul/laranja.
-   - Adversarios:
-     - preservar nomes e cores de `AI_PROFILES`;
-     - usar a mesma estrutura mecanica;
-     - permitir numeros derivados do indice, sem trocar nomes atuais.
+8. Registrar vitorias e desbloqueios
+   - Ao finalizar corrida, obter ranking por `rankedRacers`.
+   - Se Rayssa for P1, incrementar contador de vitorias.
+   - Exibir feedback no podium/replay:
+     - vitorias atuais;
+     - cargo atual;
+     - proximo desbloqueio;
+     - desbloqueio do modo piloto ao chegar a 10.
+   - Quando o controle direto estiver desbloqueado, oferecer seletor claro para
+     alternar entre `Equipe Engenharia` e `Controle Direto`.
 
-7. Desenvolver Rayssa no modelo procedural
-   - Evoluir `Driver.tsx` sem depender de asset externo inicialmente:
-     - cabelo afro com mais volume e variacao de esferas;
-     - olhos maiores com brilho;
-     - boca/sorriso simples;
-     - macacao azul/laranja com faixas;
-     - texto `RAYSSA` via `Text` do Drei no peito/cinto quando viavel;
-     - postura mais encaixada no volante.
-   - Usar `src/assets/driver-rayssa.png` como referencia visual/documental, nao como textura direta no modelo 3D nesta primeira entrega.
-   - Caso seja necessario asset 2D de apoio, usar o skill de imagem para gerar/editar bitmap e salvar no projeto, mas apenas se a implementacao exigir.
-
-8. Documentacao
-   - Atualizar `analise-tecnica/tarefas/tarefa-atual.md` com implementacao/checks.
-   - Atualizar `inventario-cena-interfaces.md` com:
-     - cameras imersivas;
-     - HUD de capacete;
-     - radio de engenharia;
-     - preparacao de gestos.
-   - Atualizar `mapa-componentes.md` se `KartModel` passar a compartilhar mais estrutura do kart real.
+9. Documentacao
+   - Atualizar `tarefa-atual.md` com implementacao/checks.
+   - Atualizar `inventario-cena-interfaces.md` com modo observador, pit wall e
+     progressao.
    - Atualizar `historico-etapas.md` no fechamento.
 
 #### Escopo Que Deve Ficar Para Proxima Atividade
 
-- Implementacao completa de controle por gestos com webcam e modelo de deteccao real.
-- Instalacao de MediaPipe/TensorFlow ou dependencia equivalente.
-- Gravacao/edicao de vozes reais da engenharia em MP3.
-- Criacao/importacao de GLTF completo da Rayssa.
-- Sistema completo de animacao facial/corporal.
+- Renderizar feeds reais de camera em multiplos monitores 3D por render targets.
+- Persistencia em backend ou conta de usuario.
+- Integracao real com DLLs C# externas alem dos estados/contratos atuais.
+- Sistema de tutorial completo com missoes guiadas.
+- Vozes reais/MP3 de engenheiros.
+- Modelos humanos hiper-realistas/GLTF completos para os cinco engenheiros.
 
 #### Riscos Tecnicos
 
-- Aumentar cameras pode quebrar split se a lista atual deixar de ter exatamente quatro cameras.
-- HUD de capacete pode poluir a leitura da pista se ocupar o centro.
-- `SpeechSynthesis` varia por navegador, idioma e permissao; precisa fallback visual.
-- Gestos por webcam exigem HTTPS/permissao e podem falhar em ambiente de aula sem camera.
-- Reaproveitamento direto do kart da Oficina pode trazer dependencias de telemetria/focus inadequadas para a Arena.
-- Mais geometria em todos os adversarios pode afetar performance; precisa manter toggles/perf em mente.
+- O fim de corrida hoje depende de `isPlayer`; trocar isso de forma ampla pode
+  quebrar replay, podium e leaderboard.
+- Autopilot simples pode nao vencer de forma consistente se os adversarios
+  estiverem muito rapidos.
+- Bloquear teclado sem cuidado pode tambem bloquear atalhos de camera, split e
+  debug.
+- Uma sala 3D muito detalhada pode prejudicar FPS dentro da Arena.
+- Paineis sobre C# precisam se manter fieis ao que o projeto realmente mede.
+- Persistencia de vitorias em `localStorage` precisa tolerar dados invalidos.
 
 #### Criterios De Aceite
 
-- Split atual continua funcionando com as quatro cameras atuais.
-- Single-view permite selecionar as novas cameras `DRIVER` e `HELMET`.
-- Camera de capacete exibe HUD/visor de engenharia sem bloquear a pista.
-- Mensagens de engenharia aparecem de forma contextual; voz funciona quando suportada e nao quebra quando bloqueada.
-- Estrutura visual dos karts da Arena fica mais proxima do kart da Oficina.
-- Adversarios preservam nomes e cores atuais.
-- Rayssa fica visualmente mais proxima da referencia: cabelo afro volumoso, macacao azul/laranja, identidade `RAYSSA` e numero `77`.
-- Preparacao de gestos fica isolada sem alterar o comportamento padrao do teclado.
+- A Arena inicia em modo `Equipe Engenharia`/observador.
+- O usuario nao controla a direcao/aceleracao do kart antes do desbloqueio.
+- Rayssa pilota autonomamente e continua aparecendo nas cameras `DRIVER` e
+  `HELMET`.
+- O usuario consegue alternar cameras e split no modo observador.
+- A interface deixa claro o papel atual da equipe e o proximo desbloqueio.
+- Vitorias de Rayssa em primeiro lugar incrementam a progressao.
+- Apos 4 vitorias, o papel sobe para cadeira superior a assistente.
+- Apos 6 vitorias, o papel sobe para lider de equipe.
+- A partir da 10a vitoria, aparece opcao de controle direto.
+- Ao escolher controle direto desbloqueado, o comportamento atual de dirigir com
+  teclado fica disponivel.
+- O ambiente de engenharia usa identidade propria do projeto, sem marca real
+  protegida como `PETRONAS`.
 - Build passa.
 
 ## Implementacao
 
-Executada em 2026-05-16.
+Executada em 2026-05-19 apos `[Concluir RPI]`.
 
-- `[Concluir RPI]` recebido em 2026-05-16.
-- `SimulatorScene` passou a oferecer cameras single-view adicionais:
-  - `DRIVER`
-  - `HELMET`
-- Split-screen atual foi preservado usando apenas as quatro cameras originais:
-  - `COCKPIT`
-  - `CHASE`
-  - `NOSE`
-  - `TOP-DOWN`
-- `KartRig` passou a registrar cameras extras presas ao kart para a visao da corredora e do capacete.
-- Criado `HelmetHud`:
-  - visor com vinheta, reticulo e telemetria;
-  - velocidade, marcha, RPM, grip, volta e bateria;
-  - canal `ENG // RADIO` com mensagens contextuais.
-- Radio de engenharia:
-  - mostra legenda contextual no visor;
-  - usa `SpeechSynthesis` em `pt-BR` quando o audio da Arena esta habilitado e o navegador suporta;
-  - mantem fallback visual quando voz nao esta disponivel.
-- `Driver` procedural evoluido:
-  - texto `RAYSSA` no macacao;
-  - numero `77`;
-  - olhos mais expressivos;
-  - sorriso simples;
-  - cabelo afro continua procedural e volumoso.
-- `KartModel` passou a aceitar identidade visual:
-  - `driverName`;
-  - `kartNumber`;
-  - `tireLabel`.
-- Player usa `RAYSSA`, `77` e `BLENDER TIRES`.
-- Adversarios preservam nomes e cores de `AI_PROFILES`, usam a mesma base visual e recebem numeros derivados do indice.
-- Criado `gestureInput.ts` com contrato inicial de gestos.
-- `useKartControls` passou a aceitar fonte externa opcional no mesmo formato do teclado, preparando futura webcam sem alterar o comportamento padrao.
+- Criado `engineeringProgressStore.ts`:
+  - controla `ENGINEERING_OBSERVER` e `DRIVER_CONTROL`;
+  - persiste vitorias P1 de Rayssa em `localStorage`;
+  - calcula papeis de equipe por marcos de 4, 6 e 10 vitorias;
+  - bloqueia `DRIVER_CONTROL` antes da 10a vitoria.
+- `useKartControls` passou a aceitar teclado desabilitado, preservando fonte
+  externa e zerando entrada manual quando bloqueado.
+- `KartRig` passou a aceitar `controlMode`:
+  - `manual`: comportamento atual por teclado;
+  - `autopilot`: controle autonomo de Rayssa baseado em tangente/lookahead da
+    pista.
+- `SimulatorScene` passou a:
+  - registrar a protagonista como `Rayssa`;
+  - iniciar em modo engenharia;
+  - carregar/ligar modulos automaticamente no modo observador;
+  - bloquear direcao/aceleracao manual enquanto Rayssa pilota;
+  - preservar troca de cameras `1-7` e split-screen `V`;
+  - registrar vitoria de Rayssa ao final da corrida;
+  - oferecer alternancia para modo piloto apenas quando desbloqueado.
+- Criado `EngineeringPitWall`:
+  - posto `Autonomy Racing`;
+  - cinco estacoes de engenharia com monitores;
+  - leitura de modulos C# / qualidade;
+  - telemetria resumida, ranking, camera ativa e proximo desbloqueio.
+- `Podium` passou a exibir papel atual da equipe, vitorias de Rayssa e proximo
+  marco de acesso.
 - Documentacao tecnica atualizada:
-  - `historico-etapas.md`;
   - `inventario-cena-interfaces.md`;
-  - `mapa-componentes.md`.
-
-## Riscos Iniciais
-
-- Escopo amplo tocando camera, HUD, audio, assets/personagem, karts da Arena e
-  futura webcam.
-- Controle por gestos via webcam pode exigir dependencias, permissoes do
-  navegador e fallback para ambientes sem camera.
-- Reaproveitar estrutura da Oficina na Arena pode conflitar com a fisica,
-  performance ou simplificacoes atuais dos karts de corrida.
-- A personagem Rayssa pode exigir estrategia separada entre asset conceitual,
-  textura, sprite, billboard ou modelo 3D procedural.
-- HUD de capacete e radio de engenharia precisam evitar poluir a leitura da
-  corrida.
-
-## Checks Planejados
-
-- `git status --short --branch` antes de qualquer edicao de codigo.
-- Research da Arena, cameras, HUD, karts concorrentes, modelo da Oficina,
-  audio/radio e possibilidades de webcam.
-- Plan tecnico com divisao de entregas, riscos, checks e criterios de aceite.
-- Apos implementacao aprovada:
-  - `npx eslint` focado nos arquivos alterados.
-  - `git diff --check`.
-  - `npm run build`.
-  - Validacao visual/manual da Arena em single-view e split.
+  - `historico-etapas.md`.
 
 ## Checks Executados
 
-- `git status --short --branch`: branch `main`, com artefatos nao rastreados
-  `chamado-correções-erros-prints/`, `image_1030ed13.png` e `sounds-trilha/`.
-- `[Iniciar RPI]` recebido em 2026-05-16.
-- Listagem de arquivos de `src/components/simulator`, `src/components/realsim` e `src/routes`.
-- Pesquisa por referencias de camera, split, HUD, driver, concorrentes, audio, webcam e gestos.
-- Leitura de `src/components/simulator/SimulatorScene.tsx`.
-- Leitura de `src/components/simulator/KartRig.tsx`.
-- Leitura de `src/components/simulator/KartModel.tsx`.
-- Leitura de `src/components/realsim/RealKart.tsx`.
-- Leitura de `src/components/simulator/AIKart.tsx`.
-- Leitura de `src/components/simulator/Driver.tsx`.
-- Leitura de `src/components/simulator/RaceSetup.tsx`.
-- Leitura de `src/components/simulator/aiProfiles.ts`.
-- Leitura de `src/components/simulator/HUD3D.tsx`.
-- Leitura de `src/components/simulator/ExtendedHud.tsx`.
-- Leitura de `src/components/simulator/useSimAudio.ts`.
-- Leitura de `src/components/simulator/useKartControls.ts`.
-- Leitura de `package.json`.
-- Listagem de assets em `public` e `src/assets`.
-- Leitura de `src/components/audio/audioAssets.ts`.
-- Leitura de `analise-tecnica/documentacao-partes/mapa-componentes.md`.
-- Leitura de `analise-tecnica/documentacao-partes/inventario-cena-interfaces.md`.
-- Inspecao visual de `src/assets/driver-rayssa.png`.
-- `[Concluir RPI]` recebido em 2026-05-16.
-- Implementacao executada nos arquivos:
-  - `src/components/simulator/SimulatorScene.tsx`
-  - `src/components/simulator/KartRig.tsx`
-  - `src/components/simulator/KartModel.tsx`
-  - `src/components/simulator/Driver.tsx`
-  - `src/components/simulator/AIKart.tsx`
-  - `src/components/simulator/HelmetHud.tsx`
-  - `src/components/simulator/gestureInput.ts`
-  - `src/components/simulator/useKartControls.ts`
-- `npx eslint` focado nos arquivos alterados: aprovado apos autofix de formatacao.
-- `npm run build`: primeira tentativa excedeu timeout de 120s sem resultado.
-- `npm run build`: aprovado com timeout maior.
-  - Avisos residuais existentes/fora do escopo: `@import` de CSS fora da primeira posicao e chunks acima de 500 kB.
+- `npm run build`: aprovado apos repetir com timeout maior.
+  - Primeira tentativa excedeu timeout de 180s sem erro exibido.
+  - Avisos residuais conhecidos: `@import` de CSS fora da primeira posicao e
+    chunks acima de 500 kB.
+- `npx eslint src\components\simulator\SimulatorScene.tsx src\components\simulator\KartRig.tsx src\components\simulator\useKartControls.ts src\components\simulator\EngineeringPitWall.tsx src\components\simulator\engineeringProgressStore.ts src\components\simulator\Leaderboard.tsx --fix`: aplicado para formatacao.
+- `npx eslint src\components\simulator\SimulatorScene.tsx src\components\simulator\KartRig.tsx src\components\simulator\useKartControls.ts src\components\simulator\EngineeringPitWall.tsx src\components\simulator\engineeringProgressStore.ts src\components\simulator\Leaderboard.tsx`: aprovado.
 - `git diff --check`: aprovado, com apenas avisos LF/CRLF do Windows.
-- Dev server iniciado em `http://127.0.0.1:5173`.
-- Validacao HTTP de `http://127.0.0.1:5173/simulator`: 200.
-- `[Finalizar Tarefa]` recebido em 2026-05-17.
-- Revisao final de diff: concluida, escopo restrito a cameras imersivas, visor de engenharia, identidade visual da Rayssa/karts, preparacao de gestos e documentacao.
-- `npx eslint src\components\simulator\SimulatorScene.tsx src\components\simulator\KartRig.tsx src\components\simulator\KartModel.tsx src\components\simulator\Driver.tsx src\components\simulator\AIKart.tsx src\components\simulator\HelmetHud.tsx src\components\simulator\useKartControls.ts src\components\simulator\gestureInput.ts`: aprovado no fechamento.
-- `git diff --check`: aprovado no fechamento, com apenas avisos LF/CRLF do Windows.
+- `npm run build`: aprovado apos autofix.
+  - Avisos residuais conhecidos: `@import` de CSS fora da primeira posicao e
+    chunks acima de 500 kB.
+- Dev server iniciado e validado em `http://127.0.0.1:8081/simulator`: HTTP 200.
+- `[Finalizar Tarefa]` recebido em 2026-05-19.
+- Revisao final de diff: concluida, escopo restrito a modo engenharia
+  observador, progressao de acesso, pit wall, autopilot da Rayssa, bloqueio de
+  controle manual e documentacao.
+- `npx eslint src\components\simulator\SimulatorScene.tsx src\components\simulator\KartRig.tsx src\components\simulator\useKartControls.ts src\components\simulator\EngineeringPitWall.tsx src\components\simulator\engineeringProgressStore.ts src\components\simulator\Leaderboard.tsx`: aprovado no fechamento.
+- `git diff --check`: aprovado no fechamento, com apenas avisos LF/CRLF do
+  Windows.
 - `npm run build`: aprovado no fechamento.
-  - Avisos residuais existentes/fora do escopo: `@import` de CSS fora da primeira posicao e chunks acima de 500 kB.
+  - Avisos residuais conhecidos: `@import` de CSS fora da primeira posicao e
+    chunks acima de 500 kB.
 
 ## Fechamento
 
-- Finalizada em: 2026-05-17.
-- Commit: criado no fechamento da tarefa; hash final informado ao usuario.
+- Finalizada em: 2026-05-19.
+- Commit: criado no fechamento; hash final informado ao usuario.
 
 ## Notas Para Release
 
-- Arena ganha cameras single-view `DRIVER` e `HELMET`, mantendo split-screen atual.
-- Camera de capacete recebe visor de engenharia com telemetria e radio contextual.
-- Rayssa e os karts de corrida passam a exibir identidade visual mais clara.
-- Projeto fica preparado para plugar controle por gestos via webcam em uma proxima tarefa.
+- Arena inicia em modo `Equipe Engenharia`, com Rayssa pilotando
+  autonomamente.
+- Usuario acompanha a corrida por cameras, split-screen e pit wall tecnico.
+- Progressao por vitorias P1 desbloqueia cadeiras de engenharia e libera
+  controle direto a partir da 10a vitoria.
+- Pit wall `Autonomy Racing` exibe modulos, telemetria, ranking e proximo
+  desbloqueio.

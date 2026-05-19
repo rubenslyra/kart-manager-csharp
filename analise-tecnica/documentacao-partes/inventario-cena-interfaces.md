@@ -198,6 +198,43 @@ Este documento registra elementos do ambiente 3D que nao sao partes fisicas do k
   - O controle por teclado continua sendo o padrao.
   - Implementacao real de gestos deve plugar no contrato existente, provavelmente via `navigator.mediaDevices.getUserMedia` e detector de maos/pose em tarefa posterior.
 
+### Modo Engenharia Observador e pit wall
+
+- Codigo:
+  - `src/components/simulator/SimulatorScene.tsx`
+  - `src/components/simulator/KartRig.tsx`
+  - `src/components/simulator/EngineeringPitWall.tsx`
+  - `src/components/simulator/engineeringProgressStore.ts`
+  - `src/components/simulator/useKartControls.ts`
+- Funcao: iniciar a Arena como uma experiencia de equipe tecnica, na qual o
+  usuario acompanha a corrida a partir de uma estacao de engenharia enquanto
+  Rayssa pilota o kart de forma autonoma.
+- Modos:
+  - `ENGINEERING_OBSERVER`: modo inicial, com controle direto bloqueado e
+    cameras/monitores liberados para observacao.
+  - `DRIVER_CONTROL`: modo de pilotagem direta, liberado somente depois de 10
+    vitorias de Rayssa em primeiro lugar.
+- Progressao persistida em `localStorage`:
+  - 0 a 3 vitorias: engenharia mecanica assistente.
+  - 4 a 5 vitorias: engenharia assistente senior.
+  - 6 a 9 vitorias: lider de equipe.
+  - 10 ou mais vitorias: operacao direta autorizada.
+- Comportamento:
+  - Rayssa e registrada como protagonista da equipe no ranking.
+  - Em modo observador, `KartRig` usa controle autonomo baseado na pista e o
+    teclado de direcao/aceleracao fica desabilitado.
+  - Atalhos de camera, split-screen, replay, audio e paineis continuam
+    disponiveis ao usuario.
+  - `EngineeringPitWall` mostra posto `Autonomy Racing`, cadeiras/monitores,
+    estado dos modulos, leitura de corrida, ranking e proximo desbloqueio.
+  - Ao final da corrida, vitorias P1 de Rayssa incrementam a progressao.
+- Requisito tecnico:
+  - Nao usar marcas reais protegidas como identidade de equipe.
+  - O painel de qualidade/C# deve se apoiar nos estados reais de modulos e
+    telemetria existentes, sem inventar integracoes externas.
+  - O controle manual atual deve permanecer disponivel quando o modo
+    `DRIVER_CONTROL` estiver desbloqueado.
+
 ## Convencao
 
 - Elementos deste documento podem parecer "projetores", telas ou hologramas, mas devem ser tratados como interfaces tecnicas de cena.
