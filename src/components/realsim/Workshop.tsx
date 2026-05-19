@@ -125,7 +125,11 @@ export function Workshop({
         engineTest={engineTest}
         controls={engineControls}
       />
-      <AcousticEngineRoom position={[7.2, 0, 3.9]} engineTest={engineTest} />
+      <AcousticEngineRoom
+        position={[7.2, 0, 3.9]}
+        engineTest={engineTest}
+        controls={engineControls}
+      />
       <ToolRack position={[-5.5, 0, 2]} />
       <ToolRack position={[5.5, 0, 2]} />
 
@@ -171,9 +175,11 @@ export function Workshop({
 function AcousticEngineRoom({
   position,
   engineTest,
+  controls,
 }: {
   position: [number, number, number];
   engineTest: EngineTestState;
+  controls?: EngineTestControls;
 }) {
   const foamPanels = [
     [-1.05, 1.0, -0.76, 0],
@@ -297,51 +303,93 @@ function AcousticEngineRoom({
         <meshBasicMaterial color={engineTest.running ? "#5be39a" : "#7f93a8"} />
       </mesh>
 
-      <mesh position={[0, 1.68, 0.92]} rotation={[0, Math.PI, 0]}>
+      <mesh position={[0, 1.68, 0.995]}>
         <planeGeometry args={[1.25, 0.28]} />
         <meshBasicMaterial color="#0c2236" />
       </mesh>
-      <Text
-        position={[0, 1.68, 0.91]}
-        rotation={[0, Math.PI, 0]}
-        fontSize={0.07}
-        color="#9ed8ff"
-        anchorX="center"
-      >
+      <Text position={[0, 1.68, 1.01]} fontSize={0.07} color="#9ed8ff" anchorX="center">
         SALA ACUSTICA · TESTE MOTOR WANKEL
       </Text>
-      <Text
-        position={[0, 1.54, 0.91]}
-        rotation={[0, Math.PI, 0]}
-        fontSize={0.045}
-        color="#ffb340"
-        anchorX="center"
-      >
+      <Text position={[0, 1.54, 1.01]} fontSize={0.045} color="#ffb340" anchorX="center">
         ISOLAMENTO SONORO · DINAMOMETRO · EXAUSTAO
       </Text>
 
-      <mesh position={[-0.83, 1.48, 0.91]} rotation={[0, Math.PI, 0]}>
+      <mesh position={[-0.83, 1.48, 0.995]}>
         <planeGeometry args={[0.62, 0.34]} />
         <meshBasicMaterial color="#061827" />
       </mesh>
-      <Text
-        position={[-0.83, 1.54, 0.9]}
-        rotation={[0, Math.PI, 0]}
-        fontSize={0.04}
-        color="#5be39a"
-        anchorX="center"
-      >
+      <Text position={[-0.83, 1.54, 1.01]} fontSize={0.04} color="#5be39a" anchorX="center">
         {`${(engineTest.running ? 74 + engineTest.throttle * 22 : 32).toFixed(0)} dB · ${(engineTest.rpm / 1000).toFixed(1)}k RPM`}
       </Text>
       <Text
-        position={[-0.83, 1.43, 0.9]}
-        rotation={[0, Math.PI, 0]}
+        position={[-0.83, 1.43, 1.01]}
         fontSize={0.032}
         color={engineTest.health < 70 ? "#ffb340" : "#9ed8ff"}
         anchorX="center"
       >
         {`HEALTH ${engineTest.health.toFixed(0)}% · LOAD ${(engineTest.load * 100).toFixed(0)}%`}
       </Text>
+
+      <Html
+        transform
+        occlude={false}
+        position={[0.68, 1.18, 1.055]}
+        rotation={[0, 0, 0]}
+        distanceFactor={1.18}
+        zIndexRange={[45, 0]}
+      >
+        <div
+          className="w-[250px] select-none border border-cyan-400/55 bg-slate-950/92 p-2 font-mono text-[9px] uppercase tracking-widest text-slate-100 shadow-[0_0_24px_rgba(56,189,248,0.22)]"
+          onWheel={(e) => e.stopPropagation()}
+        >
+          <div className="mb-2 flex items-center justify-between border-b border-cyan-400/25 pb-1">
+            <span className="text-cyan-300">Painel externo</span>
+            <span className={engineTest.running ? "text-emerald-300" : "text-slate-500"}>
+              {engineTest.running ? "ON" : "OFF"}
+            </span>
+          </div>
+          <div className="mb-2 grid grid-cols-2 gap-1">
+            <TouchButton
+              active={engineTest.running}
+              label={engineTest.running ? "Parar" : "Ligar"}
+              onClick={() => controls?.setRunning(!engineTest.running)}
+            />
+            <TouchButton
+              active={engineTest.audioEnabled}
+              label="Audio"
+              onClick={() => controls?.toggleAudio()}
+            />
+            <TouchButton
+              active={engineTest.throttle > 0.85}
+              label="Stress"
+              onClick={() => {
+                controls?.setRunning(true);
+                controls?.setThrottle(0.92);
+              }}
+            />
+            <TouchButton
+              active={engineTest.throttle > 0.58 && engineTest.throttle < 0.85}
+              label="Capacidade"
+              onClick={() => {
+                controls?.setRunning(true);
+                controls?.setThrottle(0.68);
+              }}
+            />
+          </div>
+          <label className="block text-[8px] text-slate-400">
+            Aceleracao
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={engineTest.throttle}
+              onChange={(e) => controls?.setThrottle(Number(e.target.value))}
+              className="mt-1 w-full"
+            />
+          </label>
+        </div>
+      </Html>
 
       {microphonePositions.map(([x, y, z], i) => (
         <group key={`acoustic-mic-${i}`} position={[x, y, z]}>

@@ -259,3 +259,57 @@
     telemetria, ranking e proximo desbloqueio.
   - Podium passa a exibir papel atual da equipe, total de vitorias e proximo
     marco de acesso.
+
+### Etapa 20 - Classificacao, grid e eventos de corrida
+
+- Arquivos principais:
+  - `src/components/simulator/raceStore.ts`
+  - `src/components/simulator/SimulatorScene.tsx`
+  - `src/components/simulator/QualifyingPanel.tsx`
+  - `src/components/simulator/StartLightsOverlay.tsx`
+  - `src/components/simulator/PitServiceOverlay.tsx`
+  - `src/components/simulator/track.ts`
+  - `src/components/simulator/KartRig.tsx`
+  - `src/components/simulator/AIKart.tsx`
+  - `src/components/simulator/useSimAudio.ts`
+  - `src/components/audio/audioAssets.ts`
+  - `public/sounds/race/`
+- Alteracoes:
+  - Arena passa a ter fases de sessao para setup, classificacao, grid/countdown,
+    corrida e final.
+  - Classificacao calcula 3 tempos por piloto e define ranking, Pole Position e
+    grid de largada.
+  - Karts usam posicoes de grid derivadas da pista e ficam bloqueados ate o fim
+    do semaforo regressivo.
+  - Adicionado overlay de luzes de largada e painel de classificacao.
+  - Adicionado pit service simplificado ao entrar no Pit Lane em baixa
+    velocidade.
+  - Novos assets em `public/sounds/race/` foram integrados aos eventos de
+    semaforo, setor, volta, melhor volta, volta final, bandeirada e podium.
+
+### Etapa 21 - Classificacao alternada, loading do grid e sala acustica externa
+
+- Arquivos principais:
+  - `src/components/simulator/raceStore.ts`
+  - `src/components/simulator/SimulatorScene.tsx`
+  - `src/components/simulator/QualifyingSessionPanel.tsx`
+  - `src/components/simulator/QualifyingPanel.tsx`
+  - `src/components/simulator/GridLoadingOverlay.tsx`
+  - `src/components/simulator/useSimAudio.ts`
+  - `src/components/realsim/Workshop.tsx`
+  - `src/styles.css`
+  - `public/image_1030ed13.png`
+- Alteracoes:
+  - Classificacao passou a ser alternada por rodada, com Rayssa abrindo cada
+    ciclo e todos os competidores recebendo exatamente 3 voltas.
+  - Ranking classificatorio passou a ser calculado pela soma das 3 voltas.
+  - Durante a classificacao, torcida visual e sonora fica desabilitada para
+    manter apenas motor, pista e eventos pertinentes.
+  - Painel de sessao exibe competidor ativo, retorno ao Pit Box e tempos
+    parciais para analise da equipe.
+  - Modal final mostra tabela alfabetica, corte vermelho animado, total e grid
+    final.
+  - Entrada no grid oficial ganhou tela de carregamento com fundo
+    `image_1030ed13.png`, logo `logo_kart_A26.png` e barra de progresso.
+  - Sala acustica recebeu painel externo interativo no vidro e leituras
+    frontais voltadas para fora da cabine.

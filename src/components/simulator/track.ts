@@ -63,4 +63,49 @@ export function spawnPose(): { position: [number, number, number]; rotationY: nu
   return { position: [p.x, p.y, p.z], rotationY: rotY };
 }
 
+export function gridPose(index: number): {
+  position: [number, number, number];
+  rotationY: number;
+  t: number;
+} {
+  const curve = trackCurve();
+  const startT = 0;
+  const startPos = curve.getPointAt(startT);
+  const tan = curve.getTangentAt(startT);
+  const startRot = Math.atan2(tan.x, tan.z);
+  const laneOffset = TRACK_HALF_WIDTH * 0.32;
+  const row = Math.floor(index / 2);
+  const side = index % 2 === 0 ? -1 : 1;
+  const back = 3.1 + row * 2.25;
+  const forwardX = Math.sin(startRot);
+  const forwardZ = Math.cos(startRot);
+  const perpX = Math.cos(startRot);
+  const perpZ = -Math.sin(startRot);
+  const lateral = side * laneOffset;
+  const x = startPos.x - forwardX * back + perpX * lateral;
+  const z = startPos.z - forwardZ * back + perpZ * lateral;
+  const probe = nearestOnTrack(new THREE.Vector3(x, startPos.y, z));
+  return {
+    position: [x, probe.point.y + TRACK_SURFACE_OFFSET, z],
+    rotationY: startRot,
+    t: probe.t,
+  };
+}
+
+export function pitBoxPose(index: number): {
+  position: [number, number, number];
+  rotationY: number;
+} {
+  const row = Math.floor(index / 4);
+  const col = index % 4;
+  return {
+    position: [-26 + col * 6, 0, -12 - row * 4],
+    rotationY: 0,
+  };
+}
+
+export function isInPitLane(pos: THREE.Vector3) {
+  return pos.x >= -31 && pos.x <= -3 && pos.z >= -18 && pos.z <= -7;
+}
+
 export const TRACK_CONFIG = config;

@@ -7,19 +7,20 @@ export interface KartControlsState {
   left: number;
   right: number;
   brake: number;
+  automatic: number;
+  help: number;
   reset: number;
 }
 
 const KEY_MAP: Record<string, keyof KartControlsState> = {
-  w: "forward",
   arrowup: "forward",
-  s: "reverse",
+  d: "forward",
   arrowdown: "reverse",
-  a: "left",
   arrowleft: "left",
-  d: "right",
   arrowright: "right",
-  " ": "brake",
+  f: "brake",
+  a: "automatic",
+  e: "help",
   r: "reset",
 };
 
@@ -38,6 +39,8 @@ export function useKartControls(
     left: 0,
     right: 0,
     brake: 0,
+    automatic: 0,
+    help: 0,
     reset: 0,
   });
 
@@ -69,6 +72,8 @@ export function useKartControls(
       state.current.left = 0;
       state.current.right = 0;
       state.current.brake = 0;
+      state.current.automatic = 0;
+      state.current.help = 0;
       state.current.reset = 0;
     }
   }, [debug, keyboardEnabled]);
@@ -85,6 +90,8 @@ export function useKartControls(
       state.current.left = Math.max(state.current.left, input.left ?? 0);
       state.current.right = Math.max(state.current.right, input.right ?? 0);
       state.current.brake = Math.max(state.current.brake, input.brake ?? 0);
+      state.current.automatic = Math.max(state.current.automatic, input.automatic ?? 0);
+      state.current.help = Math.max(state.current.help, input.help ?? 0);
       state.current.reset = Math.max(state.current.reset, input.reset ?? 0);
     };
     raf = requestAnimationFrame(mergeExternal);

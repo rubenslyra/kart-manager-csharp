@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Group, MathUtils, Vector3 } from "three";
-import { TRACK_SURFACE_OFFSET, trackCurve } from "./track";
+import { TRACK_SURFACE_OFFSET, gridPose, trackCurve } from "./track";
 import { raceStore, rankedRacers } from "./raceStore";
 import { KartModel } from "./KartModel";
 import { Nameplate } from "./Nameplate";
@@ -20,6 +20,8 @@ interface Props {
   kartNumber?: string;
   showHitbox?: boolean;
   hitboxAuto?: boolean;
+  raceActive?: boolean;
+  gridIndex?: number;
 }
 
 const TRACK_LANE = 1.6;
@@ -36,6 +38,8 @@ export function AIKart({
   kartNumber = "21",
   showHitbox = false,
   hitboxAuto = false,
+  raceActive = true,
+  gridIndex,
 }: Props) {
   const chassisRef = useRef<Group>(null);
   const group = useRef<Group>(null);
@@ -55,6 +59,15 @@ export function AIKart({
   useFrame((_, dtRaw) => {
     if (!group.current) return;
     const dt = Math.min(dtRaw, 0.05) * raceStore.get().timeScale;
+
+    if (!raceActive) {
+      const pose = gridPose(gridIndex ?? 1);
+      group.current.position.set(...pose.position);
+      group.current.rotation.y = pose.rotationY;
+      t.current = pose.t;
+      raceStore.updatePose(id, pose.position[0], pose.position[2], pose.rotationY);
+      return;
+    }
 
     // Frustum-cheap distance check: longe da câmera, pulamos curvatura/overtake
     const dx = group.current.position.x - camera.position.x;

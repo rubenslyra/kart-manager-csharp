@@ -23,9 +23,11 @@ export function useSimAudio() {
   const crowdBaseRef = useRef<HTMLAudioElement | null>(null);
   const crowdNearRef = useRef<HTMLAudioElement | null>(null);
   const checkeredFlagRef = useRef<HTMLAudioElement | null>(null);
+  const raceEventsRef = useRef<Record<string, HTMLAudioElement>>({});
   const speedRef = useRef(0);
   const camDistRef = useRef(60);
   const nearbyRacerRef = useRef(0);
+  const crowdMutedRef = useRef(false);
   const enabledRef = useRef(false);
   const [enabled, setEnabled] = useState(false);
 
@@ -38,13 +40,18 @@ export function useSimAudio() {
     } catch {
       /* noop */
     }
-    [raceLoopRef.current, sideCarsRef.current, crowdBaseRef.current, crowdNearRef.current, checkeredFlagRef.current].forEach(
-      (audio) => {
-        if (!audio) return;
-        audio.pause();
-        audio.currentTime = 0;
-      },
-    );
+    [
+      raceLoopRef.current,
+      sideCarsRef.current,
+      crowdBaseRef.current,
+      crowdNearRef.current,
+      checkeredFlagRef.current,
+      ...Object.values(raceEventsRef.current),
+    ].forEach((audio) => {
+      if (!audio) return;
+      audio.pause();
+      audio.currentTime = 0;
+    });
     ctxRef.current?.close();
     ctxRef.current = null;
     engineOscRef.current = null;
@@ -54,6 +61,7 @@ export function useSimAudio() {
     crowdBaseRef.current = null;
     crowdNearRef.current = null;
     checkeredFlagRef.current = null;
+    raceEventsRef.current = {};
   }, []);
 
   const start = useCallback(() => {
@@ -86,6 +94,15 @@ export function useSimAudio() {
     const crowdBase = makeAudio(AUDIO_ASSETS.fansInTheStadiumLow, true);
     const crowdNear = makeAudio(AUDIO_ASSETS.crowdNearTurn, true);
     const checkered = makeAudio(AUDIO_ASSETS.crowdCheckeredFlag, false, 0.78);
+    raceEventsRef.current = {
+      startLights: makeAudio(AUDIO_ASSETS.raceStartLights, false, 0.8),
+      lapComplete: makeAudio(AUDIO_ASSETS.raceLapComplete, false, 0.72),
+      sectorTime: makeAudio(AUDIO_ASSETS.raceSectorTime, false, 0.62),
+      bestLap: makeAudio(AUDIO_ASSETS.raceBestLap, false, 0.72),
+      finalLap: makeAudio(AUDIO_ASSETS.raceFinalLap, false, 0.72),
+      finishFlag: makeAudio(AUDIO_ASSETS.raceFinishFlag, false, 0.78),
+      podiumArrival: makeAudio(AUDIO_ASSETS.racePodiumArrival, false, 0.78),
+    };
     raceLoopRef.current = raceLoop;
     sideCarsRef.current = sideCars;
     crowdBaseRef.current = crowdBase;
@@ -164,7 +181,7 @@ export function useSimAudio() {
 
       // Crowd: louder when camera is near bleachers (positional approx)
       const d = camDistRef.current;
-      const crowdVol = Math.max(0, Math.min(0.45, 1 - d / 120)) * 0.6;
+      const crowdVol = crowdMutedRef.current ? 0 : Math.max(0, Math.min(0.45, 1 - d / 120)) * 0.6;
       crowdGainRef.current?.gain.setTargetAtTime(crowdVol * 0.25, now, 0.25);
 
       if (raceLoopRef.current) {
@@ -177,10 +194,12 @@ export function useSimAudio() {
         sideCarsRef.current.playbackRate = Math.max(0.9, Math.min(1.18, 0.96 + speed / 360));
       }
       if (crowdBaseRef.current) {
-        crowdBaseRef.current.volume = Math.max(0, Math.min(0.18, 1 - d / 180));
+        crowdBaseRef.current.volume = crowdMutedRef.current
+          ? 0
+          : Math.max(0, Math.min(0.18, 1 - d / 180));
       }
       if (crowdNearRef.current) {
-        const nearTurnBoost = Math.max(0, Math.min(0.55, 1 - d / 48));
+        const nearTurnBoost = crowdMutedRef.current ? 0 : Math.max(0, Math.min(0.55, 1 - d / 48));
         crowdNearRef.current.volume = nearTurnBoost;
       }
     };
@@ -200,6 +219,9 @@ export function useSimAudio() {
   }, []);
   const setNearbyRacerIntensity = useCallback((intensity: number) => {
     nearbyRacerRef.current = Math.max(0, Math.min(1, intensity));
+  }, []);
+  const setCrowdMuted = useCallback((muted: boolean) => {
+    crowdMutedRef.current = muted;
   }, []);
 
   // Short tyre screech (call when drifting)
@@ -267,6 +289,63 @@ export function useSimAudio() {
     void audio.play().catch(() => fanfare());
   }, [fanfare]);
 
+  const playRaceEvent = useCallback(
+    (id: keyof typeof raceEventsRef.current, fallback: () => void) => {
+      if (!enabledRef.current) return;
+      const audio = raceEventsRef.current[id];
+      if (!audio) {
+        fallback();
+        return;
+      }
+      audio.currentTime = 0;
+      void audio.play().catch(fallback);
+    },
+    [],
+  );
+
+  const startLights = useCallback(
+    () =>
+      playRaceEvent("startLights", () => {
+        tone(440, 0.16, "square", 0.16);
+        setTimeout(() => tone(520, 0.16, "square", 0.16), 700);
+        setTimeout(() => tone(660, 0.16, "square", 0.16), 1400);
+        setTimeout(() => tone(980, 0.35, "sawtooth", 0.2), 2200);
+      }),
+    [playRaceEvent, tone],
+  );
+  const sectorTime = useCallback(
+    () => playRaceEvent("sectorTime", () => checkpointBeep()),
+    [checkpointBeep, playRaceEvent],
+  );
+  const lapComplete = useCallback(
+    () => playRaceEvent("lapComplete", () => lapJingle()),
+    [lapJingle, playRaceEvent],
+  );
+  const bestLap = useCallback(
+    () =>
+      playRaceEvent("bestLap", () => {
+        tone(784, 0.14);
+        setTimeout(() => tone(1046, 0.22), 120);
+      }),
+    [playRaceEvent, tone],
+  );
+  const finalLap = useCallback(
+    () =>
+      playRaceEvent("finalLap", () => {
+        tone(880, 0.2, "triangle", 0.18);
+        setTimeout(() => tone(880, 0.2, "triangle", 0.18), 260);
+      }),
+    [playRaceEvent, tone],
+  );
+  const finishFlag = useCallback(
+    () => playRaceEvent("finishFlag", () => checkeredFlag()),
+    [checkeredFlag, playRaceEvent],
+  );
+  const podiumArrival = useCallback(
+    () => playRaceEvent("podiumArrival", () => fanfare()),
+    [fanfare, playRaceEvent],
+  );
+
   useEffect(() => () => stop(), [stop]);
 
   return {
@@ -276,11 +355,19 @@ export function useSimAudio() {
     setSpeed,
     setCamPosition,
     setNearbyRacerIntensity,
+    setCrowdMuted,
     screech,
     tone,
     checkpointBeep,
     lapJingle,
     fanfare,
     checkeredFlag,
+    startLights,
+    sectorTime,
+    lapComplete,
+    bestLap,
+    finalLap,
+    finishFlag,
+    podiumArrival,
   };
 }

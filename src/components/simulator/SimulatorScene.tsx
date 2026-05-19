@@ -32,6 +32,11 @@ import { perfStore, usePerf } from "./perfStore";
 import { HelmetHud } from "./HelmetHud";
 import { EMPTY_GESTURE_INPUT } from "./gestureInput";
 import { EngineeringPitWall } from "./EngineeringPitWall";
+import { QualifyingPanel } from "./QualifyingPanel";
+import { QualifyingSessionPanel } from "./QualifyingSessionPanel";
+import { GridLoadingOverlay } from "./GridLoadingOverlay";
+import { StartLightsOverlay } from "./StartLightsOverlay";
+import { PitServiceOverlay } from "./PitServiceOverlay";
 import {
   engineeringProgressStore,
   nextUnlockLabel,
@@ -40,6 +45,7 @@ import {
   getTeamRole,
   type ControlMode,
 } from "./engineeringProgressStore";
+import { gridPose } from "./track";
 
 interface Props {
   fullscreen?: boolean;
@@ -51,6 +57,40 @@ const DRIVER_VIEW = 4;
 const HELMET_VIEW = 5;
 const FREE_VIEW = 6;
 const REQUIRED_MODULES = ["CORE", "GEARBOX", "BRAKES", "IGNITION"] as const;
+
+function makeQualifyingEntrants(
+  aiOpponents: ReturnType<typeof generateAIList>,
+  aggression: number,
+) {
+  return [
+    {
+      id: "player",
+      name: "Rayssa",
+      color: "#22d3ee",
+      isPlayer: true,
+      pace: 1.0 + aggression * 0.02,
+    },
+    ...aiOpponents.map((a) => ({
+      id: a.id,
+      name: a.name,
+      color: a.color,
+      isPlayer: false,
+      pace: a.baseSpeed / 19,
+    })),
+  ];
+}
+
+function makeQualifyingLapMs(
+  entrant: ReturnType<typeof makeQualifyingEntrants>[number],
+  roundIndex: number,
+  entrantIndex: number,
+) {
+  const playerPush = entrant.isPlayer && roundIndex === 0 ? 520 : 0;
+  const base = 70400 - entrant.pace * 4300 + entrantIndex * 145 - playerPush;
+  const rhythm = Math.sin((entrantIndex + 1) * (roundIndex + 2.2)) * 480;
+  const tyreRamp = roundIndex * 165 - Math.min(roundIndex, 1) * 110;
+  return Math.max(61500, Math.round(base + rhythm + tyreRamp));
+}
 
 /**
  * Splitter — renders the scene into 1 or 4 viewports using gl.setScissor + setViewport.
@@ -139,11 +179,15 @@ export function SimulatorScene({ fullscreen = false }: Props) {
   const audio = useSimAudio();
   const [devMode, setDevMode] = useState(true);
   const [resetSignal, setResetSignal] = useState(0);
+  const [poseResetSignal, setPoseResetSignal] = useState(0);
   const [lap, setLap] = useState({ progress: 0, count: 0 });
   const [splitMode, setSplitMode] = useState(false);
   const [debugStats, setDebugStats] = useState<DebugStats | null>(null);
   const [physics, setPhysics] = useState<ExtendedPhysics | null>(null);
   const [activeView, setActiveView] = useState(FREE_VIEW);
+  const [radioHelpUntil, setRadioHelpUntil] = useState(0);
+  const [qualifyingTick, setQualifyingTick] = useState(0);
+  const [gridLoadingProgress, setGridLoadingProgress] = useState(0);
   const camerasRef = useRef<ThreePerspectiveCamera[] | null>(null);
   const fallbackCamRef = useRef<ThreePerspectiveCamera | null>(null);
   const sparksRef = useRef<SparksHandle | null>(null);
@@ -181,6 +225,35 @@ export function SimulatorScene({ fullscreen = false }: Props) {
   }, [race]);
 
   const aiOpponents = useMemo(() => generateAIList(race.setup), [race.setup]);
+
+  useEffect(() => {
+    if (race.phase !== "QUALIFYING") return;
+    const id = window.setInterval(() => setQualifyingTick((n) => n + 1), 180);
+    return () => window.clearInterval(id);
+  }, [race.phase]);
+
+  useEffect(() => {
+    audio.setCrowdMuted(race.phase === "QUALIFYING");
+  }, [audio, race.phase]);
+
+  useEffect(() => {
+    if (race.phase !== "QUALIFYING") return;
+    const session = race.qualifyingSession;
+    if (!session || session.complete) return;
+    const active = session.entrants[session.entrantIndex];
+    if (!active) return;
+    const elapsed = performance.now() - session.stepStartedAt;
+    if (session.step === "RUNNING" && elapsed >= 3600) {
+      const lapMs = makeQualifyingLapMs(active, session.roundIndex, session.entrantIndex);
+      raceStore.recordQualifyingLap(active.id, lapMs);
+      if (active.isPlayer) audio.lapComplete();
+      else audio.sectorTime();
+      return;
+    }
+    if ((session.step === "PIT_RETURN" || session.step === "ANALYSIS") && elapsed >= 1600) {
+      raceStore.advanceQualifying();
+    }
+  }, [audio, qualifyingTick, race.phase, race.qualifyingSession]);
 
   const handleLap = useCallback((progress: number, count: number) => {
     setLap((prev) =>
@@ -220,12 +293,28 @@ export function SimulatorScene({ fullscreen = false }: Props) {
       if (e.key === "h" || e.key === "H") setShowHitbox((s) => !s);
       if (e.key === "b" || e.key === "B") setHitboxAuto((s) => !s);
       if (e.key === "p" || e.key === "P") perfStore.toggleOverlay();
+      if ((e.key === "e" || e.key === "E") && !engineeringMode) {
+        const until = performance.now() + 4500;
+        setRadioHelpUntil(until);
+        window.setTimeout(() => {
+          setRadioHelpUntil((current) => (current === until ? 0 : current));
+        }, 4600);
+        if ("speechSynthesis" in window) {
+          window.speechSynthesis.cancel();
+          const msg = new SpeechSynthesisUtterance(
+            "Equipe no radio. Mantenha a linha, freie antes da curva e acelere progressivo na saida.",
+          );
+          msg.lang = "pt-BR";
+          msg.rate = 1.02;
+          window.speechSynthesis.speak(msg);
+        }
+      }
       if (["1", "2", "3", "4", "5", "6", "7"].includes(e.key))
         setActiveView(parseInt(e.key, 10) - 1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [engineeringMode]);
 
   // Debug presets (botões abaixo) — alternam combinações úteis sem depender só de teclas
   const applyPreset = useCallback((preset: "off" | "hitbox" | "hitboxParticles" | "fpsStats") => {
@@ -278,13 +367,30 @@ export function SimulatorScene({ fullscreen = false }: Props) {
 
   // Audio cues: checkpoint beep, lap jingle, race fanfare
   const lastCpAt = useRef(0);
+  const bestRaceLapRef = useRef<number | null>(null);
   useEffect(() => {
     const cp = race.lastCheckpoint;
     if (!cp || cp.at === lastCpAt.current) return;
     lastCpAt.current = cp.at;
-    if (cp.isLapClose) audio.lapJingle();
-    else audio.checkpointBeep();
-  }, [race.lastCheckpoint, audio]);
+    if (cp.isLapClose) {
+      const player = race.racers.player;
+      audio.lapComplete();
+      if (
+        player?.lastLapMs &&
+        (bestRaceLapRef.current === null || player.lastLapMs < bestRaceLapRef.current)
+      ) {
+        bestRaceLapRef.current = player.lastLapMs;
+        audio.bestLap();
+      }
+      if (player && player.lap >= race.totalLaps - 1 && player.lap < race.totalLaps) {
+        audio.finalLap();
+      }
+    } else audio.sectorTime();
+  }, [race.lastCheckpoint, race.racers.player, race.totalLaps, audio]);
+
+  useEffect(() => {
+    if (race.phase === "RACE") bestRaceLapRef.current = null;
+  }, [race.phase]);
 
   // Sincroniza fanfara/cues com as fases do replay (TV → Orbital → Helicóptero).
   // Fanfara dispara ao entrar na fase Helicóptero (clímax + confetes).
@@ -297,9 +403,9 @@ export function SimulatorScene({ fullscreen = false }: Props) {
     const key = `${race.replayRunNonce}-${race.replayPhase}`;
     if (key === lastPhaseKey.current) return;
     lastPhaseKey.current = key;
-    if (race.replayPhase === 0) audio.checkpointBeep();
-    else if (race.replayPhase === 1) audio.lapJingle();
-    else if (race.replayPhase === 2) audio.checkeredFlag();
+    if (race.replayPhase === 0) audio.sectorTime();
+    else if (race.replayPhase === 1) audio.lapComplete();
+    else if (race.replayPhase === 2) audio.finishFlag();
   }, [race.finished, race.playbackActive, race.replayPhase, race.replayRunNonce, audio]);
 
   const ghostBest = useGhostBest();
@@ -311,12 +417,59 @@ export function SimulatorScene({ fullscreen = false }: Props) {
       setShowPodium(false);
       return;
     }
+    audio.finishFlag();
     const id = window.setTimeout(() => setShowPodium(true), race.setup.replayDurationMs);
     return () => window.clearTimeout(id);
-  }, [race.finished, race.setup.replayDurationMs]);
+  }, [audio, race.finished, race.setup.replayDurationMs]);
+
+  useEffect(() => {
+    if (showPodium) audio.podiumArrival();
+  }, [audio, showPodium]);
 
   const skipReplay = useCallback(() => setShowPodium(true), []);
   const hasRecord = !!replayRecordStore.getRecord();
+  const gridIndexById = useMemo(() => {
+    const map = new Map<string, number>();
+    race.gridOrder.forEach((id, i) => map.set(id, i));
+    return map;
+  }, [race.gridOrder]);
+  const playerGridIndex = gridIndexById.get("player") ?? 0;
+  const playerInitialPose = useMemo(() => gridPose(playerGridIndex), [playerGridIndex]);
+  const raceActive = race.phase === "RACE";
+  const sortedOpponents = useMemo(() => {
+    if (race.gridOrder.length === 0) return aiOpponents;
+    return [...aiOpponents].sort(
+      (a, b) => (gridIndexById.get(a.id) ?? 99) - (gridIndexById.get(b.id) ?? 99),
+    );
+  }, [aiOpponents, gridIndexById, race.gridOrder.length]);
+
+  const handleStartQualifying = useCallback(() => {
+    const entrants = makeQualifyingEntrants(aiOpponents, race.setup.aggression);
+    raceStore.startQualifyingSession(entrants);
+  }, [aiOpponents, race.setup.aggression]);
+
+  const handleGoToGrid = useCallback(() => {
+    setGridLoadingProgress(0);
+    setActiveView(0);
+    raceStore.startGridLoading();
+  }, []);
+
+  useEffect(() => {
+    if (race.phase !== "GRID_LOADING") return;
+    setGridLoadingProgress(0);
+    const startedAt = performance.now();
+    const duration = 2600;
+    const id = window.setInterval(() => {
+      const pct = Math.min(100, ((performance.now() - startedAt) / duration) * 100);
+      setGridLoadingProgress(pct);
+      if (pct >= 100) {
+        window.clearInterval(id);
+        setPoseResetSignal((n) => n + 1);
+        window.setTimeout(() => raceStore.startGridCountdown(), 360);
+      }
+    }, 80);
+    return () => window.clearInterval(id);
+  }, [race.phase]);
 
   const viewportClass = fullscreen
     ? "scanline relative h-[calc(100vh-132px)] min-h-[520px] overflow-hidden bg-card"
@@ -355,9 +508,13 @@ export function SimulatorScene({ fullscreen = false }: Props) {
                 </>
               ) : (
                 <>
-                  Dirija com <span className="font-mono text-foreground">WASD</span> ou{" "}
-                  <span className="font-mono text-foreground">setas</span> ·{" "}
-                  <span className="font-mono text-foreground">Espaco</span> = freio.{" "}
+                  <span className="font-mono text-foreground">D</span> ou{" "}
+                  <span className="font-mono text-foreground">↑</span> dirige ·{" "}
+                  <span className="font-mono text-foreground">←/→</span> direcao ·{" "}
+                  <span className="font-mono text-foreground">↓</span> re ·{" "}
+                  <span className="font-mono text-foreground">F</span> freia ·{" "}
+                  <span className="font-mono text-foreground">A</span> automatico ·{" "}
+                  <span className="font-mono text-foreground">E</span> radio ·{" "}
                   <span className="font-mono text-foreground">V</span> alterna split-screen ·{" "}
                   <span className="font-mono text-foreground">1-7</span> selecionam camera.
                 </>
@@ -456,7 +613,7 @@ export function SimulatorScene({ fullscreen = false }: Props) {
                 <group name="world">
                   <TrackModel />
                   <PitBoxes />
-                  <Grandstand />
+                  {race.phase !== "QUALIFYING" && <Grandstand />}
                 </group>
                 <group name="actors">
                   <KartRig
@@ -464,7 +621,7 @@ export function SimulatorScene({ fullscreen = false }: Props) {
                     ignition={t.ignition}
                     battery={t.battery}
                     devMode={devMode}
-                    resetSignal={resetSignal}
+                    resetSignal={resetSignal + poseResetSignal}
                     splitMode={splitMode}
                     activeView={activeView}
                     onKinematics={sim.setKinematics}
@@ -477,14 +634,18 @@ export function SimulatorScene({ fullscreen = false }: Props) {
                     showHitbox={showHitbox}
                     hitboxAuto={hitboxAuto}
                     controlMode={engineeringMode ? "autopilot" : "manual"}
+                    raceActive={raceActive}
+                    initialPose={playerInitialPose}
                   />
-                  {aiOpponents.map((a, index) => (
+                  {sortedOpponents.map((a, index) => (
                     <AIKart
                       key={a.id}
                       {...a}
                       kartNumber={`${21 + index}`}
                       showHitbox={showHitbox}
                       hitboxAuto={hitboxAuto}
+                      raceActive={raceActive}
+                      gridIndex={gridIndexById.get(a.id) ?? index + 1}
                     />
                   ))}
                   <GhostKart />
@@ -536,6 +697,23 @@ export function SimulatorScene({ fullscreen = false }: Props) {
                 canDrive={canUseDriverControl}
                 onSetMode={handleControlMode}
               />
+            )}
+            <QualifyingSessionPanel session={race.qualifyingSession} />
+            <QualifyingPanel phase={race.phase} results={race.qualifying} onGrid={handleGoToGrid} />
+            <GridLoadingOverlay phase={race.phase} progress={gridLoadingProgress} />
+            <StartLightsOverlay
+              phase={race.phase}
+              startedAt={race.countdownStartedAt}
+              onStartSound={audio.startLights}
+            />
+            <PitServiceOverlay service={race.pitService} />
+            {radioHelpUntil > performance.now() && (
+              <div className="pointer-events-none absolute inset-x-0 top-28 z-40 flex justify-center font-mono">
+                <div className="corner-cut border border-primary bg-background/80 px-4 py-2 text-[10px] uppercase tracking-widest text-primary backdrop-blur-sm">
+                  Radio equipe: freie antes da curva, mantenha a linha e acelere progressivo na
+                  saida.
+                </div>
+              </div>
             )}
             {devMode && <DebugPanel stats={debugStats} />}
             {(devMode || perf.toggles.overlayEnabled) && <FpsMeter />}
@@ -699,7 +877,7 @@ export function SimulatorScene({ fullscreen = false }: Props) {
                 </div>
               </div>
             )}
-            <RaceSetup onStart={() => raceStore.openSetup(false)} />
+            <RaceSetup onStart={handleStartQualifying} />
             <button
               onClick={() => raceStore.openSetup(true)}
               className="absolute left-3 top-3 z-30 corner-cut border border-accent bg-accent/10 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-accent hover:bg-accent/20"
@@ -812,10 +990,12 @@ export function SimulatorScene({ fullscreen = false }: Props) {
                 </>
               ) : (
                 <>
-                  <div className="text-muted-foreground">W / ↑ — acelerar</div>
-                  <div className="text-muted-foreground">S / ↓ — ré · freio</div>
-                  <div className="text-muted-foreground">A · D / ← → — direção</div>
-                  <div className="text-muted-foreground">Espaco — freio forte</div>
+                  <div className="text-muted-foreground">↑ / D — dirigir</div>
+                  <div className="text-muted-foreground">← · → — direção</div>
+                  <div className="text-muted-foreground">↓ — ré</div>
+                  <div className="text-muted-foreground">A — automático</div>
+                  <div className="text-muted-foreground">F — freiar</div>
+                  <div className="text-muted-foreground">E — rádio da equipe</div>
                 </>
               )}
               <div className="text-muted-foreground">V — split-screen</div>

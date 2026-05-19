@@ -17,6 +17,8 @@ export const EMPTY_GESTURE_INPUT: GestureInputState = {
     left: 0,
     right: 0,
     brake: 0,
+    automatic: 0,
+    help: 0,
     reset: 0,
   },
 };

@@ -1,56 +1,56 @@
 # Tarefa Atual
 
-Status: finalizada
+Status: aberta
 Aberta em: 2026-05-19
 
 ## Titulo
 
-Adicionar modo Engenharia Observador e progressao de acesso da equipe
+Adicionar qualificacao, grid de largada, pit lane e eventos de corrida
 
 ## Objetivo
 
-Transformar o fluxo inicial da Arena em uma experiencia de equipe tecnica:
-o usuario comeca dentro de uma sala/pit wall de engenharia, observando a
-corrida por monitores, paineis de telemetria e cameras selecionaveis, enquanto
-Rayssa pilota o kart de forma autonoma. A conducao direta do kart deve ser
-desbloqueada apenas depois de uma progressao baseada em vitorias da corredora.
+Implementar uma etapa de classificacao antes da corrida principal, onde cada
+piloto realiza 3 voltas sozinho na pista para registrar tempos. Os melhores
+tempos definem a ordem do grid e a Pole Position. A corrida deve iniciar com
+contador regressivo/semaforo de largada, e a experiencia deve incluir retorno ao
+Pit Box apos classificatoria e manutencao no Pit Lane durante a corrida.
 
 ## Escopo Inicial
 
-- Criar ou planejar dois modos iniciais de controle:
-  - modo `Equipe Engenharia` ou observador, em que o usuario atua na sala de
-    engenharia e acompanha a corrida pelos monitores;
-  - modo de conducao direta, equivalente a perspectiva atual do jogo, liberado
-    apenas posteriormente.
-- No inicio da experiencia, permitir apenas o modo observador:
-  - Rayssa opera o carrinho sozinha;
-  - o usuario aprende as mecanicas observando a corrida;
-  - o usuario pode acionar/trocar posicoes de camera;
-  - o usuario acompanha telemetria, paineis e feeds de camera.
-- Representar a primeira etapa como cadeira de engenheiro mecanico assistente,
-  com acesso a monitores e paineis de controle.
-- Reforcar a finalidade didatica:
-  - mostrar como as libs em C# desenvolvidas em aula contribuem para a corrida;
-  - destacar a importancia da qualidade de codigo por meio de telemetria,
-    diagnosticos e feedbacks da equipe.
-- Criar ou planejar progressao de acesso por vitorias de Rayssa:
-  - inicio: engenheiro mecanico assistente;
-  - apos 4 vitorias em primeiro lugar: cadeira superior a de assistente;
-  - apos 6 vitorias: cadeira de lider de equipe;
-  - a partir da 10a vitoria: liberar opcao de operar os carros na perspectiva
-    atual do jogo.
-- Projetar ambiente visual de pit wall/command station:
-  - sala de comando high-tech noturna;
-  - cinco engenheiros ou estrategistas vistos por tras;
-  - cadeiras profissionais pretas com branding `Autonomy`;
-  - uniformes claros com identidade propria do projeto;
-  - headsets de comunicacao;
-  - arrays verticais/duplos de monitores com telemetria, mapas de pista, feeds
-    ao vivo e graficos;
-  - booth metalico escuro, linhas limpas, divisorias e iluminacao cinematica.
-- Evitar uso direto de marcas reais protegidas como `PETRONAS` no produto final,
-  salvo se houver autorizacao explicita; usar identidade inspirada e propria,
-  como `Autonomy Racing` ou equivalente.
+- Ler e consolidar as instrucoes adicionadas pelo usuario na nova estrutura de
+  pastas e no documento exibido na imagem.
+- Rastrear ao final da etapa a nova estrutura de assets em `public/sounds/race/`.
+- Implementar ou planejar fase de qualificacao/classificacao:
+  - cada corredor faz 3 voltas sozinho na pista;
+  - tempos de volta sao registrados;
+  - melhor tempo de cada piloto define ranking classificatorio;
+  - ranking define posicoes no grid;
+  - melhor tempo garante Pole Position.
+- Implementar ou planejar posicao inicial no grid:
+  - karts devem largar em ordem de classificacao;
+  - Rayssa e adversarios devem respeitar suas posicoes;
+  - grid deve ser integrado a pista e ao sistema de corrida atual.
+- Implementar ou planejar retorno ao Pit Box:
+  - apos qualificacao, piloto retorna ao seu Pit Box;
+  - durante a corrida, entrada no Pit Lane deve permitir manutencao da equipe.
+- Implementar ou planejar eventos de corrida e audio:
+  - contador regressivo;
+  - semaforo de largada;
+  - largada da corrida;
+  - volta completa;
+  - tempo de setor;
+  - melhor volta;
+  - volta final;
+  - bandeirada;
+  - chegada ao podium.
+- Considerar os assets ja adicionados:
+  - `public/sounds/race/start_light_03-02-01-start.ogg`
+  - `public/sounds/race/lap_complete.wav`
+  - `public/sounds/race/sector_time.mp3`
+  - `public/sounds/race/best_lap.mp3`
+  - `public/sounds/race/final_lap.mp3`
+  - `public/sounds/race/finish_flag.mp3`
+  - `public/sounds/race/podium_arrival.mp3`
 - Nao executar implementacao nesta etapa.
 - Nao fazer commit automatico apenas por iniciar a tarefa.
 
@@ -64,43 +64,70 @@ Verificado em 2026-05-19:
   - `chamado-correções-erros-prints/`
   - `image_1030ed13.png`
   - `sounds-trilha/`
+- Nova estrutura nao rastreada relacionada a esta tarefa:
+  - `public/sounds/race/`
+
+## Nova Estrutura De Assets Identificada
+
+- `public/sounds/race/best_lap.mp3`
+- `public/sounds/race/final_lap.mp3`
+- `public/sounds/race/finish_flag.mp3`
+- `public/sounds/race/lap_complete.wav`
+- `public/sounds/race/podium_arrival.mp3`
+- `public/sounds/race/sector_time.mp3`
+- `public/sounds/race/start_light_03-02-01-start.ogg`
 
 ## Arquivos Provaveis
 
+- `src/components/audio/audioAssets.ts`
+- `src/components/simulator/useSimAudio.ts`
+- `src/components/simulator/raceStore.ts`
+- `src/components/simulator/replayRecordStore.ts`
 - `src/components/simulator/SimulatorScene.tsx`
 - `src/components/simulator/KartRig.tsx`
 - `src/components/simulator/AIKart.tsx`
-- `src/components/simulator/useKartControls.ts`
-- `src/components/simulator/gestureInput.ts`
-- `src/components/simulator/HelmetHud.tsx`
-- `src/components/simulator/raceStore` ou store equivalente de corrida
-- componentes novos para pit wall, monitores, paineis e progressao
+- `src/components/simulator/RaceSetup.tsx`
+- `src/components/simulator/Leaderboard.tsx`
+- `src/components/simulator/PitBoxes.tsx`
+- `src/components/simulator/TrackModel.tsx`
+- `src/components/simulator/track.ts`
+- componentes novos para qualificacao, grid, semaforo, pit lane e eventos
 - documentacao em `analise-tecnica/documentacao-partes/`
 
 ## Riscos Iniciais
 
-- Travar o controle direto sem quebrar a experiencia atual de camera e corrida.
-- Definir uma IA/autopilot de Rayssa suficiente para o modo observador inicial.
-- Persistir contagem de vitorias sem criar estado inconsistente ou facil de
-  corromper.
-- Integrar monitores/pit wall com a cena 3D sem degradar performance.
-- Manter o valor didatico das libs C# claro sem inventar metricas tecnicas
-  desconectadas do que o projeto realmente possui.
-- Evitar marcas reais protegidas no visual final.
-- Preservar as cameras imersivas implementadas na tarefa anterior.
+- O sistema atual finaliza corrida com base no `isPlayer`; qualificacao por
+  piloto individual pode exigir separar fases de sessao.
+- IA atual corre simultaneamente; classificacao individual pode exigir modo
+  time-trial/autonomo isolado por piloto.
+- Grid atual pode nao ter pontos discretos suficientes para todos os corredores.
+- Pit Lane e Pit Box precisam interagir com a pista sem quebrar colisao,
+  checkpoints ou replay.
+- Contador/semaforo deve bloquear movimento antes da largada sem bloquear
+  cameras, audio e UI.
+- Novos assets de audio precisam entrar no catalogo sem duplicar sons existentes
+  ou tocar sobreposto em excesso.
+- A captura de tempos precisa ser consistente com voltas/checkpoints atuais.
+- O modo Engenharia Observador implementado na tarefa anterior deve continuar
+  funcionando.
 
 ## Checks Planejados
 
 - `git status --short --branch` antes de qualquer edicao de codigo.
-- Research da cena da Arena, controles, cameras, IA de corrida, store de
-  resultados/vitorias, HUDs e documentacao tecnica.
-- Plan tecnico com subtarefas, riscos, criterios de aceite e validacoes.
+- Research de:
+  - store de corrida e fases;
+  - checkpoints/voltas;
+  - IA e autopilot;
+  - grid/track/pit boxes;
+  - audio e assets de evento;
+  - replay/podium;
+  - modo Engenharia Observador.
+- Plan tecnico com subtarefas, riscos, validacoes e criterios de aceite.
 - Apos implementacao aprovada por `[Concluir RPI]`:
   - lint focado nos arquivos alterados;
   - `git diff --check`;
   - `npm run build`;
-  - validacao visual/manual do modo observador, cameras, progressao e liberacao
-    do controle direto.
+  - validacao manual da classificacao, grid, largada, audio, pit lane e corrida.
 
 ## Subtarefas
 
@@ -111,9 +138,9 @@ Verificado em 2026-05-19:
 - Concluido: receber `[Concluir RPI]`.
 - Concluido: implementar apos aprovacao do RPI.
 - Concluido: validar alteracoes.
-- Concluido: receber `[Finalizar Tarefa]`.
-- Concluido: revisar diff final.
-- Concluido: validar e fechar tarefa.
+- Pendente: receber `[Finalizar Tarefa]`.
+- Pendente: revisar diff final.
+- Pendente: validar e fechar tarefa.
 
 ## RPI
 
@@ -126,139 +153,172 @@ Concluido em 2026-05-19.
 - Estado do git no inicio do RPI:
   - Branch `main`.
   - `analise-tecnica/tarefas/tarefa-atual.md` modificado pela abertura da tarefa.
-  - Artefatos nao rastreados preexistentes:
+  - Nova pasta nao rastreada relacionada a tarefa: `public/sounds/race/`.
+  - Artefatos nao rastreados preexistentes e fora do escopo:
     - `chamado-correções-erros-prints/`
     - `image_1030ed13.png`
     - `sounds-trilha/`
-- Dependencias disponiveis:
-  - React 19, Three.js, `@react-three/fiber`, `@react-three/drei`, Radix,
-    Recharts, Lucide e Vite.
-  - Nao ha dependencia de engine de IA externa ou detector de gestos nesta etapa.
-- `src/components/simulator/SimulatorScene.tsx`
-  - E a composicao principal da Arena.
-  - Renderiza `Canvas`, pista, boxes, arquibancada, `KartRig`, concorrentes,
-    ghost, replay, HUDs, leaderboard, setup e controles laterais.
-  - Estado local atual:
-    - `devMode`;
-    - `resetSignal`;
-    - `lap`;
-    - `splitMode`;
-    - `activeView`;
-    - `camerasRef`;
-    - `fallbackCamRef`;
-    - `showHitbox`;
-    - `hitboxAuto`.
-  - Cameras atuais:
-    - `COCKPIT`;
-    - `CHASE`;
-    - `NOSE`;
-    - `TOP-DOWN`;
-    - `DRIVER`;
-    - `HELMET`;
-    - `FREE`.
-  - O split usa somente as quatro primeiras cameras.
-  - Teclas `1-7` selecionam camera; `V` alterna split.
-  - Hoje a interface instrui o usuario a dirigir com teclado logo no topo e no
-    painel lateral.
-  - `RaceSetup` abre por padrao e o botao `Iniciar corrida` apenas fecha o modal
-    de setup.
-  - `KartRig` e sempre renderizado como `player`, e o registro do usuario no
-    `raceStore` usa nome `"Você"`, embora o modelo visual ja seja Rayssa.
-  - Esta diferenca e importante: para o modo observador, o usuario nao deve ser
-    tratado semanticamente como piloto.
-- `src/components/simulator/KartRig.tsx`
-  - Controla fisica manual do kart atual.
-  - Usa `useKartControls(devMode)` internamente e le teclado diretamente.
-  - Calcula:
-    - velocidade;
-    - marcha;
-    - progresso;
-    - voltas;
-    - checkpoints;
-    - colisao com IA;
-    - telemetria;
-    - fisica estendida para HUD.
-  - Registra progresso do `playerId` em `raceStore`.
-  - O fim da corrida pode ocorrer quando o racer `isPlayer` termina.
-  - Para modo observador, ha duas opcoes:
-    - adaptar `KartRig` para aceitar controle externo/autopilot e bloquear teclado;
-    - criar um rig autonomo separado para Rayssa reaproveitando a logica do
-      `AIKart`.
-  - A opcao menos arriscada para primeira entrega e criar uma fonte de input
-    automatica/engenharia para `KartRig`, mantendo as cameras presas ao kart da
-    Rayssa e evitando duplicar cameras.
-- `src/components/simulator/useKartControls.ts`
-  - Ja aceita fonte externa opcional no mesmo formato do teclado.
-  - Hoje o teclado sempre continua ativo e a fonte externa e mesclada com
-    `Math.max`.
-  - Para travar o controle direto, sera necessario adicionar uma forma explicita
-    de desabilitar teclado ou definir o modo de entrada ativo.
-- `src/components/simulator/AIKart.tsx`
-  - Ja implementa piloto autonomo por curva (`trackCurve`) com:
-    - velocidade base;
-    - reducao em curvas;
-    - troca de faixa/overtake;
-    - registro de progresso;
-    - pose;
-    - numero e identidade visual.
-  - Essa logica serve como base conceitual para um autopilot de Rayssa, mas nao
-    carrega as cameras `DRIVER`/`HELMET` do `KartRig`.
+- Documento/imagem do usuario:
+  - A imagem mostra estrutura recomendada `public/sounds/race/` e mapeamento de
+    eventos.
+  - A estrutura real encontrada contem:
+    - `start_light_03-02-01-start.ogg`
+    - `lap_complete.wav`
+    - `sector_time.mp3`
+    - `best_lap.mp3`
+    - `final_lap.mp3`
+    - `finish_flag.mp3`
+    - `podium_arrival.mp3`
+  - Nao foram encontrados arquivos separados:
+    - `start_light_02.wav`
+    - `start_light_03.wav`
+    - `race_start.wav`
+  - Conclusao: a implementacao deve mapear largada/semaforo para o arquivo
+    consolidado `start_light_03-02-01-start.ogg`.
 - `src/components/simulator/raceStore.ts`
-  - Store proprio por `useSyncExternalStore`.
-  - `RaceState` atual nao possui conceito de modo de acesso, papel do usuario,
-    contagem de vitorias, persistencia de carreira ou unlock.
-  - `updateProgress` finaliza a corrida quando:
-    - todos terminam; ou
-    - um racer marcado como `isPlayer` termina.
-  - O vencedor ja e calculado por ranking e enviado ao `replayRecordStore`.
-  - Melhor ponto para progressao:
-    - registrar resultado quando `finished` muda;
-    - calcular se Rayssa venceu;
-    - incrementar contador persistido;
-    - recalcular papel/desbloqueios.
-- `src/components/simulator/replayRecordStore.ts`
-  - Persiste ultimo replay em `localStorage`.
-  - Guarda `winnerId`, `racers` e amostras.
-  - Pode ser consultado para saber vencedor do ultimo replay, mas a progressao
-    precisa de store proprio para nao depender do replay exportavel.
-- `src/components/simulator/Leaderboard.tsx`
-  - Exibe ranking e podium final.
-  - Hoje usa destaque visual para `r.isPlayer`.
-  - No modo engenharia, o destaque deve preferir Rayssa/equipe, nao "Você" como
-    piloto.
-  - `Podium` e bom ponto para exibir mudanca de nivel apos vitorias.
+  - Store atual nao possui fases de sessao.
+  - Estado atual cobre:
+    - racers;
+    - total de voltas;
+    - `startedAt`;
+    - `finished`;
+    - setup;
+    - checkpoint recente;
+    - replay.
+  - `RacerEntry` ja guarda:
+    - `lap`;
+    - `progress`;
+    - `lastLapMs`;
+    - `bestLapMs`;
+    - `lapStartedAt`;
+    - `finishTime`.
+  - `updateProgress` calcula tempo de volta quando `lap` aumenta.
+  - A corrida finaliza quando todos terminam ou quando um racer `isPlayer`
+    termina.
+  - O store atual serve de base para tempos, mas precisa de novos conceitos:
+    - fase: setup, classificacao, pre-grid/countdown, corrida, finalizada;
+    - resultados de qualificacao;
+    - ordem de grid;
+    - semaforo/countdown;
+    - pit service/estado de pit.
+- `src/components/simulator/KartRig.tsx`
+  - Controla o kart da Rayssa/protagonista.
+  - Usa checkpoints sequenciais de `CHECKPOINTS`.
+  - Incrementa `lap.current` ao completar o ciclo de checkpoints.
+  - Atualiza `raceStore.updateProgress` e `raceStore.updatePose`.
+  - Hoje usa `spawnPose()` fixo no reset.
+  - Ja possui `controlMode` manual/autopilot por causa da tarefa anterior.
+  - Para largada/grid, precisa receber pose inicial configuravel e respeitar
+    bloqueio de largada quando a fase for pre-grid/countdown.
+  - Para classificacao solo, pode ser reaproveitado para Rayssa, mas os
+    adversarios atualmente usam outro rig (`AIKart`).
+- `src/components/simulator/AIKart.tsx`
+  - IA atual corre simultaneamente.
+  - Usa `startOffset`, `baseSpeed`, habilidades e curva da pista.
+  - Incrementa lap por cruzamento `prevT > 0.85 && t.current < 0.15`, sem usar
+    checkpoints sequenciais.
+  - Registra pose/progresso no mesmo `raceStore`.
+  - Para classificacao individual de adversarios, ha duas opcoes:
+    - simular tempos deterministamente no store, sem renderizar cada volta;
+    - adicionar modo visual/time-trial para um piloto por vez.
+  - A primeira entrega recomendada deve simular ou calcular as voltas de
+    qualificacao dos adversarios a partir dos perfis, porque renderizar todos os
+    pilotos isolados em sequencia aumenta muito o escopo.
+- `src/components/simulator/track.ts` e `trackConfig.json`
+  - Pista tem `trackCurve`, `nearestOnTrack`, `CHECKPOINTS` e `spawnPose`.
+  - `trackConfig.points[0]` e `START_GRID`.
+  - Checkpoints atuais: `[0.1, 0.28, 0.48, 0.68, 0.86]`.
+  - Nao existem utilitarios exportados para posicoes de grid/pit lane/pit box.
+  - Recomenda-se adicionar helpers em `track.ts`:
+    - `gridPose(index)`;
+    - `pitBoxPose(index)`;
+    - `pitLanePose`/zonas de pit;
+    - `isInPitLane(position)` quando necessario.
+- `src/components/simulator/TrackModel.tsx`
+  - Ja desenha visualmente:
+    - linha de largada/chegada;
+    - slots de grid;
+    - gantry `KARTODROMO RL 26A`;
+    - placas `PIT LANE` em sponsor boards.
+  - Os slots de grid sao apenas visuais, calculados localmente dentro do
+    componente; a logica de corrida nao usa esses pontos.
+  - Melhor caminho: extrair ou duplicar cuidadosamente a formula de grid para
+    `track.ts`, mantendo o visual coerente.
+- `src/components/simulator/PitBoxes.tsx`
+  - Ja desenha boxes estaticos:
+    - `TEAM 01`;
+    - `TEAM 02`;
+    - `TEAM 03`;
+    - `TEAM 04`;
+    - `RACE CONTROL`.
+  - Nao existe estado/logica de entrada, retorno ou manutencao.
+  - Pode receber realce por equipe/fase posteriormente.
+  - Primeira entrega pode implementar pit return/maintenance como estado e UI,
+    com zona simples perto dos boxes, sem animacao mecanica completa.
 - `src/components/simulator/RaceSetup.tsx`
-  - Configura adversarios, voltas, agressividade, habilidades e duracao de replay.
-  - Nao tem seletor de modo de controle.
-  - No inicio, deve comunicar que a corrida comeca em modo engenharia/observador.
-- `src/components/simulator/useKartSimulator.ts`
-  - Mantem telemetria didatica dos modulos:
-    - `CORE`;
-    - `GEARBOX`;
-    - `BRAKES`;
-    - `IGNITION`;
-    - bateria;
-    - estado do kart;
-    - alertas.
-  - Esta telemetria e adequada para explicar como as libs C# contribuem para a
-    qualidade operacional, desde que os paineis de engenharia usem os dados
-    reais do simulador.
-- `src/components/realsim/BackgroundMonitors.tsx`
-  - Ja possui padrao util para monitores 3D via `CanvasTexture`.
-  - Inclui monitor de corrida e monitor de telemetria com graficos animados.
-  - Pode inspirar ou ser adaptado para a sala de comando da Arena.
-  - Usar `CanvasTexture` e mais leve que criar varias subcenas/portais de camera
-    em uma primeira entrega.
-- Documentacao tecnica:
-  - `inventario-cena-interfaces.md` ja documenta cameras imersivas, visor,
-    radio de engenharia e preparacao de gestos.
-  - `historico-etapas.md` registra a etapa anterior como "Cameras imersivas e
-    visor de engenharia da Arena".
-  - A nova entrega deve atualizar o inventario com:
-    - modo Engenharia Observador;
-    - pit wall/command station;
-    - progressao por vitorias;
-    - politica de desbloqueio do controle direto.
+  - Modal atual apenas configura:
+    - adversarios;
+    - voltas;
+    - agressividade;
+    - frenagem;
+    - ultrapassagem;
+    - duracao do replay.
+  - Botao `Iniciar corrida` apenas fecha `setupOpen`.
+  - Precisa virar entrada para fluxo completo: iniciar classificacao ou pular
+    para corrida com grid calculado.
+- `src/components/simulator/SimulatorScene.tsx`
+  - Compoe a Arena inteira.
+  - Registra Rayssa como racer `player`.
+  - Gera adversarios por `generateAIList(race.setup)`.
+  - Integra modo Engenharia Observador, cameras, split, HUDs, pit wall,
+    leaderboard, replay e podium.
+  - Audio atual:
+    - checkpoint -> `audio.checkpointBeep()`;
+    - volta completa -> `audio.lapJingle()`;
+    - fase final do replay -> `audio.checkeredFlag()`.
+  - Precisara integrar:
+    - overlay de classificacao;
+    - overlay de grid/luzes;
+    - bloqueio de movimento antes da largada;
+    - novos sons de evento;
+    - painel de resultados classificatorios.
+- `src/components/audio/audioAssets.ts`
+  - Catalogo atual so conhece MP3s anteriores.
+  - Precisa adicionar novos assets:
+    - `raceStartLights`;
+    - `raceLapComplete`;
+    - `raceSectorTime`;
+    - `raceBestLap`;
+    - `raceFinalLap`;
+    - `raceFinishFlag`;
+    - `racePodiumArrival`.
+  - A pasta `public/sounds/race/` deve ser rastreada no commit final.
+- `src/components/simulator/useSimAudio.ts`
+  - Ja instancia `HTMLAudioElement` para loops e bandeirada.
+  - Possui tons sinteticos para checkpoint/lap/fanfare.
+  - Deve receber metodo generico ou metodos explicitos:
+    - `startLights()`;
+    - `sectorTime()`;
+    - `lapComplete()`;
+    - `bestLap()`;
+    - `finalLap()`;
+    - `finishFlag()`;
+    - `podiumArrival()`.
+  - Deve manter fallback sintetico quando audio asset falhar.
+  - Audio ainda depende de gesto do usuario por politica de navegador.
+- `src/components/simulator/Leaderboard.tsx`
+  - Mostra ranking de corrida e podium.
+  - Pode receber tabela de classificacao ou novo componente separado para evitar
+    misturar ranking da corrida com resultados de qualy.
+- `src/components/simulator/ReplayCameras.tsx` e `RecordedRace.tsx`
+  - Dependem de `race.finished` e replay gravado.
+  - Devem continuar vinculados apenas a corrida principal, nao a classificacao.
+- Documentacao:
+  - `inventario-cena-interfaces.md` ja documenta modo engenharia, cameras e
+    audio atual.
+  - `historico-etapas.md` termina na Etapa 19.
+  - A nova etapa deve adicionar classificacao, grid, semaforo, pit lane e assets
+    de eventos de corrida.
 
 ### Plan
 
@@ -266,215 +326,465 @@ Plano proposto para executar apos `[Concluir RPI]`.
 
 #### Entrega Recomendada Nesta Tarefa
 
-1. Introduzir modelo de acesso e progressao
-   - Criar tipos para:
-     - `ControlMode`: `ENGINEERING_OBSERVER` e `DRIVER_CONTROL`;
-     - `TeamRole`: `ASSISTANT_ENGINEER`, `SENIOR_ASSISTANT`,
-       `TEAM_LEAD`, `DRIVER_AUTHORIZED`.
-   - Criar store leve, por exemplo `engineeringProgressStore.ts`, com:
-     - vitorias de Rayssa;
-     - papel atual;
-     - modo atual;
-     - desbloqueio de controle direto;
-     - persistencia em `localStorage`.
-   - Regras:
-     - 0 a 3 vitorias: `ASSISTANT_ENGINEER`;
-     - 4 a 5 vitorias: `SENIOR_ASSISTANT`;
-     - 6 a 9 vitorias: `TEAM_LEAD`;
-     - 10 ou mais vitorias: liberar `DRIVER_CONTROL`.
-   - O modo padrao deve ser `ENGINEERING_OBSERVER` ate o desbloqueio.
+1. Modelar fases da sessao
+   - Adicionar no `raceStore` um estado de fase, por exemplo:
+     - `SETUP`;
+     - `QUALIFYING`;
+     - `QUALIFYING_COMPLETE`;
+     - `GRID_COUNTDOWN`;
+     - `RACE`;
+     - `FINISHED`.
+   - Manter compatibilidade com `finished`, replay e podium.
+   - `RaceSetup` deve iniciar `QUALIFYING`, nao simplesmente fechar o setup.
 
-2. Registrar Rayssa como protagonista da equipe
-   - Alterar o registro semantico do racer principal:
-     - `id`: manter `player` inicialmente para reduzir impacto ou migrar com
-       cuidado para `rayssa`;
-     - `name`: usar `Rayssa`;
-     - `isPlayer`: pode continuar `true` tecnicamente para preservar regra de
-       fim de corrida, mas a UI deve tratar isso como "protagonista/equipe" no
-       modo observador.
-   - Evitar que a UI diga que o usuario e o piloto antes do desbloqueio.
+2. Criar resultados de classificacao
+   - Criar tipos como:
+     - `QualifyingLap`;
+     - `QualifyingResult`;
+     - `GridSlot`.
+   - Cada piloto deve ter 3 voltas registradas.
+   - Para Rayssa:
+     - usar tempos reais do `KartRig` quando possivel.
+   - Para adversarios na primeira entrega:
+     - gerar tempos deterministas com base em `AI_PROFILES`, `RaceSetup` e
+       pequena variacao controlada;
+     - registrar 3 voltas por piloto, preservando o requisito de 3 voltas sem
+       obrigar o usuario a esperar todas as IAs renderizadas uma a uma.
+   - Ordenar por melhor volta.
+   - Marcar `gridPosition` e `pole`.
 
-3. Travar controle manual no modo observador
-   - Evoluir `useKartControls` para aceitar opcao de teclado habilitado ou modo
-     de entrada.
-   - Em `ENGINEERING_OBSERVER`, teclado de direcao nao deve controlar o kart.
-   - Cameras, split, setup, audio, replay e paineis continuam interativos.
-   - Em `DRIVER_CONTROL`, comportamento atual de teclado deve voltar.
+3. Criar UI de qualificacao/classificacao
+   - Novo componente recomendado:
+     - `QualifyingPanel.tsx`.
+   - Exibir:
+     - piloto atual;
+     - volta 1/2/3;
+     - melhor volta;
+     - tabela classificatoria;
+     - Pole Position;
+     - botao para avancar para grid quando a classificacao estiver completa.
+   - No modo Engenharia, apresentar como painel tecnico no pit wall/overlay.
 
-4. Criar autopilot de Rayssa para o modo engenharia
-   - Primeira implementacao recomendada:
-     - criar fonte externa de controles para `KartRig`, por exemplo
-       `useRayssaAutopilotControls`;
-     - usar `nearestOnTrack`, `trackCurve` e lookahead para gerar `forward`,
-       `brake`, `left` e `right`;
-     - manter o `KartRig` como rig da Rayssa para preservar cameras `DRIVER` e
-       `HELMET`, telemetria, colisao, replay e HUDs.
-   - O autopilot deve ser previsivel e bom o suficiente para vitorias, mas ainda
-     responsivo a curvas e colisao.
-   - Como etapa inicial, permitir balancear dificuldade por setup ou constantes
-     locais, sem criar UI complexa.
+4. Grid e Pole Position
+   - Adicionar helpers em `track.ts`:
+     - `gridPose(index)`;
+     - `gridPoses(count)`.
+   - Usar a mesma geometria conceitual do `TrackModel`.
+   - Atualizar `KartRig` e `AIKart` para aceitar pose inicial de grid.
+   - `generateAIList` ou `SimulatorScene` deve ordenar adversarios pela
+     classificacao antes de renderizar.
+   - Rayssa deve largar na posicao correspondente ao ranking classificatorio.
 
-5. Criar experiencia visual do pit wall/command station
-   - Criar componente da sala tecnica da Arena, por exemplo
-     `EngineeringPitWall.tsx`.
-   - Integrar dentro da area da Arena como primeiro plano/overlay ou cena 3D
-     dedicada ao modo observador.
-   - Visual:
-     - booth escuro, metalico, com iluminacao fria;
-     - cinco estacoes de engenharia vistas por tras ou sugeridas por cadeiras;
-     - cadeiras pretas com `Autonomy`;
-     - headsets e uniformes com identidade propria `Autonomy Racing`;
-     - monitores em arrays com telemetria, mapa da pista, feed de camera e
-       graficos.
-   - Evitar uso literal de `PETRONAS` e identidade Mercedes-AMG; manter apenas a
-     inspiracao de estrutura profissional.
-   - Para performance, preferir paineis 2D/CanvasTexture e overlays HTML antes
-     de criar varias renderizacoes de camera dentro de monitores.
+5. Contador regressivo e semaforo
+   - Criar `StartLightsOverlay.tsx`.
+   - Fase `GRID_COUNTDOWN`:
+     - bloquear movimento de Rayssa e adversarios;
+     - exibir `3`, `2`, `1`, `START`;
+     - tocar `start_light_03-02-01-start.ogg`.
+   - Ao fim do contador, mudar fase para `RACE` e liberar movimento.
+   - Preservar troca de camera, split e observacao durante o countdown.
 
-6. Monitores e paineis didaticos
-   - Criar paineis que usem dados reais:
-     - estado dos modulos (`CORE`, `GEARBOX`, `BRAKES`, `IGNITION`);
-     - bateria, velocidade, marcha, freio;
-     - RPM, torque, grip e Gs quando disponiveis;
-     - ranking e volta;
-     - camera ativa.
-   - Adicionar um painel de "Qualidade de Codigo / C# libs" com linguagem
-     didatica, mas alimentado por status reais dos modulos e checklist.
-   - Nao inventar integracao C# nova se ela nao existir no codigo; comunicar como
-     diagnostico operacional da simulacao atual.
+6. Eventos sonoros de corrida
+   - Atualizar `audioAssets.ts` com `public/sounds/race/*`.
+   - Atualizar `useSimAudio` com metodos de evento.
+   - Mapeamento inicial:
+     - semaforo/largada -> `start_light_03-02-01-start.ogg`;
+     - checkpoint/setor -> `sector_time.mp3`;
+     - volta completa -> `lap_complete.wav`;
+     - melhor volta -> `best_lap.mp3`;
+     - volta final -> `final_lap.mp3`;
+     - bandeirada -> `finish_flag.mp3`;
+     - podium -> `podium_arrival.mp3`.
+   - Manter fallback sintetico se o asset falhar.
 
-7. Integrar cameras ao modo engenharia
-   - Preservar cameras existentes e atalhos `1-7`.
-   - No modo observador, renomear instrucao de uso:
-     - foco em "selecionar feed de camera" em vez de "dirigir".
-   - Manter `DRIVER` e `HELMET` como feeds que a equipe pode acompanhar.
-   - O split-screen pode representar monitor wall; nao deve ser removido.
+7. Pit Box e Pit Lane
+   - Primeira entrega funcional:
+     - criar estado de pit service no `raceStore` ou store auxiliar:
+       - piloto em pit lane;
+       - manutencao ativa;
+       - duracao/bonus simples;
+       - ultima parada.
+     - detectar entrada na zona dos boxes por proximidade de coordenadas
+       simples.
+     - exibir overlay `PIT SERVICE` e reduzir/pausar velocidade por alguns
+       segundos.
+   - Apos classificacao:
+     - exibir retorno ao Pit Box como estado/overlay e resetar para grid.
+   - Manutencao visual detalhada por equipe pode ficar para proxima atividade se
+     o tempo da implementacao ficar alto.
 
-8. Registrar vitorias e desbloqueios
-   - Ao finalizar corrida, obter ranking por `rankedRacers`.
-   - Se Rayssa for P1, incrementar contador de vitorias.
-   - Exibir feedback no podium/replay:
-     - vitorias atuais;
-     - cargo atual;
-     - proximo desbloqueio;
-     - desbloqueio do modo piloto ao chegar a 10.
-   - Quando o controle direto estiver desbloqueado, oferecer seletor claro para
-     alternar entre `Equipe Engenharia` e `Controle Direto`.
+8. Integrar com modo Engenharia Observador
+   - O modo Engenharia continua como padrao.
+   - Durante classificacao e corrida:
+     - usuario observa cameras/monitores;
+     - Rayssa segue autopilot enquanto controle direto nao estiver liberado;
+     - pit wall mostra fase atual, qualy/grid/pit status.
+   - A progressao por vitorias P1 continua sendo atualizada somente na corrida
+     principal, nao na classificacao.
 
 9. Documentacao
-   - Atualizar `tarefa-atual.md` com implementacao/checks.
-   - Atualizar `inventario-cena-interfaces.md` com modo observador, pit wall e
-     progressao.
+   - Atualizar `tarefa-atual.md` com implementacao e checks.
+   - Atualizar `inventario-cena-interfaces.md`:
+     - fases de corrida;
+     - classificacao;
+     - grid/semaforo;
+     - pit lane;
+     - novos assets de audio.
    - Atualizar `historico-etapas.md` no fechamento.
+   - Rastrear `public/sounds/race/` no commit final.
 
 #### Escopo Que Deve Ficar Para Proxima Atividade
 
-- Renderizar feeds reais de camera em multiplos monitores 3D por render targets.
-- Persistencia em backend ou conta de usuario.
-- Integracao real com DLLs C# externas alem dos estados/contratos atuais.
-- Sistema de tutorial completo com missoes guiadas.
-- Vozes reais/MP3 de engenheiros.
-- Modelos humanos hiper-realistas/GLTF completos para os cinco engenheiros.
+- Renderizar visualmente todos os pilotos fazendo 3 voltas de classificacao um
+  por vez, em tempo real, se isso deixar a entrega muito longa.
+- Animacao detalhada de mecanicos/manutencao no Pit Lane.
+- Estrategia completa de pit stop com pneus, dano, combustivel e undercut.
+- Penalidades de largada queimada.
+- Safety car, bandeiras amarelas/vermelhas ou regras completas de corrida.
+- Persistencia historica de tempos de classificacao entre sessoes.
 
 #### Riscos Tecnicos
 
-- O fim de corrida hoje depende de `isPlayer`; trocar isso de forma ampla pode
-  quebrar replay, podium e leaderboard.
-- Autopilot simples pode nao vencer de forma consistente se os adversarios
-  estiverem muito rapidos.
-- Bloquear teclado sem cuidado pode tambem bloquear atalhos de camera, split e
-  debug.
-- Uma sala 3D muito detalhada pode prejudicar FPS dentro da Arena.
-- Paineis sobre C# precisam se manter fieis ao que o projeto realmente mede.
-- Persistencia de vitorias em `localStorage` precisa tolerar dados invalidos.
+- Alterar o store central de corrida pode quebrar replay, podium, progressao de
+  engenharia e leaderboard.
+- Classificacao visual em tempo real para todos os pilotos pode tornar o fluxo
+  lento demais para sala de aula.
+- Bloqueio de largada precisa impedir movimento dos karts sem bloquear cameras,
+  setup, audio ou UI.
+- Grid pose deve ficar alinhado ao visual de `TrackModel`; divergencia causa
+  karts fora dos slots.
+- Pit lane simplificado deve ser claro para o usuario sem parecer uma mecanica
+  completa de estrategia.
+- Audio por `HTMLAudioElement` depende de gesto do usuario e pode ser bloqueado
+  pelo navegador.
 
 #### Criterios De Aceite
 
-- A Arena inicia em modo `Equipe Engenharia`/observador.
-- O usuario nao controla a direcao/aceleracao do kart antes do desbloqueio.
-- Rayssa pilota autonomamente e continua aparecendo nas cameras `DRIVER` e
-  `HELMET`.
-- O usuario consegue alternar cameras e split no modo observador.
-- A interface deixa claro o papel atual da equipe e o proximo desbloqueio.
-- Vitorias de Rayssa em primeiro lugar incrementam a progressao.
-- Apos 4 vitorias, o papel sobe para cadeira superior a assistente.
-- Apos 6 vitorias, o papel sobe para lider de equipe.
-- A partir da 10a vitoria, aparece opcao de controle direto.
-- Ao escolher controle direto desbloqueado, o comportamento atual de dirigir com
-  teclado fica disponivel.
-- O ambiente de engenharia usa identidade propria do projeto, sem marca real
-  protegida como `PETRONAS`.
+- A nova pasta `public/sounds/race/` e seus arquivos entram no rastreamento ao
+  final da tarefa.
+- Existe fase de classificacao antes da corrida.
+- Cada piloto recebe 3 tempos de volta na classificacao.
+- A tabela de classificacao ordena pilotos por melhor tempo.
+- Pole Position e identificada.
+- O grid da corrida respeita a ordem de classificacao.
+- Antes da largada, karts ficam parados durante countdown/semaforo.
+- O semaforo toca o asset de largada quando audio esta habilitado.
+- A corrida so libera movimento apos o countdown.
+- Eventos de setor, volta completa, melhor volta, volta final, bandeirada e
+  podium usam os novos assets ou fallback seguro.
+- Ha representacao funcional de retorno ao Pit Box/Pit Lane/manutencao, ainda
+  que simplificada.
+- Modo Engenharia Observador continua funcionando.
 - Build passa.
 
 ## Implementacao
 
 Executada em 2026-05-19 apos `[Concluir RPI]`.
 
-- Criado `engineeringProgressStore.ts`:
-  - controla `ENGINEERING_OBSERVER` e `DRIVER_CONTROL`;
-  - persiste vitorias P1 de Rayssa em `localStorage`;
-  - calcula papeis de equipe por marcos de 4, 6 e 10 vitorias;
-  - bloqueia `DRIVER_CONTROL` antes da 10a vitoria.
-- `useKartControls` passou a aceitar teclado desabilitado, preservando fonte
-  externa e zerando entrada manual quando bloqueado.
-- `KartRig` passou a aceitar `controlMode`:
-  - `manual`: comportamento atual por teclado;
-  - `autopilot`: controle autonomo de Rayssa baseado em tangente/lookahead da
-    pista.
-- `SimulatorScene` passou a:
-  - registrar a protagonista como `Rayssa`;
-  - iniciar em modo engenharia;
-  - carregar/ligar modulos automaticamente no modo observador;
-  - bloquear direcao/aceleracao manual enquanto Rayssa pilota;
-  - preservar troca de cameras `1-7` e split-screen `V`;
-  - registrar vitoria de Rayssa ao final da corrida;
-  - oferecer alternancia para modo piloto apenas quando desbloqueado.
-- Criado `EngineeringPitWall`:
-  - posto `Autonomy Racing`;
-  - cinco estacoes de engenharia com monitores;
-  - leitura de modulos C# / qualidade;
-  - telemetria resumida, ranking, camera ativa e proximo desbloqueio.
-- `Podium` passou a exibir papel atual da equipe, vitorias de Rayssa e proximo
-  marco de acesso.
+- `raceStore` recebeu fases de sessao:
+  - `SETUP`;
+  - `QUALIFYING`;
+  - `QUALIFYING_COMPLETE`;
+  - `GRID_COUNTDOWN`;
+  - `RACE`;
+  - `FINISHED`.
+- Criados resultados de classificacao com 3 voltas por piloto, melhor volta,
+  posicao de grid e Pole Position.
+- `RaceSetup` agora inicia a classificacao.
+- Criado `QualifyingPanel` para exibir ranking classificatorio, voltas e botao
+  para ir ao grid.
+- `track.ts` recebeu helpers:
+  - `gridPose`;
+  - `pitBoxPose`;
+  - `isInPitLane`.
+- `KartRig` e `AIKart` passaram a aceitar grid/pausa de largada.
+- Criado `StartLightsOverlay` com contagem 3, 2, 1 e START.
+- Criado `PitServiceOverlay` e estado de pit service simplificado.
+- `SimulatorScene` passou a orquestrar:
+  - classificacao;
+  - grid countdown;
+  - liberacao da corrida;
+  - audio por evento;
+  - pit service;
+  - grid ordenado por classificacao.
+- `audioAssets.ts` passou a catalogar `public/sounds/race/*`.
+- `useSimAudio` ganhou eventos:
+  - `startLights`;
+  - `sectorTime`;
+  - `lapComplete`;
+  - `bestLap`;
+  - `finalLap`;
+  - `finishFlag`;
+  - `podiumArrival`.
+- A pasta `public/sounds/race/` deve ser rastreada no fechamento desta tarefa.
 - Documentacao tecnica atualizada:
   - `inventario-cena-interfaces.md`;
   - `historico-etapas.md`.
 
 ## Checks Executados
 
-- `npm run build`: aprovado apos repetir com timeout maior.
-  - Primeira tentativa excedeu timeout de 180s sem erro exibido.
+- `npx eslint ... --fix`: aplicado nos arquivos alterados.
+  - Aviso residual: `RaceSetup.tsx` exporta helper alem de componente
+    (`react-refresh/only-export-components`), ja existente no padrao atual do
+    arquivo.
+- `npm run build`: aprovado.
   - Avisos residuais conhecidos: `@import` de CSS fora da primeira posicao e
     chunks acima de 500 kB.
-- `npx eslint src\components\simulator\SimulatorScene.tsx src\components\simulator\KartRig.tsx src\components\simulator\useKartControls.ts src\components\simulator\EngineeringPitWall.tsx src\components\simulator\engineeringProgressStore.ts src\components\simulator\Leaderboard.tsx --fix`: aplicado para formatacao.
-- `npx eslint src\components\simulator\SimulatorScene.tsx src\components\simulator\KartRig.tsx src\components\simulator\useKartControls.ts src\components\simulator\EngineeringPitWall.tsx src\components\simulator\engineeringProgressStore.ts src\components\simulator\Leaderboard.tsx`: aprovado.
+- `npx eslint ...`: aprovado sem erros, mantendo apenas o aviso de Fast Refresh
+  em `RaceSetup.tsx`.
 - `git diff --check`: aprovado, com apenas avisos LF/CRLF do Windows.
-- `npm run build`: aprovado apos autofix.
-  - Avisos residuais conhecidos: `@import` de CSS fora da primeira posicao e
-    chunks acima de 500 kB.
-- Dev server iniciado e validado em `http://127.0.0.1:8081/simulator`: HTTP 200.
-- `[Finalizar Tarefa]` recebido em 2026-05-19.
-- Revisao final de diff: concluida, escopo restrito a modo engenharia
-  observador, progressao de acesso, pit wall, autopilot da Rayssa, bloqueio de
-  controle manual e documentacao.
-- `npx eslint src\components\simulator\SimulatorScene.tsx src\components\simulator\KartRig.tsx src\components\simulator\useKartControls.ts src\components\simulator\EngineeringPitWall.tsx src\components\simulator\engineeringProgressStore.ts src\components\simulator\Leaderboard.tsx`: aprovado no fechamento.
-- `git diff --check`: aprovado no fechamento, com apenas avisos LF/CRLF do
-  Windows.
-- `npm run build`: aprovado no fechamento.
-  - Avisos residuais conhecidos: `@import` de CSS fora da primeira posicao e
-    chunks acima de 500 kB.
+- Dev server iniciado e validado em `http://127.0.0.1:8080/simulator`: HTTP 200.
+- Correcao apos validacao manual:
+  - causa do carro parado no grid: `gridPose(playerGridIndex)` era recriado a
+    cada render e fazia `KartRig` resetar a pose inicial continuamente;
+  - correcao: pose inicial do grid memoizada em `SimulatorScene`.
+- `npx eslint src\components\simulator\SimulatorScene.tsx src\components\simulator\KartRig.tsx`: aprovado apos correcao.
+- `npm run build`: aprovado apos correcao.
+- Ajuste solicitado de controles do modo piloto:
+  - `38` / seta para cima: dirigir;
+  - `37` / seta esquerda: virar esquerda;
+  - `39` / seta direita: virar direita;
+  - `40` / seta para baixo: re;
+  - `65` / `A`: assistencia automatica;
+  - `68` / `D`: dirigir;
+  - `70` / `F`: freiar;
+  - `69` / `E`: pedir ajuda a equipe por radio.
 
-## Fechamento
+## Replanejamento Antes Do Fechamento Da Versao Inicial
 
-- Finalizada em: 2026-05-19.
-- Commit: criado no fechamento; hash final informado ao usuario.
+Registrado em 2026-05-19 apos revisao de escopo solicitada pelo usuario.
 
-## Notas Para Release
+### Novos Ajustes De Regra Da Classificacao
 
-- Arena inicia em modo `Equipe Engenharia`, com Rayssa pilotando
-  autonomamente.
-- Usuario acompanha a corrida por cameras, split-screen e pit wall tecnico.
-- Progressao por vitorias P1 desbloqueia cadeiras de engenharia e libera
-  controle direto a partir da 10a vitoria.
-- Pit wall `Autonomy Racing` exibe modulos, telemetria, ranking e proximo
-  desbloqueio.
+- A classificacao nao deve mais ser apenas uma geracao instantanea de todos os
+  tempos.
+- Cada competidor deve ter exatamente 3 voltas classificatorias.
+- As voltas devem ser alternadas por rodada:
+  - rodada 1: Rayssa faz a primeira volta completa e retorna ao Pit Box da
+    equipe;
+  - os demais competidores fazem sua volta, um por vez;
+  - enquanto adversarios estao na pista, o usuario permanece com tempo de
+    analise dos numeros da equipe;
+  - o ciclo se repete para a segunda e terceira voltas.
+- Durante a classificacao nao deve haver torcida:
+  - manter som de motores, pista e eventos pertinentes;
+  - desativar camada de torcida ambiente enquanto a fase for classificatoria.
+- Rayssa deve buscar desempenho maximo na primeira volta e retornar ao Pit Box
+  identificado com o nome/equipe dela.
+- A corrida oficial so deve iniciar depois de:
+  - completar as 3 rodadas;
+  - exibir a tabela/modal final;
+  - calcular ranking final;
+  - apresentar transicao de carregamento;
+  - posicionar a camera no grid de largada.
+
+### Modal E Motion De Resultado Classificatorio
+
+- Ao fim da terceira rodada, subir modal de resultado.
+- O modal deve iniciar com tabela grande em ordem alfabetica por competidor.
+- Colunas iniciais:
+  - nome;
+  - volta 1;
+  - volta 2;
+  - volta 3.
+- De cima para baixo, cada linha/celula deve receber efeito de corte:
+  - aplicar tarja vermelha sobre as celulas de tempo ja processadas;
+  - evitar remover o dado, pois o aluno precisa ver o tempo original.
+- Depois do corte, apresentar coluna final:
+  - tempo total;
+  - colocacao.
+- Ranking:
+  - soma das 3 voltas define a classificacao;
+  - menor soma = 1o colocado / Pole Position;
+  - maior soma = ultimo colocado;
+  - ordenar a lista final pelas posicoes qualificadas para o grid.
+
+### Loading E Transicao Para Grid Oficial
+
+- Criar tela de carregamento entre classificacao e corrida oficial.
+- Assets:
+  - fundo: `image_1030ed13.png`;
+  - logo central: `public/logo_kart_A26.png`.
+- A tela deve exibir barra de progresso ate concluir o carregamento das
+  dependencias/estado de largada.
+- Depois do carregamento:
+  - ir para a cena do grid;
+  - iniciar pela camera 1;
+  - fazer zoom de cima ate a posicao da Rayssa;
+  - somente entao mostrar a contagem/semaforo da corrida oficial.
+
+### Correcao Geometrica Da Sala Acustica
+
+- Documento de referencia:
+  - `analise-tecnica/documentacao-partes/Orientações SALA ACÚSTICA - TRATAMENTO MOTOR.docx`.
+- Texto extraido do DOCX:
+  - "ESSA E A VISAO EXATA DO QUE QUERO PARA A SALA ACUSTICA";
+  - "Figura 1 - A visao geral da sala quando a camera troca para a opcao
+    SALA ACUSTICA";
+  - "Figura 2 - Visao de dentro da SALA - com som do motor ativo".
+- Area principal de codigo:
+  - `src/components/realsim/Workshop.tsx`;
+  - `src/components/realsim/CameraController.tsx`.
+- Problema informado:
+  - interface e controles da sala acustica foram gerados em plano invertido,
+    espelhados para dentro do vidro.
+- Correcoes planejadas:
+  - revisar grupo `AcousticEngineRoom` e separar face interna da sala de face
+    externa do vidro/painel;
+  - rebater o conjunto frontal no eixo correto, provavelmente Z local, porque o
+    vidro e a sinalizacao principal estao no plano `z ~= 0.91/0.96`;
+  - garantir que textos, telas, botoes, medidores e leitura de RPM usem rotacao
+    voltada para a camera externa atual;
+  - posicionar controles interativos na face externa do painel/vidro;
+  - ajustar ou validar alvo de camera `acousticRoom` para mirar a face externa
+    corrigida.
+
+### Plano De Implementacao Revisado
+
+1. Consolidar estado de classificacao alternada.
+   - Criar modelo de sessao com rodada atual, competidor ativo, volta atual,
+     estado `running/returning/analyzing/complete` e resultados parciais.
+   - Manter `QualifyingResult` final compativel com `gridOrder`.
+
+2. Implementar fluxo visual/funcional minimo das voltas alternadas.
+   - Rayssa no modo automatico durante classificacao.
+   - Adversarios executam tempos um por vez.
+   - Entre tentativas, mostrar painel de analise da equipe com tempos parciais.
+   - Retorno ao Pit Box como estado claro, mesmo que o movimento fisico seja
+     simplificado nesta versao.
+
+3. Substituir `QualifyingPanel` por modal de apuracao.
+   - Tabela alfabetica inicial.
+   - Animacao de corte vermelho por linha/celula.
+   - Coluna final com total e colocacao.
+   - Ranking final ordenado para grid.
+
+4. Adicionar loading de entrada no grid.
+   - Usar `image_1030ed13.png` como fundo.
+   - Usar `public/logo_kart_A26.png` no centro.
+   - Barra de progresso controlada por estado de transicao.
+   - Depois do progresso, ir para camera 1 e iniciar zoom ate a Rayssa.
+
+5. Corrigir sala acustica.
+   - Ajustar orientacao do painel/vidro/textos em `Workshop.tsx`.
+   - Validar foco `SALA ACUSTICA` em fullscreen e modo normal.
+   - Manter controles Wankel interativos e externos.
+
+6. Atualizar documentacao tecnica.
+   - Inventario de cena e interfaces.
+   - Historico de etapas.
+   - Registro final da tarefa.
+
+7. Validar.
+   - `npx eslint` nos arquivos alterados.
+   - `npm run build`.
+   - Validacao manual em `/simulator` para classificacao/grid.
+   - Validacao manual em `/real-simulator` ou tela equivalente da oficina para
+     foco da sala acustica.
+
+### Riscos Do Replanejamento
+
+- Simular todos os pilotos fisicamente por 3 voltas pode alongar demais o tempo
+  de aula; a primeira entrega deve priorizar fluxo alternado claro e tempos
+  consistentes, deixando trajetoria fisica completa para etapa posterior se
+  necessario.
+- A tela de loading usa `image_1030ed13.png`, que esta na raiz e ainda nao esta
+  rastreada; sera necessario decidir se o asset fica na raiz ou sera movido para
+  `public/` antes do fechamento.
+- A correcao da sala acustica pode exigir ajuste fino por imagem/camera, pois o
+  DOCX contem orientacao visual, mas pouco texto tecnico extraivel.
+- Alterar fases de corrida pode impactar replay, modo Engenharia, audio de
+  eventos e progressao de vitorias.
+
+## Implementacao Do Replanejamento
+
+Executada em 2026-05-19.
+
+- `raceStore` recebeu modelo de sessao classificatoria alternada:
+  - `QualifyingEntrant`;
+  - `QualifyingSession`;
+  - etapa atual `RUNNING`, `PIT_RETURN`, `ANALYSIS` ou `COMPLETE`;
+  - rodada atual;
+  - competidor ativo;
+  - tempos parciais por competidor.
+- A classificacao agora inicia por `startQualifyingSession`.
+- Cada competidor recebe exatamente 3 voltas.
+- Rayssa e priorizada como primeira tentativa de cada rodada.
+- O ranking final passou a usar soma das 3 voltas (`totalMs`):
+  - menor soma = Pole Position;
+  - maior soma = ultima posicao do grid.
+- Criado `QualifyingSessionPanel`:
+  - mostra rodada atual;
+  - competidor na pista;
+  - retorno ao Pit Box;
+  - tempos parciais da Rayssa para analise da equipe.
+- `QualifyingPanel` foi alterado para modal de apuracao:
+  - tabela inicial em ordem alfabetica;
+  - voltas 1, 2 e 3;
+  - tarja vermelha animada sobre tempos processados;
+  - coluna final de total;
+  - colocacao final para o grid.
+- Criado `GridLoadingOverlay`:
+  - fundo `public/image_1030ed13.png`;
+  - logo `public/logo_kart_A26.png`;
+  - barra de progresso antes do grid oficial.
+- `SimulatorScene` passou a:
+  - desativar audio de torcida durante `QUALIFYING`;
+  - ocultar `Grandstand` durante `QUALIFYING`;
+  - iniciar a corrida oficial por `GRID_LOADING`;
+  - selecionar camera 1 antes da transicao para o grid;
+  - acionar countdown apenas apos o carregamento.
+- `useSimAudio` ganhou `setCrowdMuted` para silenciar as camadas de torcida sem
+  desligar motor/pista/eventos.
+- `Workshop.tsx` corrigiu a orientacao externa da sala acustica:
+  - textos e leituras frontais foram reposicionados para a face externa do vidro;
+  - a leitura de dB/RPM/saude/carga deixou de ficar voltada para dentro;
+  - criado painel externo interativo no vidro com ligar/parar, audio, stress,
+    capacidade e aceleracao;
+  - o painel usa os mesmos controles locais do teste Wankel.
+- `public/image_1030ed13.png` foi criado a partir do asset solicitado na raiz
+  para que o navegador consiga servir o fundo da tela de carregamento.
+
+## Checks Executados Apos Replanejamento
+
+- `npx eslint src\components\simulator\SimulatorScene.tsx src\components\simulator\raceStore.ts src\components\simulator\QualifyingPanel.tsx src\components\simulator\QualifyingSessionPanel.tsx src\components\simulator\GridLoadingOverlay.tsx src\components\simulator\useSimAudio.ts src\components\realsim\Workshop.tsx --fix`: aplicado.
+- `npx eslint src\components\simulator\SimulatorScene.tsx src\components\simulator\raceStore.ts src\components\simulator\QualifyingPanel.tsx src\components\simulator\QualifyingSessionPanel.tsx src\components\simulator\GridLoadingOverlay.tsx src\components\simulator\useSimAudio.ts src\components\realsim\Workshop.tsx`: aprovado.
+- `npm run build`: aprovado.
+  - Avisos residuais conhecidos:
+    - `@import` de fontes no CSS nao esta na primeira posicao;
+    - chunks acima de 500 kB.
+
+## Fechamento Da Tarefa
+
+Executado em 2026-05-19 apos `[Finalizar Tarefa]`.
+
+- Escopo revisado:
+  - classificacao alternada;
+  - apuracao/ranking por soma das 3 voltas;
+  - loading para grid oficial;
+  - controles do modo piloto;
+  - pit service/pit lane;
+  - sons de evento em `public/sounds/race/`;
+  - painel externo da sala acustica;
+  - documentacao tecnica.
+- Arquivos de referencia e assets rastreados no fechamento:
+  - `analise-tecnica/documentacao-partes/Orientações SALA ACÚSTICA - TRATAMENTO MOTOR.docx`;
+  - `public/image_1030ed13.png`;
+  - `public/sounds/race/*`.
+- Itens deixados fora do commit por nao pertencerem diretamente ao escopo
+  fechado:
+  - `chamado-correções-erros-prints/`;
+  - `sounds-trilha/`;
+  - `image_1030ed13.png` na raiz, pois a versao servida pelo app foi copiada
+    para `public/image_1030ed13.png`.
+
+### Checks Finais
+
+- `git diff --check`: aprovado, com avisos LF/CRLF do Windows.
+- `npx eslint ...`: aprovado.
+  - Aviso residual conhecido: `RaceSetup.tsx` exporta helper alem do componente
+    (`react-refresh/only-export-components`).
+- `npm run build`: aprovado.
+  - Avisos residuais conhecidos:
+    - `@import` de fontes no CSS fora da primeira posicao;
+    - chunks acima de 500 kB.

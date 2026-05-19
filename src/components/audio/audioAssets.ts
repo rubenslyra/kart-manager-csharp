@@ -6,6 +6,13 @@ export const AUDIO_ASSETS = {
   fansInTheStadiumLow: "/sounds/fans-in-the-stadium-low.mp3",
   crowdNearTurn: "/sounds/crowd-near-turn.mp3",
   goKartRacingOutdoors: "/sounds/go-kart-racing-outdoors.mp3",
+  raceStartLights: "/sounds/race/start_light_03-02-01-start.ogg",
+  raceLapComplete: "/sounds/race/lap_complete.wav",
+  raceSectorTime: "/sounds/race/sector_time.mp3",
+  raceBestLap: "/sounds/race/best_lap.mp3",
+  raceFinalLap: "/sounds/race/final_lap.mp3",
+  raceFinishFlag: "/sounds/race/finish_flag.mp3",
+  racePodiumArrival: "/sounds/race/podium_arrival.mp3",
 } as const;
 
 export const AUDIO_CREDITS = [

@@ -11,6 +11,7 @@ import {
   nearestOnTrack,
   spawnPose,
   trackCurve,
+  isInPitLane,
 } from "./track";
 import type { Gear, KartState } from "./types";
 import { raceStore } from "./raceStore";
@@ -48,6 +49,8 @@ interface Props {
   showHitbox?: boolean;
   hitboxAuto?: boolean;
   controlMode?: "manual" | "autopilot";
+  raceActive?: boolean;
+  initialPose?: { position: [number, number, number]; rotationY: number };
 }
 
 const PHYS = {
@@ -97,6 +100,8 @@ export function KartRig({
   showHitbox = false,
   hitboxAuto = false,
   controlMode = "manual",
+  raceActive = true,
+  initialPose,
 }: Props) {
   const group = useRef<Group>(null);
   const chassisRef = useRef<Group>(null);
@@ -141,7 +146,7 @@ export function KartRig({
 
   useEffect(() => {
     if (!group.current) return;
-    const sp = spawnPose();
+    const sp = initialPose ?? spawnPose();
     group.current.position.set(sp.position[0], sp.position[1], sp.position[2]);
     group.current.rotation.set(0, sp.rotationY, 0);
     speed.current = 0;
@@ -149,23 +154,27 @@ export function KartRig({
     lap.current = 0;
     ghostStore.resetCurrent();
     onLapProgress(0, 0);
-  }, [resetSignal, onLapProgress]);
+  }, [resetSignal, onLapProgress, initialPose]);
 
   useFrame((_, dtRaw) => {
     if (!group.current) return;
     raceStore.tickSlowMo();
+    raceStore.tickPitService();
     const ts = raceStore.get().timeScale;
     const dt = Math.min(dtRaw, 0.05) * ts;
     const c = controls.current;
 
     const stateAllowsDrive = state === "READY_TO_DRIVE" || state === "DRIVING";
     const canDrive =
-      controlMode === "autopilot" || devMode || (ignition && battery > 0 && stateAllowsDrive);
+      raceActive &&
+      !raceStore.get().pitService.active &&
+      (controlMode === "autopilot" || devMode || (ignition && battery > 0 && stateAllowsDrive));
 
     let autoSteer = 0;
     let autoBrake = 0;
     let autoForward = 0;
-    if (controlMode === "autopilot") {
+    const autoAssist = controlMode === "autopilot" || c.automatic > 0;
+    if (autoAssist) {
       const probeNow = nearestOnTrack(group.current.position);
       const lookAheadT = (probeNow.t + 0.026) % 1;
       _lookAheadTan.copy(curve.getTangentAt(lookAheadT)).normalize();
@@ -188,9 +197,9 @@ export function KartRig({
 
     let v = speed.current;
     if (canDrive) {
-      const forwardInput = controlMode === "autopilot" ? autoForward : c.forward;
-      const reverseInput = controlMode === "autopilot" ? 0 : c.reverse;
-      const brakeInput = controlMode === "autopilot" ? autoBrake : c.brake;
+      const forwardInput = autoAssist ? autoForward : c.forward;
+      const reverseInput = autoAssist ? 0 : c.reverse;
+      const brakeInput = autoAssist ? autoBrake : c.brake;
       if (forwardInput) v += PHYS.acceleration * forwardInput * dt;
       if (reverseInput) v -= PHYS.reverseAccel * dt;
       if (brakeInput) {
@@ -206,7 +215,7 @@ export function KartRig({
     if (Math.sign(v) !== sign) v = 0;
     v = Math.max(-PHYS.maxReverse, Math.min(PHYS.maxSpeed, v));
 
-    const steerInput = controlMode === "autopilot" ? autoSteer : c.left - c.right;
+    const steerInput = autoAssist ? autoSteer : c.left - c.right;
     if (Math.abs(v) > 0.3) {
       const dir = v > 0 ? 1 : -1;
       const steerScale = Math.min(1, Math.abs(v) / 25);
@@ -320,6 +329,15 @@ export function KartRig({
       group.current.position.z,
       group.current.rotation.y,
     );
+    if (
+      raceStore.get().phase === "RACE" &&
+      !raceStore.get().pitService.active &&
+      speedKmh < 22 &&
+      isInPitLane(group.current.position)
+    ) {
+      raceStore.startPitService(playerId);
+      speed.current *= 0.2;
+    }
     // grava trajetória do player para o Ghost Kart
     ghostStore.push(group.current.position.x, group.current.position.z, group.current.rotation.y);
 
@@ -424,7 +442,7 @@ export function KartRig({
           state={state}
           driving={Math.abs(speed.current) > 0.5}
           steer={
-            controlMode === "autopilot"
+            controlMode === "autopilot" || controls.current.automatic > 0
               ? autoSteerVisual.current
               : controls.current.left - controls.current.right
           }

@@ -105,6 +105,8 @@ Este documento registra elementos do ambiente 3D que nao sao partes fisicas do k
   - Controles touchscreen chamam os mesmos estados locais do teste Wankel usados pela sala acustica.
   - No modo fullscreen da Oficina, o antigo painel externo de teste fica oculto para evitar controles fora da area de trabalho.
   - A sala acustica reflete o estado do teste em luzes, leitura interna e bancada.
+  - A sala acustica possui painel externo no vidro com comandos de ligar/parar, audio, stress, capacidade e aceleracao, voltado para a camera externa da opcao `SALA ACUSTICA`.
+  - Textos e leituras frontais da sala acustica ficam orientados para fora da cabine, evitando leitura espelhada pelo lado interno do vidro.
   - O audio usa o MP3 `wankel-test-room-engine.mp3` como camada principal conectada ao grafo Web Audio e mantem o sintetizador Web Audio como apoio/fallback.
   - O mesmo gesto de audio habilita o riser de apresentacao do carrinho quando o checklist fica completo.
 - Requisito tecnico:
@@ -234,6 +236,77 @@ Este documento registra elementos do ambiente 3D que nao sao partes fisicas do k
     telemetria existentes, sem inventar integracoes externas.
   - O controle manual atual deve permanecer disponivel quando o modo
     `DRIVER_CONTROL` estiver desbloqueado.
+
+### Classificacao, grid, largada e pit lane
+
+- Codigo:
+  - `src/components/simulator/raceStore.ts`
+  - `src/components/simulator/SimulatorScene.tsx`
+  - `src/components/simulator/QualifyingPanel.tsx`
+  - `src/components/simulator/QualifyingSessionPanel.tsx`
+  - `src/components/simulator/GridLoadingOverlay.tsx`
+  - `src/components/simulator/StartLightsOverlay.tsx`
+  - `src/components/simulator/PitServiceOverlay.tsx`
+  - `src/components/simulator/track.ts`
+  - `src/components/simulator/KartRig.tsx`
+  - `src/components/simulator/AIKart.tsx`
+- Funcao: estruturar a Arena em fases de sessao antes da corrida principal.
+- Fases:
+  - `SETUP`;
+  - `QUALIFYING`;
+  - `QUALIFYING_COMPLETE`;
+  - `GRID_LOADING`;
+  - `GRID_COUNTDOWN`;
+  - `RACE`;
+  - `FINISHED`.
+- Classificacao:
+  - Cada piloto recebe exatamente 3 tempos de volta.
+  - As tentativas sao alternadas por rodada, com Rayssa abrindo cada ciclo.
+  - Durante a classificacao a torcida visual/sonora fica desligada; permanecem
+    motores, pista e eventos pertinentes.
+  - `QualifyingSessionPanel` mostra competidor na pista, retorno ao Pit Box e
+    tempos parciais da Rayssa para analise da equipe.
+  - A soma das 3 voltas define o ranking classificatorio.
+  - O primeiro colocado e marcado como Pole Position.
+  - `QualifyingPanel` exibe tabela alfabetica, tarja vermelha sobre tempos,
+    coluna de total e ranking final para grid.
+- Grid e largada:
+  - `GridLoadingOverlay` usa `public/image_1030ed13.png` como fundo,
+    `public/logo_kart_A26.png` como logo central e barra de progresso antes do
+    grid oficial.
+  - `track.ts` expoe `gridPose` para alinhar logica e slots visuais.
+  - Karts ficam bloqueados durante `GRID_COUNTDOWN`.
+  - `StartLightsOverlay` exibe 3, 2, 1 e START antes de liberar `RACE`.
+- Pit lane:
+  - `track.ts` expoe uma zona simples de pit lane.
+  - `KartRig` detecta entrada em baixa velocidade e inicia manutencao.
+  - `PitServiceOverlay` exibe manutencao rapida de pneus, freio e bateria.
+
+### Assets de evento de corrida
+
+- Codigo:
+  - `src/components/audio/audioAssets.ts`
+  - `src/components/simulator/useSimAudio.ts`
+- Assets:
+  - `public/sounds/race/start_light_03-02-01-start.ogg`
+  - `public/sounds/race/lap_complete.wav`
+  - `public/sounds/race/sector_time.mp3`
+  - `public/sounds/race/best_lap.mp3`
+  - `public/sounds/race/final_lap.mp3`
+  - `public/sounds/race/finish_flag.mp3`
+  - `public/sounds/race/podium_arrival.mp3`
+- Mapeamento:
+  - semaforo/largada -> `start_light_03-02-01-start.ogg`;
+  - setor -> `sector_time.mp3`;
+  - volta completa -> `lap_complete.wav`;
+  - melhor volta -> `best_lap.mp3`;
+  - volta final -> `final_lap.mp3`;
+  - bandeirada -> `finish_flag.mp3`;
+  - chegada ao podium -> `podium_arrival.mp3`.
+- Requisito tecnico:
+  - O audio depende de gesto do usuario por restricoes do navegador.
+  - Cada evento mantem fallback sintetico quando o asset falha ou nao foi
+    habilitado.
 
 ## Convencao
 
