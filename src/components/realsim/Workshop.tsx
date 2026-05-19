@@ -11,6 +11,7 @@ import { buildChecklist, canLeavePit } from "@/bridge/moduleValidator";
 export interface EngineTestControls {
   setRunning: (running: boolean) => void;
   setThrottle: (throttle: number) => void;
+  setVolume: (volume: number) => void;
   toggleAudio: () => void;
 }
 
@@ -268,7 +269,19 @@ function AcousticEngineRoom({
       ))}
       <mesh position={[0, 1.08, 0.965]}>
         <planeGeometry args={[1.72, 1.32]} />
-        <meshBasicMaterial color="#a8d8ff" transparent opacity={0.22} side={THREE.DoubleSide} />
+        <meshPhysicalMaterial
+          color="#ffffff"
+          transparent
+          opacity={0.035}
+          transmission={1}
+          thickness={0.015}
+          roughness={0.02}
+          metalness={0}
+          clearcoat={1}
+          clearcoatRoughness={0.02}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+        />
       </mesh>
       <mesh position={[0.78, 1.08, 0.995]}>
         <boxGeometry args={[0.08, 0.5, 0.045]} />
@@ -303,26 +316,26 @@ function AcousticEngineRoom({
         <meshBasicMaterial color={engineTest.running ? "#5be39a" : "#7f93a8"} />
       </mesh>
 
-      <mesh position={[0, 1.68, 0.995]}>
+      <mesh position={[0, 1.68, 1.018]}>
         <planeGeometry args={[1.25, 0.28]} />
-        <meshBasicMaterial color="#0c2236" />
+        <meshBasicMaterial color="#06111d" transparent opacity={0.86} depthWrite={false} />
       </mesh>
-      <Text position={[0, 1.68, 1.01]} fontSize={0.07} color="#9ed8ff" anchorX="center">
+      <Text position={[0, 1.68, 1.035]} fontSize={0.07} color="#9ed8ff" anchorX="center">
         SALA ACUSTICA · TESTE MOTOR WANKEL
       </Text>
-      <Text position={[0, 1.54, 1.01]} fontSize={0.045} color="#ffb340" anchorX="center">
+      <Text position={[0, 1.54, 1.035]} fontSize={0.045} color="#ffb340" anchorX="center">
         ISOLAMENTO SONORO · DINAMOMETRO · EXAUSTAO
       </Text>
 
-      <mesh position={[-0.83, 1.48, 0.995]}>
+      <mesh position={[-0.83, 1.48, 1.018]}>
         <planeGeometry args={[0.62, 0.34]} />
-        <meshBasicMaterial color="#061827" />
+        <meshBasicMaterial color="#04111e" transparent opacity={0.9} depthWrite={false} />
       </mesh>
-      <Text position={[-0.83, 1.54, 1.01]} fontSize={0.04} color="#5be39a" anchorX="center">
+      <Text position={[-0.83, 1.54, 1.035]} fontSize={0.04} color="#5be39a" anchorX="center">
         {`${(engineTest.running ? 74 + engineTest.throttle * 22 : 32).toFixed(0)} dB · ${(engineTest.rpm / 1000).toFixed(1)}k RPM`}
       </Text>
       <Text
-        position={[-0.83, 1.43, 1.01]}
+        position={[-0.83, 1.43, 1.035]}
         fontSize={0.032}
         color={engineTest.health < 70 ? "#ffb340" : "#9ed8ff"}
         anchorX="center"
@@ -386,6 +399,19 @@ function AcousticEngineRoom({
               value={engineTest.throttle}
               onChange={(e) => controls?.setThrottle(Number(e.target.value))}
               className="mt-1 w-full"
+            />
+          </label>
+          <label className="mt-2 block text-[8px] text-slate-400">
+            Volume seguro {(engineTest.volume * 100).toFixed(0)}%
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={engineTest.volume}
+              onChange={(e) => controls?.setVolume(Number(e.target.value))}
+              className="mt-1 w-full accent-emerald-300"
+              aria-label="Volume seguro do motor Wankel"
             />
           </label>
         </div>

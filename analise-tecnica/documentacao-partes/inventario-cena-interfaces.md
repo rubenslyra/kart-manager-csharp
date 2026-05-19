@@ -308,6 +308,65 @@ Este documento registra elementos do ambiente 3D que nao sao partes fisicas do k
   - Cada evento mantem fallback sintetico quando o asset falha ou nao foi
     habilitado.
 
+### Karts de arena alinhados ao modelo oficinal
+
+- Codigo:
+  - `src/components/simulator/KartModel.tsx`
+- Funcao: manter o kart procedural da arena compativel com corrida, replay,
+  camera e fisica, mas com linguagem visual coerente com o kart oficinal.
+- Elementos:
+  - chassi tubular escuro com trilhos superiores, struts e roll hoop;
+  - degraus laterais de aluminio com textura/ridges;
+  - bucket seat visivel atras da corredora;
+  - volante tecnico com hub emissivo;
+  - motor traseiro compacto inspirado em Wankel, com housing triangular, rotor,
+    ribs e exaustao metalica.
+- Requisito tecnico:
+  - A API publica do `KartModel` e a hierarquia de refs de rodas/direcao devem
+    permanecer estaveis para `KartRig`, `AIKart` e `RecordedRace`.
+
+### Sala acustica clear glass e teste Wankel seguro
+
+- Codigo:
+  - `src/components/realsim/Workshop.tsx`
+  - `src/components/realsim/parts/MotorAssembly.tsx`
+  - `src/components/realsim/RealSimulator.tsx`
+  - `src/components/realsim/RealSimUI.tsx`
+  - `src/components/realsim/hooks/useWankelTestAudio.ts`
+- Funcao: permitir observar o motor Wankel na sala acustica sem filtro fosco,
+  com indicacao visual clara de funcionamento e controle de conforto auditivo.
+- Elementos:
+  - vidro frontal em `meshPhysicalMaterial` transparente, com opacidade baixa,
+    transmission/clearcoat e `depthWrite={false}`;
+  - textos e leituras externos com fundos opacos localizados, sem camada ampla
+    sobre o vidro;
+  - rotor, eixo, polia e dinamometro animados quando `engineTest.running` esta
+    ativo;
+  - vibracao procedural do conjunto proporcional a `engineTest.throttle`;
+  - slider `Volume seguro` no painel externo e no overlay tecnico.
+- Requisito tecnico:
+  - O painel externo deve continuar clicavel e a visibilidade interna do motor
+    nao deve depender de fundo semitransparente sobre o vidro.
+
+### DLLs C# de alunos
+
+- Codigo:
+  - `src/lib/csharp/dllInspector.ts`
+  - `src/components/realsim/dll/DllImportPanel.tsx`
+  - `public/docs/CSHARP_MODULE_CONTRACT.md`
+  - `public/docs/DLL_STUDENT_GUIDE.md`
+- Funcao: orientar e validar entregas de DLLs C# para os modulos didaticos do
+  RL Kart 26A.
+- Validacoes bloqueantes:
+  - cabecalho PE valido;
+  - metadados .NET/BSJB presentes;
+  - nome do arquivo igual ao esperado para o slot selecionado;
+  - `AssemblyName`, `ModuleId`, versao SemVer e funcoes obrigatorias presentes
+    nos metadados.
+- Requisito tecnico:
+  - O frontend ainda executa cenario simulado via `mockBridge`; execucao real
+    da DLL depende de host .NET externo via WebSocket.
+
 ## Convencao
 
 - Elementos deste documento podem parecer "projetores", telas ou hologramas, mas devem ser tratados como interfaces tecnicas de cena.

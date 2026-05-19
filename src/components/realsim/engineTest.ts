@@ -6,18 +6,22 @@ export interface EngineTestState {
   temperature: number;
   load: number;
   audioEnabled: boolean;
+  volume: number;
 }
 
 export function deriveEngineTestState({
   running,
   throttle,
   audioEnabled,
+  volume = 0.45,
 }: {
   running: boolean;
   throttle: number;
   audioEnabled: boolean;
+  volume?: number;
 }): EngineTestState {
   const clampedThrottle = Math.max(0, Math.min(1, throttle));
+  const clampedVolume = Math.max(0, Math.min(1, volume));
   const rpm = running ? 900 + clampedThrottle * 7600 : 0;
   const load = running ? 0.22 + clampedThrottle * 0.72 : 0;
   const temperature = running ? 38 + clampedThrottle * 62 + load * 18 : 30;
@@ -31,5 +35,6 @@ export function deriveEngineTestState({
     temperature,
     load,
     audioEnabled,
+    volume: clampedVolume,
   };
 }

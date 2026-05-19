@@ -1,8 +1,12 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import * as THREE from "three";
+import { useFrame } from "@react-three/fiber";
 import type { DimProps } from "./shared";
 import type { EngineTestState } from "../engineTest";
-import { RL_KART_DERIVED, RL_KART_PART_NAMES } from "@/components/simulator/kart/RLKart26ADimensions";
+import {
+  RL_KART_DERIVED,
+  RL_KART_PART_NAMES,
+} from "@/components/simulator/kart/RLKart26ADimensions";
 
 const X = RL_KART_DERIVED;
 const SOLID_DIM: DimProps = { opacity: 1, transparent: false, wireframe: false };
@@ -10,6 +14,8 @@ const SOLID_DIM: DimProps = { opacity: 1, transparent: false, wireframe: false }
 interface WankelEngineProps {
   dim?: DimProps;
   showServiceHandles?: boolean;
+  running?: boolean;
+  throttle?: number;
 }
 
 function makeLobedShape(radius: number, lobing: number, points = 96) {
@@ -40,17 +46,34 @@ function makeRotorShape(radius: number) {
 }
 
 /** Motor rotativo Wankel com pivô local no centro inferior da placa de montagem. */
-export function WankelEngine({ dim = SOLID_DIM, showServiceHandles = false }: WankelEngineProps) {
+export function WankelEngine({
+  dim = SOLID_DIM,
+  showServiceHandles = false,
+  running = false,
+  throttle = 0,
+}: WankelEngineProps) {
   const housingShape = useMemo(() => makeLobedShape(0.145, 0.18), []);
   const chamberShape = useMemo(() => makeLobedShape(0.106, 0.16), []);
   const rotorShape = useMemo(() => makeRotorShape(0.072), []);
+  const rotorRef = useRef<THREE.Mesh>(null);
+  const shaftRef = useRef<THREE.Mesh>(null);
+  const pulleyRef = useRef<THREE.Mesh>(null);
+
+  useFrame((_, dt) => {
+    if (!running) return;
+    const t = THREE.MathUtils.clamp(throttle, 0, 1);
+    const omega = 5.5 + t * 34;
+    if (rotorRef.current) rotorRef.current.rotation.z += omega * dt;
+    if (shaftRef.current) shaftRef.current.rotation.x += omega * 1.6 * dt;
+    if (pulleyRef.current) pulleyRef.current.rotation.x += omega * 2.2 * dt;
+  });
 
   const intakeCurve = useMemo(
     () =>
       new THREE.CatmullRomCurve3([
         new THREE.Vector3(-0.27, 0.23, 0.06),
         new THREE.Vector3(-0.36, 0.23, 0.02),
-        new THREE.Vector3(-0.45, 0.20, -0.04),
+        new THREE.Vector3(-0.45, 0.2, -0.04),
       ]),
     [],
   );
@@ -59,7 +82,7 @@ export function WankelEngine({ dim = SOLID_DIM, showServiceHandles = false }: Wa
     () =>
       new THREE.CatmullRomCurve3([
         new THREE.Vector3(0.26, 0.22, -0.02),
-        new THREE.Vector3(0.40, 0.21, -0.10),
+        new THREE.Vector3(0.4, 0.21, -0.1),
         new THREE.Vector3(0.53, 0.17, -0.27),
         new THREE.Vector3(0.61, 0.14, -0.47),
       ]),
@@ -90,7 +113,7 @@ export function WankelEngine({ dim = SOLID_DIM, showServiceHandles = false }: Wa
     <group name="wankel_engine_pivot_base">
       {/* Adjustable mounting plate: local origin is the bottom-center mounting datum. */}
       <mesh position={[0, 0.015, 0]} castShadow receiveShadow>
-        <boxGeometry args={[0.46, 0.03, 0.30]} />
+        <boxGeometry args={[0.46, 0.03, 0.3]} />
         <meshStandardMaterial color="#343b44" metalness={0.85} roughness={0.32} {...dim} />
       </mesh>
       {[-0.15, 0.15].map((x) =>
@@ -113,21 +136,53 @@ export function WankelEngine({ dim = SOLID_DIM, showServiceHandles = false }: Wa
       {/* Epitrochoid housing, shown as an engineering cutaway. */}
       <group position={[0, 0.24, 0]} rotation={[0, Math.PI / 2, 0]}>
         <mesh castShadow>
-          <extrudeGeometry args={[housingShape, { depth: 0.24, bevelEnabled: true, bevelSize: 0.006, bevelThickness: 0.006, bevelSegments: 2 }]} />
+          <extrudeGeometry
+            args={[
+              housingShape,
+              {
+                depth: 0.24,
+                bevelEnabled: true,
+                bevelSize: 0.006,
+                bevelThickness: 0.006,
+                bevelSegments: 2,
+              },
+            ]}
+          />
           <meshStandardMaterial color="#8f969e" metalness={0.56} roughness={0.62} {...dim} />
         </mesh>
         <mesh position={[0, 0, 0.124]}>
           <extrudeGeometry args={[chamberShape, { depth: 0.012, bevelEnabled: false }]} />
-          <meshStandardMaterial color="#14181d" metalness={0.2} roughness={0.82} transparent opacity={0.72} />
+          <meshStandardMaterial
+            color="#14181d"
+            metalness={0.2}
+            roughness={0.82}
+            transparent
+            opacity={0.72}
+          />
         </mesh>
-        <mesh position={[0, -0.002, 0.14]} rotation={[0, 0, 0.35]} castShadow>
-          <extrudeGeometry args={[rotorShape, { depth: 0.026, bevelEnabled: true, bevelSize: 0.006, bevelThickness: 0.003, bevelSegments: 2 }]} />
+        <mesh ref={rotorRef} position={[0, -0.002, 0.14]} rotation={[0, 0, 0.35]} castShadow>
+          <extrudeGeometry
+            args={[
+              rotorShape,
+              {
+                depth: 0.026,
+                bevelEnabled: true,
+                bevelSize: 0.006,
+                bevelThickness: 0.003,
+                bevelSegments: 2,
+              },
+            ]}
+          />
           <meshStandardMaterial color="#b7a261" metalness={0.82} roughness={0.31} {...dim} />
         </mesh>
         {[0, 1, 2].map((i) => {
           const a = -Math.PI / 2 + (i / 3) * Math.PI * 2 + 0.35;
           return (
-            <mesh key={`apex-seal-${i}`} position={[Math.cos(a) * 0.072, Math.sin(a) * 0.072, 0.156]} rotation={[0, 0, a]}>
+            <mesh
+              key={`apex-seal-${i}`}
+              position={[Math.cos(a) * 0.072, Math.sin(a) * 0.072, 0.156]}
+              rotation={[0, 0, a]}
+            >
               <boxGeometry args={[0.034, 0.006, 0.006]} />
               <meshStandardMaterial color="#20242b" metalness={0.86} roughness={0.26} {...dim} />
             </mesh>
@@ -136,18 +191,22 @@ export function WankelEngine({ dim = SOLID_DIM, showServiceHandles = false }: Wa
       </group>
 
       {/* Eccentric shaft and front cover hardware. */}
-      <mesh position={[0, 0.24, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+      <mesh ref={shaftRef} position={[0, 0.24, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
         <cylinderGeometry args={[0.026, 0.026, 0.34, 32]} />
         <meshStandardMaterial color="#2f363f" metalness={0.9} roughness={0.25} {...dim} />
       </mesh>
-      <mesh position={[-0.145, 0.24, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+      <mesh ref={pulleyRef} position={[-0.145, 0.24, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
         <cylinderGeometry args={[0.068, 0.068, 0.018, 36]} />
         <meshStandardMaterial color="#1d232b" metalness={0.78} roughness={0.34} {...dim} />
       </mesh>
       {[0, 1, 2, 3, 4, 5].map((i) => {
         const a = (i / 6) * Math.PI * 2;
         return (
-          <mesh key={`case-bolt-${i}`} position={[-0.156, 0.24 + Math.sin(a) * 0.112, Math.cos(a) * 0.112]} rotation={[0, 0, Math.PI / 2]}>
+          <mesh
+            key={`case-bolt-${i}`}
+            position={[-0.156, 0.24 + Math.sin(a) * 0.112, Math.cos(a) * 0.112]}
+            rotation={[0, 0, Math.PI / 2]}
+          >
             <cylinderGeometry args={[0.006, 0.006, 0.012, 12]} />
             <meshStandardMaterial color="#d9dde2" metalness={0.92} roughness={0.22} {...dim} />
           </mesh>
@@ -194,19 +253,30 @@ export function WankelEngine({ dim = SOLID_DIM, showServiceHandles = false }: Wa
         <meshStandardMaterial color="#59636e" metalness={0.74} roughness={0.32} {...dim} />
       </mesh>
       <mesh position={[-0.52, 0.19, -0.06]} castShadow>
-        <boxGeometry args={[0.13, 0.10, 0.15]} />
+        <boxGeometry args={[0.13, 0.1, 0.15]} />
         <meshStandardMaterial color="#090a0c" roughness={0.92} metalness={0.04} {...dim} />
       </mesh>
       <mesh geometry={new THREE.TubeGeometry(exhaustCurve, 34, 0.02, 12, false)} castShadow>
-        <meshStandardMaterial color="#a5abb1" metalness={0.84} roughness={0.28} emissive="#15324a" emissiveIntensity={0.07} {...dim} />
+        <meshStandardMaterial
+          color="#a5abb1"
+          metalness={0.84}
+          roughness={0.28}
+          emissive="#15324a"
+          emissiveIntensity={0.07}
+          {...dim}
+        />
       </mesh>
       {[0.34, 0.49].map((x, i) => (
-        <mesh key={`weld-${i}`} position={[x, 0.20 - i * 0.035, -0.09 - i * 0.13]} rotation={[Math.PI / 2, 0, 0.45]}>
+        <mesh
+          key={`weld-${i}`}
+          position={[x, 0.2 - i * 0.035, -0.09 - i * 0.13]}
+          rotation={[Math.PI / 2, 0, 0.45]}
+        >
           <torusGeometry args={[0.028, 0.0035, 6, 20]} />
           <meshStandardMaterial color="#4d7ea6" metalness={0.7} roughness={0.38} {...dim} />
         </mesh>
       ))}
-      <mesh position={[0.64, 0.12, -0.60]} rotation={[Math.PI / 2, 0, 0.18]} castShadow>
+      <mesh position={[0.64, 0.12, -0.6]} rotation={[Math.PI / 2, 0, 0.18]} castShadow>
         <cylinderGeometry args={[0.035, 0.047, 0.23, 28]} />
         <meshStandardMaterial color="#8e949b" metalness={0.84} roughness={0.28} {...dim} />
       </mesh>
@@ -229,7 +299,11 @@ export function WankelEngine({ dim = SOLID_DIM, showServiceHandles = false }: Wa
 
 export function MotorAssembly({ dim }: { dim: DimProps }) {
   return (
-    <group name={RL_KART_PART_NAMES.motorRear} position={[0, X.wheelRadius - 0.015, X.rearMotorZ]} rotation={[0, Math.PI, 0]}>
+    <group
+      name={RL_KART_PART_NAMES.motorRear}
+      position={[0, X.wheelRadius - 0.015, X.rearMotorZ]}
+      rotation={[0, Math.PI, 0]}
+    >
       <WankelEngine dim={dim} showServiceHandles />
     </group>
   );
@@ -243,6 +317,7 @@ const IDLE_ENGINE_TEST: EngineTestState = {
   temperature: 30,
   load: 0,
   audioEnabled: false,
+  volume: 0.45,
 };
 
 export function EngineTestRig({
@@ -252,13 +327,47 @@ export function EngineTestRig({
   position: [number, number, number];
   engineTest?: EngineTestState;
 }) {
+  const engineGroup = useRef<THREE.Group>(null);
+  const dynoPulley = useRef<THREE.Mesh>(null);
+  const dynoShaft = useRef<THREE.Mesh>(null);
+
+  useFrame((state, dt) => {
+    const throttle = THREE.MathUtils.clamp(engineTest.throttle, 0, 1);
+    const runningFactor = engineTest.running ? 1 : 0;
+    const omega = runningFactor * (6 + throttle * 42);
+
+    if (dynoPulley.current) dynoPulley.current.rotation.x += omega * dt;
+    if (dynoShaft.current) dynoShaft.current.rotation.x += omega * 1.35 * dt;
+
+    if (!engineGroup.current) return;
+    if (!engineTest.running) {
+      engineGroup.current.position.set(-0.14, 0.49, 0);
+      engineGroup.current.rotation.set(0, 0, 0);
+      return;
+    }
+
+    const t = state.clock.elapsedTime;
+    const amplitude = 0.0025 + throttle * 0.016;
+    const frequency = 34 + throttle * 86;
+    engineGroup.current.position.set(
+      -0.14 + Math.sin(t * frequency) * amplitude,
+      0.49 + Math.sin(t * (frequency * 1.37) + 1.7) * amplitude * 0.55,
+      Math.cos(t * (frequency * 0.73) + 0.4) * amplitude * 0.7,
+    );
+    engineGroup.current.rotation.set(
+      Math.sin(t * frequency * 0.41) * amplitude * 0.55,
+      Math.cos(t * frequency * 0.33) * amplitude * 0.45,
+      Math.sin(t * frequency * 0.29) * amplitude * 0.6,
+    );
+  });
+
   return (
     <group position={position}>
       <mesh position={[0, 0.44, 0]} castShadow>
         <boxGeometry args={[1.1, 0.08, 0.56]} />
         <meshStandardMaterial color="#252c35" metalness={0.72} roughness={0.34} />
       </mesh>
-      <mesh position={[0.46, 0.64, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+      <mesh ref={dynoPulley} position={[0.46, 0.64, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
         <cylinderGeometry args={[0.12, 0.12, 0.22, 32]} />
         <meshStandardMaterial
           color="#111827"
@@ -268,20 +377,32 @@ export function EngineTestRig({
           roughness={0.32}
         />
       </mesh>
-      <mesh position={[0.27, 0.64, 0]} rotation={[0, 0, Math.PI / 2]}>
+      <mesh ref={dynoShaft} position={[0.27, 0.64, 0]} rotation={[0, 0, Math.PI / 2]}>
         <cylinderGeometry args={[0.018, 0.018, 0.18, 16]} />
         <meshStandardMaterial color="#a0a7ae" metalness={0.85} roughness={0.28} />
       </mesh>
-      <group position={[-0.14, 0.49, 0]} scale={0.82}>
-        <WankelEngine showServiceHandles />
+      <group ref={engineGroup} position={[-0.14, 0.49, 0]} scale={0.82}>
+        <WankelEngine
+          showServiceHandles
+          running={engineTest.running}
+          throttle={engineTest.throttle}
+        />
       </group>
       <mesh position={[0, 0.9, -0.32]} rotation={[-0.35, 0, 0]}>
         <planeGeometry args={[0.8, 0.32]} />
-        <meshBasicMaterial color={engineTest.health < 70 ? "#ffb340" : "#39c5ff"} transparent opacity={engineTest.running ? 0.34 : 0.18} />
+        <meshBasicMaterial
+          color={engineTest.health < 70 ? "#ffb340" : "#39c5ff"}
+          transparent
+          opacity={engineTest.running ? 0.34 : 0.18}
+        />
       </mesh>
       <mesh position={[0.15, 0.58, 0.31]}>
         <boxGeometry args={[0.46, 0.035, 0.045]} />
-        <meshStandardMaterial color={engineTest.running ? "#5be39a" : "#4b5563"} emissive={engineTest.running ? "#12321f" : "#000000"} emissiveIntensity={0.5} />
+        <meshStandardMaterial
+          color={engineTest.running ? "#5be39a" : "#4b5563"}
+          emissive={engineTest.running ? "#12321f" : "#000000"}
+          emissiveIntensity={0.5}
+        />
       </mesh>
       <mesh position={[0.02 + engineTest.throttle * 0.34, 0.58, 0.34]}>
         <boxGeometry args={[0.035, 0.052, 0.052]} />

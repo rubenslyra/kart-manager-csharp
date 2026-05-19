@@ -123,7 +123,8 @@ export function KartModel({
   const accent = STATE_COLOR[state];
   const liveryBlue = liveryColor ?? "#1d4ed8";
   const liveryOrange = "#f97316";
-  const tubular = "#cbd5e1";
+  const tubular = "#3a4452";
+  const aluminum = "#d9dde2";
   const tireBlack = "#0a0a0a";
   const rimSilver = "#94a3b8";
 
@@ -176,6 +177,35 @@ export function KartModel({
           <cylinderGeometry args={[0.032, 0.032, 0.82, 10]} />
           <meshStandardMaterial color={tubular} metalness={0.85} roughness={0.25} />
         </mesh>
+        {[0.44, -0.44].map((x, i) => (
+          <mesh
+            key={`upper-rail-${i}`}
+            position={[x, 0.32, -0.05]}
+            rotation={[Math.PI / 2, 0, 0]}
+            castShadow
+          >
+            <cylinderGeometry args={[0.022, 0.022, 1.05, 10]} />
+            <meshStandardMaterial
+              color={tubular}
+              metalness={0.92}
+              roughness={0.32}
+              emissive="#0a1a2c"
+              emissiveIntensity={0.18}
+            />
+          </mesh>
+        ))}
+        {[0.42, 0, -0.42].map((z) =>
+          [1, -1].map((side) => (
+            <mesh key={`side-strut-${side}-${z}`} position={[side * 0.38, 0.225, z]} castShadow>
+              <cylinderGeometry args={[0.014, 0.014, 0.21, 8]} />
+              <meshStandardMaterial color={tubular} metalness={0.88} roughness={0.34} />
+            </mesh>
+          )),
+        )}
+        <mesh position={[0, 0.6, -0.3]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+          <torusGeometry args={[0.21, 0.022, 10, 22, Math.PI]} />
+          <meshStandardMaterial color={tubular} metalness={0.9} roughness={0.3} />
+        </mesh>
       </group>
 
       {/* Floor pan */}
@@ -211,19 +241,29 @@ export function KartModel({
         </Text>
       </group>
 
-      {/* Side pods */}
+      {/* Side steps derived from the workshop model. */}
       {[0.5, -0.5].map((x, i) => (
         <group key={`pod-${i}`} position={[x * 0.86, 0.15, -0.08]}>
           <mesh castShadow>
-            <boxGeometry args={[0.08, 0.2, 0.72]} />
-            <meshStandardMaterial color={liveryBlue} metalness={0.3} roughness={0.5} />
+            <boxGeometry args={[0.12, 0.04, 0.78]} />
+            <meshStandardMaterial color={aluminum} metalness={1} roughness={0.16} />
           </mesh>
-          <mesh position={[x > 0 ? 0.052 : -0.052, 0, 0]}>
-            <planeGeometry args={[0.72, 0.06]} />
+          <mesh position={[0, 0.026, 0]}>
+            <boxGeometry args={[0.095, 0.012, 0.58]} />
+            <meshStandardMaterial color="#111827" roughness={0.92} />
+          </mesh>
+          {[-0.18, 0, 0.18].map((z) => (
+            <mesh key={`step-ridge-${z}`} position={[0, 0.038, z]}>
+              <boxGeometry args={[0.105, 0.01, 0.018]} />
+              <meshStandardMaterial color="#2d343d" metalness={0.75} roughness={0.32} />
+            </mesh>
+          ))}
+          <mesh position={[x > 0 ? 0.068 : -0.068, 0.055, 0.18]}>
+            <planeGeometry args={[0.34, 0.07]} />
             <meshStandardMaterial color={liveryOrange} />
           </mesh>
           <mesh
-            position={[x > 0 ? 0.053 : -0.053, -0.04, -0.24]}
+            position={[x > 0 ? 0.07 : -0.07, 0.06, -0.24]}
             rotation={[0, x > 0 ? 0 : Math.PI, 0]}
           >
             <planeGeometry args={[0.24, 0.12]} />
@@ -257,13 +297,41 @@ export function KartModel({
       </mesh>
       <group ref={steerWheel} position={[0, 0.7, 0.7]} rotation={[Math.PI / 3, 0, 0]}>
         <mesh>
-          <torusGeometry args={[0.17, 0.028, 10, 24]} />
+          <torusGeometry args={[0.14, 0.02, 10, 28]} />
           <meshStandardMaterial color="#0f172a" />
         </mesh>
         <mesh>
-          <boxGeometry args={[0.32, 0.02, 0.02]} />
+          <boxGeometry args={[0.25, 0.016, 0.016]} />
           <meshStandardMaterial color="#374151" />
         </mesh>
+        <mesh>
+          <cylinderGeometry args={[0.035, 0.035, 0.035, 16]} />
+          <meshStandardMaterial
+            color={accent}
+            emissive={accent}
+            emissiveIntensity={0.6}
+            metalness={0.5}
+            roughness={0.4}
+          />
+        </mesh>
+      </group>
+
+      {/* Bucket seat shell visible behind the driver, matching the workshop kart. */}
+      <group position={[0, 0.15, -0.18]}>
+        <mesh position={[0, 0.08, 0.04]} castShadow>
+          <boxGeometry args={[0.38, 0.08, 0.36]} />
+          <meshStandardMaterial color="#0d1117" roughness={0.95} metalness={0.12} />
+        </mesh>
+        <mesh position={[0, 0.32, -0.1]} rotation={[-0.22, 0, 0]} castShadow>
+          <boxGeometry args={[0.36, 0.42, 0.045]} />
+          <meshStandardMaterial color="#0d1117" roughness={0.95} metalness={0.12} />
+        </mesh>
+        {[1, -1].map((side) => (
+          <mesh key={`seat-bolster-${side}`} position={[side * 0.2, 0.21, -0.02]} castShadow>
+            <boxGeometry args={[0.045, 0.24, 0.32]} />
+            <meshStandardMaterial color="#0d1117" roughness={0.95} metalness={0.12} />
+          </mesh>
+        ))}
       </group>
 
       {/* Driver */}
@@ -279,20 +347,36 @@ export function KartModel({
         <meshStandardMaterial color={accent} emissive={accent} emissiveIntensity={0.9} />
       </mesh>
 
-      {/* Motor + exhaust */}
-      <mesh position={[0.28, 0.2, -0.42]} rotation={[0, 0, Math.PI / 2]} castShadow>
-        <cylinderGeometry args={[0.11, 0.11, 0.24, 18]} />
-        <meshStandardMaterial color="#374151" metalness={0.85} roughness={0.25} />
-      </mesh>
-      {[0, 0.06, 0.12, -0.06, -0.12].map((z, i) => (
-        <mesh key={`fin-${i}`} position={[0.28, 0.31, -0.42 + z * 0.7]}>
-          <boxGeometry args={[0.24, 0.016, 0.024]} />
-          <meshStandardMaterial color="#475569" metalness={0.7} />
+      {/* Compact Wankel-inspired rear motor + exhaust. */}
+      <group position={[0.27, 0.14, -0.52]} rotation={[0, Math.PI / 2, 0]}>
+        <mesh castShadow>
+          <cylinderGeometry args={[0.14, 0.14, 0.18, 3]} />
+          <meshStandardMaterial color="#8f969e" metalness={0.62} roughness={0.5} />
+        </mesh>
+        <mesh position={[0, 0, 0.094]} rotation={[0, 0, 0.36]}>
+          <cylinderGeometry args={[0.07, 0.07, 0.018, 3]} />
+          <meshStandardMaterial color="#b7a261" metalness={0.82} roughness={0.31} />
+        </mesh>
+        <mesh position={[0, 0, -0.102]}>
+          <cylinderGeometry args={[0.035, 0.035, 0.035, 20]} />
+          <meshStandardMaterial color="#1d232b" metalness={0.78} roughness={0.34} />
+        </mesh>
+      </group>
+      {[-0.08, -0.04, 0, 0.04, 0.08].map((z) => (
+        <mesh key={`wankel-rib-${z}`} position={[0.27, 0.285, -0.52 + z]}>
+          <boxGeometry args={[0.22, 0.012, 0.018]} />
+          <meshStandardMaterial color="#a5adb5" metalness={0.62} roughness={0.45} />
         </mesh>
       ))}
       <mesh position={[-0.28, 0.26, -0.44]} rotation={[Math.PI / 2.2, 0, 0]} castShadow>
-        <cylinderGeometry args={[0.04, 0.045, 0.46, 12]} />
-        <meshStandardMaterial color="#1f2937" metalness={0.9} roughness={0.3} />
+        <cylinderGeometry args={[0.034, 0.045, 0.5, 16]} />
+        <meshStandardMaterial
+          color="#8e949b"
+          metalness={0.84}
+          roughness={0.28}
+          emissive="#15324a"
+          emissiveIntensity={0.07}
+        />
       </mesh>
 
       {/* ==========================================================

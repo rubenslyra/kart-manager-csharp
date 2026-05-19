@@ -37,6 +37,7 @@ O painel **DLLs C#** parseia o cabeçalho PE + metadados CLI (BSJB) e valida:
 |---|---|
 | Cabeçalho PE válido | sim |
 | Assembly .NET (BSJB) | sim |
+| Nome do arquivo = `RLKart.Module.<Nome>.dll` | sim |
 | `AssemblyName` = `RLKart.Module.<Nome>` | sim |
 | `ModuleId` literal presente nos metadados | sim |
 | `Version` no formato SemVer `x.y.z` | sim |

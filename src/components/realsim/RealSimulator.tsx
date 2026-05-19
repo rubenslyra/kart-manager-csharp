@@ -32,6 +32,7 @@ export function RealSimulator({ fullscreen = false }: RealSimulatorProps) {
   const [showWiring, setShowWiring] = useState(true);
   const [engineRunning, setEngineRunning] = useState(false);
   const [engineThrottle, setEngineThrottle] = useState(0.18);
+  const [engineVolume, setEngineVolume] = useState(0.45);
   const audit = useAuditLog(ext.telemetry, focus);
   const releasable = canLeavePit(ext.telemetry);
   const presentationAudio = usePresentationRiserAudio(releasable);
@@ -41,13 +42,15 @@ export function RealSimulator({ fullscreen = false }: RealSimulatorProps) {
         running: engineRunning,
         throttle: engineThrottle,
         audioEnabled: false,
+        volume: engineVolume,
       }),
-    [engineRunning, engineThrottle],
+    [engineRunning, engineThrottle, engineVolume],
   );
   const audio = useWankelTestAudio({
     running: engineRunning,
     throttle: engineThrottle,
     health: engineTestModel.health,
+    volume: engineVolume,
   });
   const engineTest = useMemo(
     () =>
@@ -55,8 +58,9 @@ export function RealSimulator({ fullscreen = false }: RealSimulatorProps) {
         running: engineRunning,
         throttle: engineThrottle,
         audioEnabled: audio.enabled,
+        volume: engineVolume,
       }),
-    [engineRunning, engineThrottle, audio.enabled],
+    [engineRunning, engineThrottle, audio.enabled, engineVolume],
   );
 
   const onRelease = () => {
@@ -97,6 +101,7 @@ export function RealSimulator({ fullscreen = false }: RealSimulatorProps) {
             engineControls={{
               setRunning: setEngineRunning,
               setThrottle: setEngineThrottle,
+              setVolume: setEngineVolume,
               toggleAudio: () => {
                 presentationAudio.start();
                 audio.start();
@@ -134,6 +139,7 @@ export function RealSimulator({ fullscreen = false }: RealSimulatorProps) {
         engineTest={engineTest}
         setEngineRunning={setEngineRunning}
         setEngineThrottle={setEngineThrottle}
+        setEngineVolume={setEngineVolume}
         toggleEngineAudio={() => {
           presentationAudio.start();
           audio.start();

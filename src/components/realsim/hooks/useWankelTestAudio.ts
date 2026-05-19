@@ -5,9 +5,10 @@ interface UseWankelTestAudioArgs {
   running: boolean;
   throttle: number;
   health: number;
+  volume: number;
 }
 
-export function useWankelTestAudio({ running, throttle, health }: UseWankelTestAudioArgs) {
+export function useWankelTestAudio({ running, throttle, health, volume }: UseWankelTestAudioArgs) {
   const ctxRef = useRef<AudioContext | null>(null);
   const masterGainRef = useRef<GainNode | null>(null);
   const rotorOscRef = useRef<OscillatorNode | null>(null);
@@ -21,6 +22,7 @@ export function useWankelTestAudio({ running, throttle, health }: UseWankelTestA
   const runningRef = useRef(running);
   const throttleRef = useRef(throttle);
   const healthRef = useRef(health);
+  const volumeRef = useRef(volume);
   const enabledRef = useRef(false);
   const [enabled, setEnabled] = useState(false);
 
@@ -28,7 +30,8 @@ export function useWankelTestAudio({ running, throttle, health }: UseWankelTestA
     runningRef.current = running;
     throttleRef.current = throttle;
     healthRef.current = health;
-  }, [running, throttle, health]);
+    volumeRef.current = volume;
+  }, [running, throttle, health, volume]);
 
   const stop = useCallback(() => {
     enabledRef.current = false;
@@ -71,7 +74,7 @@ export function useWankelTestAudio({ running, throttle, health }: UseWankelTestA
     ctxRef.current = ctx;
 
     const master = ctx.createGain();
-    master.gain.value = 0.42;
+    master.gain.value = Math.max(0, Math.min(1, volumeRef.current)) * 0.42;
     master.connect(ctx.destination);
     masterGainRef.current = master;
 
@@ -129,6 +132,7 @@ export function useWankelTestAudio({ running, throttle, health }: UseWankelTestA
       const now = ctx.currentTime;
       const t = throttleRef.current;
       const on = runningRef.current;
+      const userVolume = Math.max(0, Math.min(1, volumeRef.current));
       const healthFactor = Math.max(0.25, Math.min(1, healthRef.current / 100));
       const freq = on ? 90 + t * 430 : 55;
       const pulseFreq = on ? 18 + t * 54 : 8;
@@ -136,6 +140,7 @@ export function useWankelTestAudio({ running, throttle, health }: UseWankelTestA
       const pulseGain = on ? (0.012 + t * 0.06) * healthFactor : 0.0;
       const cutoff = 550 + t * 2600;
 
+      masterGainRef.current?.gain.setTargetAtTime(userVolume * 0.42, now, 0.06);
       rotorOscRef.current?.frequency.setTargetAtTime(freq, now, 0.055);
       pulseOscRef.current?.frequency.setTargetAtTime(pulseFreq, now, 0.06);
       rotorGainRef.current?.gain.setTargetAtTime(gain, now, 0.08);

@@ -7,6 +7,7 @@
  *   3. Parse CLI header → metadata root (BSJB), version string, streams.
  *   4. Extract #Strings heap (null-terminated UTF-8 entries).
  *   5. Validate that:
+ *        - File name = `RLKart.Module.<Name>.dll` matching the chosen module.
  *        - Assembly name = `RLKart.Module.<Name>` matching the chosen module.
  *        - Module id literal "<id>" appears in #Strings (KartModule attribute).
  *        - Each expected exported method name exists as its own entry in #Strings
@@ -26,8 +27,10 @@ export interface InspectionResult {
   assemblyName?: string;
   declaredModuleId?: string;
   declaredVersion?: string;
+  expectedFileName: string;
   expectedAssemblyName: string;
   expectedModuleId: ModuleId;
+  fileNameOk: boolean;
   assemblyNameOk: boolean;
   moduleIdOk: boolean;
   versionOk: boolean;
@@ -44,10 +47,18 @@ export interface InspectionResult {
   strings: string[];
   errors: string[];
   /** Structured per-field failures for UI rendering. */
-  failures: Array<{ field: "AssemblyName" | "ModuleId" | "Version" | "Export"; expected: string; actual: string; detail?: string }>;
+  failures: Array<{
+    field: "FileName" | "AssemblyName" | "ModuleId" | "Version" | "Export";
+    expected: string;
+    actual: string;
+    detail?: string;
+  }>;
 }
 
-export const MODULE_CONTRACT: Record<ModuleId, { assembly: string; assemblyName: string; exports: string[] }> = {
+export const MODULE_CONTRACT: Record<
+  ModuleId,
+  { assembly: string; assemblyName: string; exports: string[] }
+> = {
   core: {
     assembly: "RLKart.Module.Core.dll",
     assemblyName: "RLKart.Module.Core",
@@ -90,7 +101,12 @@ async function sha256Hex(buf: ArrayBuffer): Promise<string> {
     .join("");
 }
 
-interface Section { va: number; size: number; raw: number; rawSize: number; }
+interface Section {
+  va: number;
+  size: number;
+  raw: number;
+  rawSize: number;
+}
 
 function rvaToOffset(rva: number, sections: Section[]): number {
   for (const s of sections) {
@@ -101,7 +117,11 @@ function rvaToOffset(rva: number, sections: Section[]): number {
   return -1;
 }
 
-function readNullTerminatedUtf8(view: DataView, start: number, max: number): { s: string; next: number } {
+function readNullTerminatedUtf8(
+  view: DataView,
+  start: number,
+  max: number,
+): { s: string; next: number } {
   let end = start;
   while (end < start + max && view.getUint8(end) !== 0) end++;
   const bytes = new Uint8Array(view.buffer, view.byteOffset + start, end - start);
@@ -109,13 +129,17 @@ function readNullTerminatedUtf8(view: DataView, start: number, max: number): { s
   return { s, next: end + 1 };
 }
 
-function readPaddedString(view: DataView, start: number, maxLen: number): { s: string; consumed: number } {
+function readPaddedString(
+  view: DataView,
+  start: number,
+  maxLen: number,
+): { s: string; consumed: number } {
   // CLI metadata version string: length-prefixed up to maxLen, padded to 4-byte boundary.
   let end = start;
   while (end < start + maxLen && view.getUint8(end) !== 0) end++;
   const bytes = new Uint8Array(view.buffer, view.byteOffset + start, end - start);
   const s = new TextDecoder("utf-8", { fatal: false }).decode(bytes);
-  const consumed = ((maxLen + 3) & ~3);
+  const consumed = (maxLen + 3) & ~3;
   return { s, consumed };
 }
 
@@ -162,19 +186,30 @@ function parseDotNet(buf: ArrayBuffer, errors: string[]): ParsedDotNet | null {
     });
   }
   const cliOff = rvaToOffset(cliRva, sections);
-  if (cliOff < 0) { errors.push("não foi possível resolver RVA do CLI header"); return null; }
+  if (cliOff < 0) {
+    errors.push("não foi possível resolver RVA do CLI header");
+    return null;
+  }
   // CLI header: dword cb, word major, word minor, dword metadataRva, dword metadataSize, ...
   const metaRva = view.getUint32(cliOff + 8, true);
   const metaOff = rvaToOffset(metaRva, sections);
-  if (metaOff < 0) { errors.push("não foi possível resolver RVA dos metadados"); return null; }
+  if (metaOff < 0) {
+    errors.push("não foi possível resolver RVA dos metadados");
+    return null;
+  }
   // Metadata root: dword signature 0x424A5342 ("BSJB"), word major, word minor, dword reserved, dword length, version string padded, word flags, word streams
-  if (view.getUint32(metaOff, true) !== 0x424a5342) { errors.push("assinatura BSJB ausente"); return null; }
+  if (view.getUint32(metaOff, true) !== 0x424a5342) {
+    errors.push("assinatura BSJB ausente");
+    return null;
+  }
   const verLen = view.getUint32(metaOff + 12, true);
   const { s: metadataVersion, consumed } = readPaddedString(view, metaOff + 16, verLen);
   let p = metaOff + 16 + consumed;
   p += 2; // flags
-  const numStreams = view.getUint16(p, true); p += 2;
-  let stringsOff = -1, stringsSize = 0;
+  const numStreams = view.getUint16(p, true);
+  p += 2;
+  let stringsOff = -1,
+    stringsSize = 0;
   for (let i = 0; i < numStreams && p < view.byteLength; i++) {
     const sOffRel = view.getUint32(p, true);
     const sSize = view.getUint32(p + 4, true);
@@ -183,11 +218,17 @@ function parseDotNet(buf: ArrayBuffer, errors: string[]): ParsedDotNet | null {
     let nameEnd = p;
     while (nameEnd < view.byteLength && view.getUint8(nameEnd) !== 0 && nameEnd - p < 32) nameEnd++;
     const name = new TextDecoder().decode(new Uint8Array(buf, p, nameEnd - p));
-    const nameLenPadded = ((nameEnd - p + 1 + 3) & ~3);
+    const nameLenPadded = (nameEnd - p + 1 + 3) & ~3;
     p += nameLenPadded;
-    if (name === "#Strings") { stringsOff = metaOff + sOffRel; stringsSize = sSize; }
+    if (name === "#Strings") {
+      stringsOff = metaOff + sOffRel;
+      stringsSize = sSize;
+    }
   }
-  if (stringsOff < 0) { errors.push("stream #Strings não encontrada"); return null; }
+  if (stringsOff < 0) {
+    errors.push("stream #Strings não encontrada");
+    return null;
+  }
   // Parse #Strings heap
   const strings: string[] = [];
   let off = stringsOff + 1; // first byte is empty string
@@ -206,9 +247,13 @@ export async function inspectDll(file: File, moduleId: ModuleId): Promise<Inspec
   const buf = await file.arrayBuffer();
   const errors: string[] = [];
   const sha256 = await sha256Hex(buf);
-  const isPe = buf.byteLength > 0x40 && new Uint8Array(buf, 0, 2)[0] === 0x4d && new Uint8Array(buf, 0, 2)[1] === 0x5a;
+  const isPe =
+    buf.byteLength > 0x40 &&
+    new Uint8Array(buf, 0, 2)[0] === 0x4d &&
+    new Uint8Array(buf, 0, 2)[1] === 0x5a;
   const parsed = parseDotNet(buf, errors);
   const isDotNet = !!parsed;
+  const fileNameOk = file.name === contract.assembly;
 
   const strings = parsed?.strings ?? [];
   const stringsSet = new Set(strings);
@@ -223,7 +268,9 @@ export async function inspectDll(file: File, moduleId: ModuleId): Promise<Inspec
 
   // Build position map (1-based occurrence index in #Strings)
   const indexOf = new Map<string, number>();
-  strings.forEach((s, i) => { if (!indexOf.has(s)) indexOf.set(s, i + 1); });
+  strings.forEach((s, i) => {
+    if (!indexOf.has(s)) indexOf.set(s, i + 1);
+  });
 
   // Exports: each expected method name must be its OWN string heap entry
   const found = contract.exports.filter((n) => stringsSet.has(n));
@@ -236,25 +283,63 @@ export async function inspectDll(file: File, moduleId: ModuleId): Promise<Inspec
   const versionAt = declaredVersion ? indexOf.get(declaredVersion) : undefined;
 
   const contractOk =
-    isPe && isDotNet && assemblyNameOk && moduleIdOk && versionOk && missing.length === 0;
+    isPe &&
+    isDotNet &&
+    fileNameOk &&
+    assemblyNameOk &&
+    moduleIdOk &&
+    versionOk &&
+    missing.length === 0;
 
   const failures: InspectionResult["failures"] = [];
+  if (!fileNameOk) {
+    failures.push({
+      field: "FileName",
+      expected: contract.assembly,
+      actual: file.name,
+      detail: "nome do arquivo deve casar com o slot selecionado",
+    });
+    errors.push(`FileName ≠ esperado (${contract.assembly}); recebido: ${file.name}`);
+  }
   if (isDotNet && !assemblyNameOk) {
     const actual = strings.find((s) => /^RLKart\.Module\./.test(s)) ?? "(não encontrado)";
-    failures.push({ field: "AssemblyName", expected: contract.assemblyName, actual, detail: "literal ausente em #Strings" });
+    failures.push({
+      field: "AssemblyName",
+      expected: contract.assemblyName,
+      actual,
+      detail: "literal ausente em #Strings",
+    });
     errors.push(`AssemblyName ≠ esperado (${contract.assemblyName}); encontrado: ${actual}`);
   }
   if (isDotNet && !moduleIdOk) {
     const candidates = strings.filter((s) => MODULES_LOWER.includes(s));
-    failures.push({ field: "ModuleId", expected: `"${moduleId}"`, actual: candidates.join(", ") || "(nenhum)", detail: "atributo [KartModule(\"<id>\")] não bate" });
-    errors.push(`ModuleId ≠ "${moduleId}"; literais de módulo encontrados: ${candidates.join(", ") || "nenhum"}`);
+    failures.push({
+      field: "ModuleId",
+      expected: `"${moduleId}"`,
+      actual: candidates.join(", ") || "(nenhum)",
+      detail: 'atributo [KartModule("<id>")] não bate',
+    });
+    errors.push(
+      `ModuleId ≠ "${moduleId}"; literais de módulo encontrados: ${candidates.join(", ") || "nenhum"}`,
+    );
   }
   if (isDotNet && !versionOk) {
-    failures.push({ field: "Version", expected: "SemVer X.Y.Z[-pre]", actual: "(nenhum literal SemVer)", detail: "AssemblyVersion/AssemblyInformationalVersion ausente" });
+    failures.push({
+      field: "Version",
+      expected: "SemVer X.Y.Z[-pre]",
+      actual: "(nenhum literal SemVer)",
+      detail: "AssemblyVersion/AssemblyInformationalVersion ausente",
+    });
     errors.push("Version SemVer ausente nos metadados (esperado X.Y.Z)");
   }
   if (isDotNet && missing.length) {
-    for (const m of missing) failures.push({ field: "Export", expected: m, actual: "ausente", detail: "método não exportado no #Strings" });
+    for (const m of missing)
+      failures.push({
+        field: "Export",
+        expected: m,
+        actual: "ausente",
+        detail: "método não exportado no #Strings",
+      });
     errors.push(`exports faltando: ${missing.join(", ")}`);
   }
 
@@ -265,11 +350,15 @@ export async function inspectDll(file: File, moduleId: ModuleId): Promise<Inspec
     isPe,
     isDotNet,
     metadataVersion: parsed?.metadataVersion,
-    assemblyName: assemblyNameOk ? contract.assemblyName : strings.find((s) => /^RLKart\.Module\./.test(s)),
+    assemblyName: assemblyNameOk
+      ? contract.assemblyName
+      : strings.find((s) => /^RLKart\.Module\./.test(s)),
     declaredModuleId: moduleIdOk ? moduleId : undefined,
     declaredVersion,
+    expectedFileName: contract.assembly,
     expectedAssemblyName: contract.assemblyName,
     expectedModuleId: moduleId,
+    fileNameOk,
     assemblyNameOk,
     moduleIdOk,
     versionOk,

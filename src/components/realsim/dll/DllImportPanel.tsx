@@ -50,7 +50,9 @@ export function DllImportPanel() {
           `ver=${res.declaredVersion ?? "—"} · exports ${res.found.length}/${res.expected.length}`,
       );
       for (const f of res.failures) {
-        append(`[${mod.toUpperCase()}] ✕ ${f.field}: esperado=${f.expected} · atual=${f.actual}${f.detail ? ` (${f.detail})` : ""}`);
+        append(
+          `[${mod.toUpperCase()}] ✕ ${f.field}: esperado=${f.expected} · atual=${f.actual}${f.detail ? ` (${f.detail})` : ""}`,
+        );
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -76,7 +78,9 @@ export function DllImportPanel() {
     setPaused(false);
     setStream([]);
     const totalRuns = mode === "repeat" ? runs : 1;
-    append(`[${mod.toUpperCase()}] cenário isolado iniciado · v${r.declaredVersion} · runs=${totalRuns}`);
+    append(
+      `[${mod.toUpperCase()}] cenário isolado iniciado · v${r.declaredVersion} · runs=${totalRuns}`,
+    );
     try {
       await mockBridge.runModuleScenario(mod, { runs: totalRuns });
       append(`[${mod.toUpperCase()}] ✓ cenário concluído`);
@@ -86,13 +90,27 @@ export function DllImportPanel() {
       setActiveTest(null);
       setPaused(false);
       // Auto-archive the just-completed stream
-      setStream((s) => { setArchive(s); return s; });
+      setStream((s) => {
+        setArchive(s);
+        return s;
+      });
     }
   };
 
-  const onPause = () => { mockBridge.pauseScenario(); setPaused(true); append("⏸ teste pausado"); };
-  const onResume = () => { mockBridge.resumeScenario(); setPaused(false); append("▶ teste retomado"); };
-  const onStop = () => { mockBridge.stopScenario(); append("⏹ teste interrompido"); };
+  const onPause = () => {
+    mockBridge.pauseScenario();
+    setPaused(true);
+    append("⏸ teste pausado");
+  };
+  const onResume = () => {
+    mockBridge.resumeScenario();
+    setPaused(false);
+    append("▶ teste retomado");
+  };
+  const onStop = () => {
+    mockBridge.stopScenario();
+    append("⏹ teste interrompido");
+  };
 
   const exportData = useMemo(() => (stream.length ? stream : archive), [stream, archive]);
 
@@ -104,7 +122,15 @@ export function DllImportPanel() {
 
   const downloadCsv = () => {
     if (!exportData.length) return;
-    const headers = ["timestamp", "moduleId", "phase", "tick", "telemetryJson", "systemStateJson", "log"];
+    const headers = [
+      "timestamp",
+      "moduleId",
+      "phase",
+      "tick",
+      "telemetryJson",
+      "systemStateJson",
+      "log",
+    ];
     const rows = exportData.map((s) =>
       headers
         .map((h) => {
@@ -138,10 +164,20 @@ export function DllImportPanel() {
           >
             Ver contrato (.md)
           </a>
+          <a
+            href="/docs/DLL_STUDENT_GUIDE.md"
+            target="_blank"
+            rel="noreferrer"
+            className="block text-[9px] uppercase tracking-widest text-primary underline"
+          >
+            Guia dos alunos: funcoes, condicoes e boas praticas
+          </a>
 
           {/* Run-mode controls */}
           <div className="border border-border p-2">
-            <div className="mb-1 uppercase tracking-widest text-muted-foreground">Modo de execução</div>
+            <div className="mb-1 uppercase tracking-widest text-muted-foreground">
+              Modo de execução
+            </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setMode("single")}
@@ -168,11 +204,26 @@ export function DllImportPanel() {
             {activeTest && (
               <div className="mt-2 flex items-center gap-2">
                 {!paused ? (
-                  <button onClick={onPause} className="flex-1 corner-cut bg-warning/20 px-2 py-1 uppercase tracking-widest text-warning">⏸ Pausar</button>
+                  <button
+                    onClick={onPause}
+                    className="flex-1 corner-cut bg-warning/20 px-2 py-1 uppercase tracking-widest text-warning"
+                  >
+                    ⏸ Pausar
+                  </button>
                 ) : (
-                  <button onClick={onResume} className="flex-1 corner-cut bg-success/20 px-2 py-1 uppercase tracking-widest text-success">▶ Retomar</button>
+                  <button
+                    onClick={onResume}
+                    className="flex-1 corner-cut bg-success/20 px-2 py-1 uppercase tracking-widest text-success"
+                  >
+                    ▶ Retomar
+                  </button>
                 )}
-                <button onClick={onStop} className="flex-1 corner-cut bg-destructive/20 px-2 py-1 uppercase tracking-widest text-destructive">⏹ Parar</button>
+                <button
+                  onClick={onStop}
+                  className="flex-1 corner-cut bg-destructive/20 px-2 py-1 uppercase tracking-widest text-destructive"
+                >
+                  ⏹ Parar
+                </button>
               </div>
             )}
           </div>
@@ -183,10 +234,7 @@ export function DllImportPanel() {
             const expected = MODULE_CONTRACT[mod].exports;
             const fc = r && r !== "pending" && !("error" in r) ? r.found.length : 0;
             return (
-              <div
-                key={mod}
-                className={`border p-2 ${ok ? "border-success/60" : "border-border"}`}
-              >
+              <div key={mod} className={`border p-2 ${ok ? "border-success/60" : "border-border"}`}>
                 <div className="flex items-center justify-between">
                   <span className="uppercase tracking-widest text-foreground">{mod}</span>
                   <span
@@ -223,9 +271,17 @@ export function DllImportPanel() {
                   <>
                     <div className="mt-1 grid grid-cols-[8rem_1fr] gap-x-2 text-[9px]">
                       <span className="text-muted-foreground">PE</span>
-                      <span className={r.isPe ? "text-success" : "text-destructive"}>{r.isPe ? "ok" : "fail"}</span>
+                      <span className={r.isPe ? "text-success" : "text-destructive"}>
+                        {r.isPe ? "ok" : "fail"}
+                      </span>
                       <span className="text-muted-foreground">.NET (BSJB)</span>
-                      <span className={r.isDotNet ? "text-success" : "text-destructive"}>{r.isDotNet ? "ok" : "fail"}</span>
+                      <span className={r.isDotNet ? "text-success" : "text-destructive"}>
+                        {r.isDotNet ? "ok" : "fail"}
+                      </span>
+                      <span className="text-muted-foreground">FileName</span>
+                      <span className={r.fileNameOk ? "text-success" : "text-destructive"}>
+                        {r.fileNameOk ? r.fileName : `esperado: ${r.expectedFileName}`}
+                      </span>
                       <span className="text-muted-foreground">AssemblyName</span>
                       <span className={r.assemblyNameOk ? "text-success" : "text-destructive"}>
                         {r.assemblyNameOk
@@ -251,12 +307,18 @@ export function DllImportPanel() {
                     {/* Detailed failures */}
                     {r.failures.length > 0 && (
                       <div className="mt-2 border border-destructive/40 bg-destructive/5 p-1">
-                        <div className="text-[9px] uppercase tracking-widest text-destructive">Falhas de contrato</div>
+                        <div className="text-[9px] uppercase tracking-widest text-destructive">
+                          Falhas de contrato
+                        </div>
                         <ul className="mt-1 space-y-0.5 text-[9px] text-destructive">
                           {r.failures.map((f, i) => (
                             <li key={i}>
-                              <span className="font-bold">{f.field}</span> — esperado <code className="text-foreground">{f.expected}</code>, atual <code className="text-foreground">{f.actual}</code>
-                              {f.detail && <span className="text-muted-foreground"> · {f.detail}</span>}
+                              <span className="font-bold">{f.field}</span> — esperado{" "}
+                              <code className="text-foreground">{f.expected}</code>, atual{" "}
+                              <code className="text-foreground">{f.actual}</code>
+                              {f.detail && (
+                                <span className="text-muted-foreground"> · {f.detail}</span>
+                              )}
                             </li>
                           ))}
                         </ul>
@@ -277,7 +339,9 @@ export function DllImportPanel() {
                               key={name}
                               className={`flex items-center justify-between ${present ? "text-success" : "text-destructive font-bold"}`}
                             >
-                              <span>{present ? "✓" : "✕"} {name}</span>
+                              <span>
+                                {present ? "✓" : "✕"} {name}
+                              </span>
                               <span className="text-muted-foreground">
                                 {present ? `#Strings[${at}]` : "AUSENTE"}
                               </span>
@@ -296,7 +360,13 @@ export function DllImportPanel() {
                           : "border border-border text-muted-foreground"
                       }`}
                     >
-                      {activeTest === mod ? (paused ? "Pausado" : "Rodando…") : !r.contractOk ? "Bloqueado" : "Testar módulo"}
+                      {activeTest === mod
+                        ? paused
+                          ? "Pausado"
+                          : "Rodando…"
+                        : !r.contractOk
+                          ? "Bloqueado"
+                          : "Testar módulo"}
                     </button>
                   </>
                 )}
@@ -312,7 +382,13 @@ export function DllImportPanel() {
             <div className="mb-1 flex items-center justify-between uppercase tracking-widest text-accent">
               <span>Telemetria do módulo testado</span>
               <span className="text-[9px] text-muted-foreground">
-                {activeTest ? (paused ? `⏸ ${activeTest}` : `▶ ${activeTest}`) : last ? `■ ${last.moduleId}` : "—"}
+                {activeTest
+                  ? paused
+                    ? `⏸ ${activeTest}`
+                    : `▶ ${activeTest}`
+                  : last
+                    ? `■ ${last.moduleId}`
+                    : "—"}
               </span>
             </div>
             {last ? (
@@ -327,11 +403,15 @@ export function DllImportPanel() {
                     {last.timestamp.split("T")[1]?.replace("Z", "")}
                   </span>
                 </div>
-                <div className="mt-1 text-[9px] uppercase text-muted-foreground">GetTelemetryJson()</div>
+                <div className="mt-1 text-[9px] uppercase text-muted-foreground">
+                  GetTelemetryJson()
+                </div>
                 <pre className="overflow-x-auto whitespace-pre-wrap break-all text-[9px] text-success">
                   {last.telemetryJson}
                 </pre>
-                <div className="mt-1 text-[9px] uppercase text-muted-foreground">GetSystemState()</div>
+                <div className="mt-1 text-[9px] uppercase text-muted-foreground">
+                  GetSystemState()
+                </div>
                 <pre className="overflow-x-auto whitespace-pre-wrap break-all text-[9px] text-primary">
                   {last.systemStateJson}
                 </pre>
@@ -353,7 +433,8 @@ export function DllImportPanel() {
               </>
             ) : (
               <div className="text-[9px] text-muted-foreground">
-                Selecione uma DLL válida e pressione "Testar módulo" para ver o stream em tempo real.
+                Selecione uma DLL válida e pressione "Testar módulo" para ver o stream em tempo
+                real.
               </div>
             )}
 

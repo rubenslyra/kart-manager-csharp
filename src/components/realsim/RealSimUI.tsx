@@ -27,6 +27,7 @@ interface Props {
   engineTest: EngineTestState;
   setEngineRunning: (v: boolean) => void;
   setEngineThrottle: (v: number) => void;
+  setEngineVolume: (v: number) => void;
   toggleEngineAudio: () => void;
   presentationAudioEnabled: boolean;
   playPresentationAudio: () => void;
@@ -69,6 +70,7 @@ export function RealSimUI({
   engineTest,
   setEngineRunning,
   setEngineThrottle,
+  setEngineVolume,
   toggleEngineAudio,
   presentationAudioEnabled,
   playPresentationAudio,
@@ -279,6 +281,19 @@ export function RealSimUI({
               value={engineTest.throttle}
               onChange={(e) => setEngineThrottle(Number(e.target.value))}
               className="w-full"
+            />
+          </label>
+          <label className="mt-2 block text-muted-foreground">
+            Volume seguro ({(engineTest.volume * 100).toFixed(0)}%)
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={engineTest.volume}
+              onChange={(e) => setEngineVolume(Number(e.target.value))}
+              className="w-full accent-emerald-400"
+              aria-label="Volume seguro do teste Wankel"
             />
           </label>
           <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">

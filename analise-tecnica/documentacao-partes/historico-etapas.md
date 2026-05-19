@@ -313,3 +313,31 @@
     `image_1030ed13.png`, logo `logo_kart_A26.png` e barra de progresso.
   - Sala acustica recebeu painel externo interativo no vidro e leituras
     frontais voltadas para fora da cabine.
+
+### Etapa 22 - Refino oficinal dos karts, clear glass e DLLs de aula
+
+- Arquivos principais:
+  - `src/components/simulator/KartModel.tsx`
+  - `src/components/realsim/Workshop.tsx`
+  - `src/components/realsim/parts/MotorAssembly.tsx`
+  - `src/components/realsim/RealSimulator.tsx`
+  - `src/components/realsim/RealSimUI.tsx`
+  - `src/components/realsim/hooks/useWankelTestAudio.ts`
+  - `src/components/realsim/dll/DllImportPanel.tsx`
+  - `src/lib/csharp/dllInspector.ts`
+  - `public/docs/CSHARP_MODULE_CONTRACT.md`
+  - `public/docs/DLL_STUDENT_GUIDE.md`
+- Alteracoes:
+  - Karts da arena foram refinados para parecerem derivados do modelo oficinal,
+    preservando fisica, cameras, driver, livery e animacoes existentes.
+  - Sala acustica trocou o vidro frontal fosco por clear glass com
+    `depthWrite={false}`, mantendo textos e painel externo em camadas opacas
+    separadas.
+  - Motor Wankel da bancada ganhou rotor, eixo, polia e dinamometro animados
+    durante teste ativo, com vibracao proporcional ao acelerador.
+  - Teste Wankel recebeu controle de volume seguro no painel externo e no
+    overlay tecnico.
+  - Validador de DLLs passou a bloquear nome de arquivo incorreto para o slot
+    selecionado.
+  - Criado guia dos alunos com contrato, funcoes obrigatorias, criterios de
+    bloqueio, checklist e boas praticas.
