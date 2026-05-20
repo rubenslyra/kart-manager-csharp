@@ -472,21 +472,15 @@ export function SimulatorScene({ fullscreen = false }: Props) {
   }, [race.phase]);
 
   const viewportClass = fullscreen
-    ? "scanline relative h-[calc(100vh-132px)] min-h-[520px] overflow-hidden bg-card"
+    ? "scanline relative h-full min-h-[640px] w-full overflow-hidden bg-card"
     : "panel corner-cut scanline relative h-[620px] overflow-hidden";
-  const sectionClass = fullscreen ? "relative min-h-screen pt-14" : "relative py-24";
-  const containerClass = fullscreen
-    ? "flex min-h-[calc(100vh-56px)] flex-col px-3 pb-3"
-    : "mx-auto max-w-7xl px-6";
-  const headerClass = fullscreen
-    ? "mb-3 flex shrink-0 items-end justify-between gap-4 border-b border-border/60 pb-3 pl-36 md:pl-0"
-    : "mb-10 flex items-end justify-between gap-4";
-  const gridClass = fullscreen
-    ? "grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_320px]"
-    : "grid gap-6 lg:grid-cols-[1fr_320px]";
-  const sidePanelClass = fullscreen
-    ? "flex min-h-0 flex-col gap-3 overflow-y-auto"
-    : "flex flex-col gap-4";
+  const sectionClass = fullscreen
+    ? "relative h-screen min-h-[640px] overflow-hidden"
+    : "relative py-24";
+  const containerClass = fullscreen ? "h-full w-full" : "mx-auto max-w-7xl px-6";
+  const headerClass = fullscreen ? "hidden" : "mb-10 flex items-end justify-between gap-4";
+  const gridClass = fullscreen ? "h-full w-full" : "grid gap-6 lg:grid-cols-[1fr_320px]";
+  const sidePanelClass = fullscreen ? "hidden" : "flex flex-col gap-4";
 
   return (
     <section id="arena" className={sectionClass}>
@@ -670,6 +664,52 @@ export function SimulatorScene({ fullscreen = false }: Props) {
               <AudioSync onCam={audio.setCamPosition} />
               <ShadowsSync enabled={perf.toggles.shadowsEnabled} />
             </Canvas>
+
+            {fullscreen && (
+              <div className="pointer-events-auto absolute left-3 top-14 z-40 flex max-w-[calc(100%-7.5rem)] flex-wrap items-center gap-1.5 font-mono text-[9px] uppercase tracking-widest md:left-40 md:top-3">
+                <div className="corner-cut border border-primary/40 bg-background/75 px-2.5 py-1.5 text-primary backdrop-blur-sm">
+                  Arena · {engineeringMode ? roleLabel(currentRole) : "Piloto"}
+                </div>
+                <button
+                  onClick={() =>
+                    handleControlMode(engineeringMode ? "DRIVER_CONTROL" : "ENGINEERING_OBSERVER")
+                  }
+                  disabled={engineeringMode ? !canUseDriverControl : false}
+                  className="corner-cut border border-primary bg-primary/10 px-2.5 py-1.5 text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-40"
+                  title={
+                    canUseDriverControl
+                      ? "Alternar modo de controle"
+                      : nextUnlockLabel(engineering.rayssaWins)
+                  }
+                >
+                  {engineeringMode ? "Engenharia" : "Piloto"}
+                </button>
+                <button
+                  onClick={() => setSplitMode((s) => !s)}
+                  className="corner-cut border border-primary bg-primary/10 px-2.5 py-1.5 text-primary transition-colors hover:bg-primary/20"
+                >
+                  Split {splitMode ? "ON" : "OFF"}
+                </button>
+                <button
+                  onClick={toggleDev}
+                  className="corner-cut border border-accent bg-accent/10 px-2.5 py-1.5 text-accent transition-colors hover:bg-accent/20"
+                >
+                  Dev {devMode ? "ON" : "OFF"}
+                </button>
+                <button
+                  onClick={audio.start}
+                  className="corner-cut border border-primary bg-primary/10 px-2.5 py-1.5 text-primary transition-colors hover:bg-primary/20"
+                >
+                  Audio {audio.enabled ? "ON" : "OFF"}
+                </button>
+                <button
+                  onClick={handleResetPosition}
+                  className="corner-cut border border-border bg-background/70 px-2.5 py-1.5 text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                >
+                  Reset
+                </button>
+              </div>
+            )}
 
             {/* Single-view: HUD */}
             {!splitMode && <HUD3D t={t} lap={lap} devMode={devMode} />}
@@ -958,59 +998,63 @@ export function SimulatorScene({ fullscreen = false }: Props) {
             )}
           </div>
 
-          <div className={sidePanelClass}>
-            <TelemetryPanel t={t} />
-            <SimulatorControls
-              t={t}
-              loadModule={sim.loadModule}
-              ignite={sim.ignite}
-              accelerate={sim.accelerate}
-              brake={sim.brake}
-              drainBattery={sim.drainBattery}
-              reset={sim.reset}
-            />
-            <div className="panel corner-cut p-4 font-mono text-[10px] uppercase tracking-widest">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-primary">{engineeringMode ? "Posto" : "Controles"}</span>
+          {!fullscreen && (
+            <div className={sidePanelClass}>
+              <TelemetryPanel t={t} />
+              <SimulatorControls
+                t={t}
+                loadModule={sim.loadModule}
+                ignite={sim.ignite}
+                accelerate={sim.accelerate}
+                brake={sim.brake}
+                drainBattery={sim.drainBattery}
+                reset={sim.reset}
+              />
+              <div className="panel corner-cut p-4 font-mono text-[10px] uppercase tracking-widest">
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-primary">{engineeringMode ? "Posto" : "Controles"}</span>
+                  <button
+                    onClick={() => setSplitMode((s) => !s)}
+                    className="text-primary hover:underline"
+                  >
+                    Split: {splitMode ? "ON" : "OFF"}
+                  </button>
+                </div>
+                {engineeringMode ? (
+                  <>
+                    <div className="text-muted-foreground">{roleLabel(currentRole)}</div>
+                    <div className="text-muted-foreground">
+                      {engineering.rayssaWins} vitorias P1
+                    </div>
+                    <div className="text-muted-foreground">
+                      {nextUnlockLabel(engineering.rayssaWins)}
+                    </div>
+                    <div className="text-muted-foreground">Rayssa — piloto automatico</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-muted-foreground">↑ / D — dirigir</div>
+                    <div className="text-muted-foreground">← · → — direção</div>
+                    <div className="text-muted-foreground">↓ — ré</div>
+                    <div className="text-muted-foreground">A — automático</div>
+                    <div className="text-muted-foreground">F — freiar</div>
+                    <div className="text-muted-foreground">E — rádio da equipe</div>
+                  </>
+                )}
+                <div className="text-muted-foreground">V — split-screen</div>
+                <div className="text-muted-foreground">H — hitbox debug</div>
+                <div className="text-muted-foreground">1-7 — câmera ativa</div>
+                <div className="text-muted-foreground">5 — visão corredora</div>
+                <div className="text-muted-foreground">6 — capacete / visor</div>
                 <button
-                  onClick={() => setSplitMode((s) => !s)}
-                  className="text-primary hover:underline"
+                  onClick={handleResetPosition}
+                  className="mt-3 w-full corner-cut border border-border bg-card/60 px-3 py-1.5 text-muted-foreground transition-colors hover:border-primary hover:text-primary md:hidden"
                 >
-                  Split: {splitMode ? "ON" : "OFF"}
+                  Resetar posição
                 </button>
               </div>
-              {engineeringMode ? (
-                <>
-                  <div className="text-muted-foreground">{roleLabel(currentRole)}</div>
-                  <div className="text-muted-foreground">{engineering.rayssaWins} vitorias P1</div>
-                  <div className="text-muted-foreground">
-                    {nextUnlockLabel(engineering.rayssaWins)}
-                  </div>
-                  <div className="text-muted-foreground">Rayssa — piloto automatico</div>
-                </>
-              ) : (
-                <>
-                  <div className="text-muted-foreground">↑ / D — dirigir</div>
-                  <div className="text-muted-foreground">← · → — direção</div>
-                  <div className="text-muted-foreground">↓ — ré</div>
-                  <div className="text-muted-foreground">A — automático</div>
-                  <div className="text-muted-foreground">F — freiar</div>
-                  <div className="text-muted-foreground">E — rádio da equipe</div>
-                </>
-              )}
-              <div className="text-muted-foreground">V — split-screen</div>
-              <div className="text-muted-foreground">H — hitbox debug</div>
-              <div className="text-muted-foreground">1-7 — câmera ativa</div>
-              <div className="text-muted-foreground">5 — visão corredora</div>
-              <div className="text-muted-foreground">6 — capacete / visor</div>
-              <button
-                onClick={handleResetPosition}
-                className="mt-3 w-full corner-cut border border-border bg-card/60 px-3 py-1.5 text-muted-foreground transition-colors hover:border-primary hover:text-primary md:hidden"
-              >
-                Resetar posição
-              </button>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </section>

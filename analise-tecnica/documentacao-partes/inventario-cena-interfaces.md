@@ -348,6 +348,24 @@ Este documento registra elementos do ambiente 3D que nao sao partes fisicas do k
   - O painel externo deve continuar clicavel e a visibilidade interna do motor
     nao deve depender de fundo semitransparente sobre o vidro.
 
+### Arena em full body
+
+- Codigo:
+  - `src/components/simulator/SimulatorScene.tsx`
+  - `src/routes/simulator.tsx`
+- Funcao: entregar a Arena como experiencia full body, equivalente ao padrao
+  visual da Oficina, sem coluna lateral comprimindo a corrida.
+- Comportamento:
+  - quando `SimulatorScene` recebe `fullscreen`, o canvas ocupa `h-screen` e
+    `w-full`;
+  - header interno e coluna lateral deixam de participar do fluxo visual;
+  - controles essenciais ficam em overlay compacto sobre a cena;
+  - modo embutido nao-fullscreen preserva a composicao antiga com paineis
+    laterais.
+- Requisito tecnico:
+  - A mudanca deve permanecer restrita ao modo fullscreen e nao deve alterar
+    fisica, IA, cameras, fases de corrida ou regras de replay.
+
 ### DLLs C# de alunos
 
 - Codigo:

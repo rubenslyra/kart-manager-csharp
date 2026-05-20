@@ -72,16 +72,46 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "RL Kart 26A — Hub Educacional RLLabs" },
+      {
+        name: "description",
+        content:
+          "RL Kart 26A e uma experiencia educacional da RLLabs com arena de corrida, oficina tecnica, telemetria e modulos C#.",
+      },
+      {
+        name: "keywords",
+        content:
+          "RL Kart 26A, RLLabs, kart eletrico educacional, C#, Three.js, telemetria, simulador",
+      },
+      { name: "author", content: "RLLabs" },
+      { name: "theme-color", content: "#0d1826" },
+      { property: "og:title", content: "RL Kart 26A — RLLabs" },
+      {
+        property: "og:description",
+        content:
+          "Arena e oficina tecnica do RL Kart 26A, com corrida 3D, telemetria e validacao de modulos C#.",
+      },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { property: "og:image", content: "/logo_kart_A26.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "RL Kart 26A — RLLabs" },
+      {
+        name: "twitter:description",
+        content:
+          "Hub educacional RLLabs com corrida 3D, oficina tecnica e modulos C# para o RL Kart 26A.",
+      },
+      { name: "twitter:image", content: "/logo_kart_A26.png" },
     ],
     links: [
+      {
+        rel: "icon",
+        type: "image/png",
+        href: "/logo_kart_A26.png",
+      },
+      {
+        rel: "apple-touch-icon",
+        href: "/logo_kart_A26.png",
+      },
       {
         rel: "stylesheet",
         href: appCss,

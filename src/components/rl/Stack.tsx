@@ -2,7 +2,7 @@ import { SectionHeader } from "./ProjectOverview";
 
 const stack = [
   {
-    title: "Lovable Hub",
+    title: "RLLabs Hub",
     role: "Orquestração + UX",
     items: ["Interface geral", "Dashboard", "HUD", "Fluxo de aulas", "Telemetria"],
     accent: "primary",
@@ -16,7 +16,7 @@ const stack = [
   {
     title: "Blender",
     role: "Pipeline de Assets",
-    items: ["Chassi GLB", "Pista", "Oficina RL Labs", "Materiais PBR"],
+    items: ["Chassi GLB", "Pista", "Oficina RLLabs", "Materiais PBR"],
     accent: "warning",
   },
   {
@@ -34,7 +34,7 @@ export function Stack() {
         <SectionHeader
           index="04"
           title="Arquitetura Final"
-          subtitle="Lovable é o HUB. Cada camada tem uma responsabilidade clara."
+          subtitle="RLLabs e o HUB. Cada camada tem uma responsabilidade clara."
         />
 
         <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
@@ -44,7 +44,10 @@ export function Stack() {
                 className="mb-4 inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 font-mono text-[10px] uppercase tracking-widest"
                 style={{ color: `var(--${s.accent})` }}
               >
-                <span className="led h-1.5 w-1.5 rounded-full" style={{ backgroundColor: `var(--${s.accent})`, color: `var(--${s.accent})` }} />
+                <span
+                  className="led h-1.5 w-1.5 rounded-full"
+                  style={{ backgroundColor: `var(--${s.accent})`, color: `var(--${s.accent})` }}
+                />
                 {s.role}
               </div>
               <h3 className="font-display text-xl font-bold text-foreground">{s.title}</h3>

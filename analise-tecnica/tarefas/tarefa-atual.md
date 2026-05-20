@@ -5,52 +5,45 @@ Aberta em: 2026-05-19
 
 ## Titulo
 
-Refino visual dos karts da pista e vidro limpo da sala acustica
+Favicon, SEO no head e hotfix da arena em full body
 
 ## Objetivo
 
-Antes da etapa final de QA visual/refino da primeira versao, alinhar os carrinhos da arena ao modelo oficinal usado na Oficina/Simulador Real e corrigir a renderizacao do painel frontal da sala acustica para eliminar a camada fosca que prejudica transparencia e legibilidade.
+Adicionar favicon e metadados essenciais de SEO ao projeto e corrigir a
+experiencia visual da Arena para que a area de corrida ocupe o corpo principal
+da pagina, sem ficar comprimida em uma caixa lateral. A intencao e aproximar o
+modo Arena da experiencia full body ja usada na Oficina.
 
 ## Escopo Inicial
 
-- Revisar o modelo visual atual dos karts da pista:
-  - `src/components/simulator/KartModel.tsx`;
-  - usos em `KartRig`, `AIKart` e `RecordedRace`.
-- Comparar com o carrinho/modelo oficinal atual:
-  - `src/components/realsim/RealKart.tsx`;
-  - componentes em `src/components/realsim/parts/`, especialmente chassi, rodas, motor e materiais.
-- Ajustar os karts da arena para se aproximarem do modelo oficinal:
-  - proporcao visual;
-  - materiais;
-  - rodas/cockpit;
-  - identidade/livery;
-  - preservando hitbox, fisica, cameras e controle.
-- Corrigir a sala acustica em `src/components/realsim/Workshop.tsx`:
-  - remover camada semitransparente/esbranquicada que cobre a frente da cabine;
-  - remover especificamente a layer quadrada clara que fica sobre a frente da
-    sala e atrapalha a visao interna;
-  - tornar o vidro frontal limpo e transparente;
-  - garantir que o vidro nao bloqueie a iluminacao interna nem a visibilidade do motor Wankel;
-  - separar textos e menu `PAINEL EXTERNO` do material do vidro;
-  - manter UI 100% opaca, legivel e em world space/fixada sobre o vidro.
-- Adicionar movimento visivel ao motor Wankel durante o teste:
-  - quando `engineTest.running` estiver ativo, o motor deve ter animacao clara
-    de funcionamento;
-  - a animacao deve ajudar o usuario a perceber que o teste esta acontecendo
-    mesmo atraves do vidro limpo.
-- Adicionar controle de volume seguro para a Sala Acustica:
-  - permitir reduzir o volume do motor Wankel durante a interacao;
-  - responder em tempo real sem desligar necessariamente o teste;
-  - objetivo: nao prejudicar conforto/saude auditiva do usuario.
-- Nao iniciar implementacao antes de `[Concluir RPI]`.
-- A tarefa posterior de QA visual/refino devera ser aberta separadamente apos esta entrega.
+- Adicionar favicon ao projeto:
+  - usar asset existente quando adequado, preferencialmente `public/logo_kart_A26.png`;
+  - registrar no `<head>` com `rel="icon"` e tipo/tamanho coerentes;
+  - evitar criar imagem nova sem necessidade.
+- Adicionar SEO essencial no `<head>`:
+  - `title` consistente com RL Kart 26A;
+  - `description`;
+  - `keywords` quando fizer sentido;
+  - `author` como `RLLabs`;
+  - Open Graph basico;
+  - Twitter Card basico;
+  - `theme-color`;
+  - `canonical` quando o framework permitir de forma segura.
+- Hotfix visual da Arena:
+  - localizar a rota/pagina da arena;
+  - remover ou ajustar o layout em caixa lateral que comprime a corrida;
+  - tornar a area principal da corrida full body/full viewport, como a Oficina;
+  - preservar overlays, HUD, paineis, controles, audio e cenas existentes;
+  - manter responsividade em desktop e mobile.
+- Nao iniciar implementacao antes de `[Concluir RPI]`, salvo excecao explicita
+  do usuario para hotfix sem RPI.
 
 ## Estado Inicial Do Git
 
 Verificado em 2026-05-19 apos abertura da tarefa:
 
 - Branch: `main`.
-- Ultimo commit fechado da tarefa anterior: `9924d1f` (`milestone: add qualifying race flow`).
+- Ultimo commit fechado da tarefa anterior: `3c78e03` (`milestone: refine karts and acoustic room`).
 - Sem modificacoes rastreadas pendentes.
 - Artefatos nao rastreados existentes e fora do escopo imediato:
   - `chamado-correções-erros-prints/`;
@@ -59,37 +52,30 @@ Verificado em 2026-05-19 apos abertura da tarefa:
 
 ## Arquivos Provaveis
 
-- `src/components/simulator/KartModel.tsx`
-- `src/components/simulator/KartRig.tsx`
-- `src/components/simulator/AIKart.tsx`
-- `src/components/simulator/RecordedRace.tsx`
-- `src/components/realsim/RealKart.tsx`
-- `src/components/realsim/parts/Chassis.tsx`
-- `src/components/realsim/parts/MotorAssembly.tsx`
-- `src/components/realsim/Workshop.tsx`
-  - camada quadrada clara no painel frontal da sala acustica;
-  - motor em bancada de teste.
-- `src/components/realsim/RealSimulator.tsx`
-  - estado local do volume seguro do teste Wankel.
-- `src/components/realsim/RealSimUI.tsx`
-  - overlay tecnico tambem recebe slider de volume.
-- `src/components/realsim/hooks/useWankelTestAudio.ts`
-  - ganhos principais do audio do Wankel devem ser multiplicados pelo volume do
-    usuario.
-- `analise-tecnica/documentacao-partes/inventario-cena-interfaces.md`
-- `analise-tecnica/documentacao-partes/historico-etapas.md`
+- `src/routes/__root.tsx`
+- `src/routes/index.tsx`
+- `src/routes/simulator.tsx`
+- `src/routes/simulador-real.tsx`
+- `src/router.tsx`
+- `src/start.ts`
+- `src/styles.css`
+- `public/logo_kart_A26.png`
+- possivelmente novo asset em `public/` se o favicon exigir arquivo dedicado.
 
 ## Riscos Iniciais
 
-- Mudar o `KartModel` pode afetar camera, cockpit/helmet view e leitura de hitbox.
-- A arena usa escala e hierarquia propria; reaproveitar geometria da oficina deve ser feito por compatibilidade visual, nao por troca direta sem validar proporcoes.
-- Vidro transparente em Three.js pode gerar ordenacao/alpha sorting ruim se UI e vidro compartilharem plano.
-- A UI da sala acustica deve continuar clicavel e legivel depois da separacao do vidro.
-- O motor Wankel precisa continuar visivel e iluminado por tras do vidro limpo.
+- Head/SEO depende do padrao do framework usado no projeto; alterar no lugar
+  errado pode nao refletir no SSR ou gerar metadados duplicados.
+- Usar PNG grande como favicon pode funcionar, mas um favicon dedicado pode ser
+  melhor se houver suporte simples no build.
+- Transformar a Arena em full body pode afetar overlays, scroll da pagina,
+  foco de teclado, tamanho do canvas e disposicao de paineis.
+- Alteracoes de CSS globais podem impactar a Oficina e a landing page.
+- A hotfix deve ser localizada para evitar regressao visual fora da Arena.
 
 ## RPI
 
-Iniciado em 2026-05-19.
+Status RPI: concluido.
 
 ### Research
 
@@ -98,284 +84,263 @@ Concluido em 2026-05-19.
 - Estado do git no inicio do RPI:
   - Branch `main`.
   - Apenas `analise-tecnica/tarefas/tarefa-atual.md` modificado pela abertura
-    da tarefa.
+    desta tarefa.
   - Nao rastreados fora do escopo:
     - `chamado-correções-erros-prints/`;
     - `image_1030ed13.png` na raiz;
     - `sounds-trilha/`.
-- `src/components/simulator/KartModel.tsx`
-  - Modelo atual da arena e procedural.
-  - Ja usa `RL_KART_DIMENSIONS` e `RL_KART_DERIVED`, portanto escala oficial
-    esta alinhada ao modelo oficinal.
-  - Possui hierarquia funcional importante:
-    - pivots de direcao nas rodas dianteiras;
-    - refs individuais para giro das rodas;
-    - `Driver`;
-    - steering wheel animado;
-    - labels e livery por piloto.
-  - A implementacao atual tem:
-    - chassi tubular simples;
-    - floor pan;
-    - front fairing;
-    - side pods;
-    - bateria;
-    - motor simplificado cilindrico;
-    - rodas proceduralmente animadas.
-  - Nao convem substituir por `RealKart` diretamente, porque `KartModel` e
-    usado em `KartRig`, `AIKart` e `RecordedRace` com animacao propria de rodas,
-    direcao e driver.
-- `src/components/realsim/RealKart.tsx`
-  - Modelo oficinal e composicional.
-  - Pode carregar GLB se existir, mas fallback procedural e montado por partes:
-    - `Chassis`;
-    - `Seat`;
-    - `Steering`;
-    - `ElectricalSystem`;
-    - `MotorAssembly`;
-    - `GearSelector`;
-    - `BrakeSystem`;
-    - `Dashboard`;
-    - `SideStep`.
-  - O modelo oficinal tambem usa as mesmas dimensoes oficiais `RL_KART_26A`.
-  - Reaproveitamento recomendado:
-    - copiar linguagem visual/material dos componentes, nao trocar a arvore do
-      kart da arena por `RealKart`.
-- `src/components/realsim/parts/Chassis.tsx`
-  - Chassi oficinal usa:
-    - trilhos laterais em metal escuro;
-    - trilhos superiores de protecao;
-    - struts verticais;
-    - eixo dianteiro/traseiro visiveis;
-    - roll hoop atras do banco;
-    - berco de motor traseiro.
-  - Materiais usam metalness alto, roughness medio e emissive sutil azul.
-- `src/components/realsim/parts/Seat.tsx`
-  - Banco oficinal e bucket seat com:
-    - base;
-    - bolsters laterais;
-    - encosto inclinado;
-    - headrest;
-    - ancoragens de cinto vermelhas.
-  - O `Driver` da arena hoje ocupa o cockpit; o banco precisa ser visualmente
-    compatível sem atravessar a corredora.
-- `src/components/realsim/parts/Steering.tsx`
-  - Direcao oficinal tem volante menor e mais tecnico, com hub emissivo azul.
-  - A arena ja tem steering wheel animado; pode receber hub e spokes mais
-    proximos sem alterar animacao.
-- `src/components/realsim/parts/MotorAssembly.tsx`
-  - Motor oficinal representa o Wankel por:
-    - housing lobado/epitrocoide;
-    - rotor triangular;
-    - eixo excentrico;
-    - parafusos;
-    - velas e cabos;
-    - admissao/exaustao.
-  - Para a arena, uma versao simplificada e recomendada para nao pesar nem
-    comprometer todos os karts/replay.
-- `src/components/simulator/RecordedRace.tsx`
-  - Usa `KartModel`, portanto qualquer refino visual sera refletido no replay.
-  - Deve manter props atuais (`state`, `driving`, `steer`, `speedKmh`,
-    `liveryColor`).
-- `src/components/realsim/Workshop.tsx`
-  - Vidro frontal atual:
-    - plano em `[0, 1.08, 0.965]`;
-    - material `meshBasicMaterial color="#a8d8ff" transparent opacity={0.22}
-      side={THREE.DoubleSide}`;
-    - cria o filtro esbranquicado/azulado sobre o motor Wankel.
-  - Textos frontais e leituras:
-    - ja foram trazidos para a face externa em `z ~= 1.01`;
-    - ainda possuem placas solidas de fundo (`#0c2236` e `#061827`) que podem
-      parecer uma layer opaca adicional.
-  - Painel `PAINEL EXTERNO` e um `Html` em world space externo, separado do mesh
-    do vidro, mas ainda visualmente sobreposto ao plano.
-  - Correção deve:
-    - substituir o plano fosco por vidro quase invisivel ou material fisico de
-      clear glass;
-    - remover a layer quadrada clara da face frontal quando ela funcionar como
-      filtro visual sobre a sala;
-    - manter moldura/vedacao e puxador;
-    - mover UI/textos para grupos proprios com fundos opacos localizados, sem
-      depender do material do vidro;
-    - evitar `depthWrite` no vidro para nao bloquear iluminacao/visibilidade
-      interna;
-    - preservar clique do painel externo.
-- `src/components/realsim/parts/MotorAssembly.tsx` / `EngineTestRig`
-  - `WankelEngine` hoje e uma composicao estatica.
-  - `EngineTestRig` recebe `engineTest`, mas nao usa animacao mecanica visivel
-    do rotor/eixo.
-  - Como o usuario precisa ver o teste acontecendo, a implementacao deve
-    animar um subconjunto visivel do motor quando `engineTest.running` estiver
-    ativo, preferencialmente rotor/eixo/indicador mecanico, com velocidade
-    ligada ao `throttle`/`rpm`.
-- `src/components/realsim/CameraController.tsx`
-  - Foco `acousticRoom` olha de fora para a sala.
-  - Nao ha necessidade inicial de mover camera; a melhoria principal fica em
-    material/transparencia e legibilidade.
+- `src/routes/__root.tsx`
+  - Usa TanStack Router/Start com `createRootRouteWithContext`.
+  - O `<head>` global e produzido por `HeadContent`.
+  - Head atual ainda tem metadados genericos:
+    - title `Lovable App`;
+    - description `Lovable Generated Project`;
+    - author `Lovable`;
+    - Open Graph/Twitter com identidade Lovable.
+  - A implementacao deve remover qualquer referencia a Lovable no head global e
+    substituir a autoria/identidade por `RLLabs`.
+  - CSS global ja entra via `links` em `head`.
+  - Local adequado para favicon e SEO base global:
+    - `meta` da rota raiz;
+    - `links` da rota raiz.
+- `src/routes/index.tsx`
+  - Home ja define title/description/OG especificos para RL Kart 26A.
+  - Pode permanecer como override de rota.
+- `src/routes/simulator.tsx`
+  - A rota ja usa `SimulatorScene fullscreen`.
+  - Possui head proprio da Arena, mas sem twitter/canonical especifico.
+  - O wrapper externo e equivalente ao da Oficina:
+    - `main.relative.min-h-screen.bg-background`;
+    - barra superior absoluta com `ConfirmHomeExit`.
+  - Portanto a compressao visual nao vem da rota.
+- `src/routes/simulador-real.tsx`
+  - A Oficina chama `RealSimulator fullscreen`.
+  - `RealSimulator` fullscreen usa container direto:
+    - `relative h-screen min-h-[640px] w-full overflow-hidden bg-card`.
+  - Nao ha header interno nem grid lateral fora do canvas.
+- `src/components/realsim/RealSimulator.tsx`
+  - Serve como referencia de full body:
+    - canvas ocupa `h-full w-full`;
+    - UI e paineis sao overlays absolutos sobre a cena;
+    - nao ha coluna lateral de layout.
+- `src/components/simulator/SimulatorScene.tsx`
+  - Mesmo com `fullscreen`, o componente ainda monta uma composicao de pagina:
+    - `sectionClass`: `relative min-h-screen pt-14`;
+    - `containerClass`: `flex min-h-[calc(100vh-56px)] flex-col px-3 pb-3`;
+    - `headerClass`: header interno com titulo, texto e botoes;
+    - `gridClass`: `grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_320px]`;
+    - `viewportClass`: `h-[calc(100vh-132px)] min-h-[520px]`;
+    - coluna lateral com `TelemetryPanel`, `SimulatorControls` e ajuda.
+  - Esse grid lateral de `320px` e a altura reduzida do viewport explicam a
+    percepcao de caixa direita/compressao.
+  - O hotfix deve alterar apenas o modo `fullscreen`; o modo embutido nao deve
+    ser afetado.
+  - Paineis ja existem como overlays dentro do viewport:
+    - `HUD3D`;
+    - `ExtendedHud`;
+    - `HelmetHud`;
+    - `Leaderboard`;
+    - `TelemetryCharts`;
+    - `EngineeringPitWall`;
+    - `Qualifying*`;
+    - `RaceSetup`;
+    - botao `Setup`;
+    - seletor de cameras.
+  - A coluna lateral pode ser removida/ocultada no modo fullscreen sem quebrar
+    controles principais se os botoes superiores continuarem disponiveis.
+  - Os botoes superiores atuais ficam dentro do header interno; ao remover o
+    header no fullscreen, controles importantes devem migrar para overlay.
+- `public/logo_kart_A26.png`
+  - Arquivo PNG valido (`89 50 4E 47...`) em `public/`.
+  - Tamanho atual: 206075 bytes.
+  - Pode ser usado como favicon PNG sem criar arquivo novo.
+  - Opcionalmente pode ser referenciado como `apple-touch-icon`/OG image.
+- `package.json`
+  - Scripts disponiveis:
+    - `npm run build`;
+    - `npm run lint`;
+    - `npx eslint <arquivos>` tambem segue padrao ja usado no projeto.
 
 ### Plan
 
 Plano proposto para executar apos `[Concluir RPI]`.
 
-1. Refino do kart da arena em `KartModel.tsx`
-   - Manter interface publica e hierarquia de refs.
-   - Introduzir pequenos helpers locais para materiais/peças:
-     - tubos metalicos escuros;
-     - side steps de aluminio;
-     - bucket seat visual;
-     - motor Wankel simplificado;
-     - cubos/aros mais tecnicos.
-   - Substituir ou complementar os `side pods` por degraus laterais/removable
-     aluminum side steps inspirados no modelo oficinal.
-   - Adicionar trilhos superiores e struts, preservando rodas e pivots atuais.
-   - Melhorar banco/cockpit sem deslocar o `Driver`.
-   - Trocar o motor cilindrico simplificado por uma leitura Wankel compacta:
-     - housing lobado ou caixa técnica com rotor triangular visivel;
-     - cabos/velas/exaustao curta;
-     - materiais metalicos coerentes com `MotorAssembly`.
-   - Preservar:
-     - dimensoes oficiais;
-     - `position`/`rotation`;
-     - animacao de direcao;
-     - rotacao das rodas;
-     - livery por piloto;
-     - textos/numeracao.
+1. SEO/head global em `src/routes/__root.tsx`
+   - Substituir metadados genericos Lovable por identidade RL Kart 26A e
+     autoria `RLLabs`.
+   - Adicionar:
+     - title global;
+     - description global;
+     - keywords;
+     - author `RLLabs`;
+     - `theme-color`;
+     - `og:title`;
+     - `og:description`;
+     - `og:type`;
+     - `og:image` apontando para `/logo_kart_A26.png`;
+     - `twitter:card`;
+     - `twitter:title`;
+     - `twitter:description`;
+     - `twitter:image`.
+   - Adicionar links:
+     - stylesheet existente;
+     - favicon PNG em `/logo_kart_A26.png`;
+     - `apple-touch-icon` em `/logo_kart_A26.png`;
+     - canonical base se o framework aceitar `rel="canonical"` sem URL
+       dinamica local; preferir URL relativa/raiz somente se nao gerar dado
+       enganoso.
 
-2. Garantir compatibilidade nos usos
-   - Validar visual por uso em:
-     - `KartRig`;
-     - `AIKart`;
-     - `RecordedRace`.
-   - Ajustar somente se houver clipping evidente por causa do novo cockpit,
-     banco ou motor.
+2. SEO por rota quando fizer sentido
+   - Manter head especifico da home, Arena e Oficina.
+   - Adicionar apenas metadados complementares na Arena se necessario:
+     - `twitter:title`;
+     - `twitter:description`;
+     - `og:image`.
+   - Evitar duplicar demais metadados ja cobertos pela raiz.
 
-3. Vidro limpo da sala acustica em `Workshop.tsx`
-   - Substituir o material do plano frontal por clear glass:
-     - material `meshPhysicalMaterial`;
-     - `transparent`;
-     - opacidade muito baixa;
-     - alta transmission/clearcoat quando suportado;
-     - `depthWrite={false}`;
-     - `side={THREE.DoubleSide}`.
-   - Remover o aspecto azulado/esbranquicado do vidro:
-     - sem `meshBasicMaterial` fosco;
-     - sem color overlay amplo na cabine.
-   - Remover a layer quadrada clara que atualmente bloqueia a leitura do
-     interior da sala.
-   - Manter apenas reflexos/sutilezas de borda, caso necessario, fora da area
-     principal de visao do motor.
-   - Separar a UI:
-     - textos `SALA ACUSTICA`, dB/RPM, health/load e painel externo ficam acima
-       do vidro em world space;
-     - fundos dos textos devem ser pequenos painéis opacos localizados, nao uma
-       camada grande sobre o vidro;
-     - `Html` do painel externo continua externo, opaco e clicavel.
-   - Garantir que o vidro nao bloqueie iluminacao interna:
-     - usar material fisico/transparente com `depthWrite={false}`;
-     - manter luzes internas atuais.
+3. Hotfix full body da Arena em `SimulatorScene.tsx`
+   - No modo `fullscreen`, aproximar estrutura de `RealSimulator`:
+     - wrapper raiz `relative h-screen min-h-[640px] w-full overflow-hidden bg-card`;
+     - canvas/viewport ocupando toda a area (`h-full w-full`);
+     - remover header interno e grid lateral do fluxo.
+   - Manter o modo nao-fullscreen como esta.
+   - Migrar controles essenciais do header/coluna para overlay no fullscreen:
+     - alternar modo Engenharia/Piloto;
+     - Split;
+     - Modo Dev;
+     - Audio 3D;
+     - Reset;
+     - resumo do posto/atalhos se necessario em painel compacto.
+   - Ocultar `TelemetryPanel` e `SimulatorControls` como coluna lateral no
+     fullscreen para eliminar a caixa a direita.
+   - Preservar paineis que ja sao overlays na cena.
+   - Garantir que o overlay nao sobreponha de forma grave:
+     - `ConfirmHomeExit` da rota;
+     - seletor de cameras;
+     - `EngineeringPitWall`;
+     - `RaceSetup`;
+     - HUDs existentes.
 
-4. Movimento visivel do motor Wankel em teste
-   - Ajustar `WankelEngine`/`EngineTestRig` para permitir animacao quando
-     `engineTest.running` estiver ativo.
-   - Animar rotor/eixo ou elemento tecnico equivalente com velocidade derivada
-     de `engineTest.throttle`/`engineTest.rpm`.
-   - Manter fallback parado quando o teste estiver em standby.
-   - Evitar animacao pesada em todos os motores da aplicacao; priorizar a
-     bancada da sala acustica.
+4. Documentacao da tarefa
+   - Atualizar `tarefa-atual.md` com implementacao e checks ao concluir.
+   - Se o hotfix alterar inventario de interfaces de cena, registrar nota curta
+     em `analise-tecnica/documentacao-partes/inventario-cena-interfaces.md` no
+     fechamento.
 
-5. Documentacao
-   - Atualizar `inventario-cena-interfaces.md`:
-     - kart de arena alinhado ao modelo oficinal;
-     - vidro clear glass e UI separada da sala acustica.
-   - Atualizar `historico-etapas.md` no fechamento.
-   - Atualizar `tarefa-atual.md` com implementacao e checks.
-
-6. Validacao
-   - `npx eslint` nos arquivos alterados.
+5. Validacao
+   - `npx eslint src\routes\__root.tsx src\routes\simulator.tsx src\components\simulator\SimulatorScene.tsx`.
    - `npm run build`.
-   - Validacao manual recomendada:
-     - `/simulator`: checar kart Rayssa, adversarios e replay sem quebrar
-       cameras/rodas.
-     - `/simulador-real`: checar foco `SALA ACUSTICA`, transparencia do vidro,
-       visibilidade do Wankel, legibilidade e clique do painel externo.
+   - Validacao visual recomendada:
+     - `/simulator`: confirmar canvas em full body, sem coluna lateral
+       comprimindo a pista;
+     - `/simulator`: confirmar overlays principais e botoes de controle;
+     - `/simulador-real`: confirmar que a Oficina continua full body;
+     - inspecionar head gerado/build para favicon e metadados.
 
 ### Criterios De Aceite
 
-- Karts da arena parecem derivados do modelo oficinal, mantendo identidade de
-  corrida e livery.
-- Nenhum uso de `KartModel` quebra props, animacao de rodas/direcao ou driver.
-- Vidro frontal da sala acustica deixa de ter filtro fosco/esbranquicado.
-- Motor Wankel fica visivel atras do vidro limpo.
-- Motor Wankel tem movimento perceptivel durante teste ativo.
-- Textos e painel externo continuam nitidos e opacos.
-- Painel externo continua interativo.
+- Favicon aparece a partir de asset publico do projeto.
+- Head global deixa de exibir identidade Lovable e passa a usar RL Kart 26A.
+- Autoria/metadados institucionais referenciam `RLLabs`.
+- Arena em `/simulator` ocupa o corpo principal/full viewport, sem caixa
+  lateral comprimindo a corrida.
+- Controles principais da Arena continuam acessiveis.
+- Oficina em `/simulador-real` nao sofre regressao visual.
 - Build passa.
 
 ### Escopo Fora Desta Tarefa
 
-- Substituir todos os karts por GLB externo.
-- Refazer fisica, colisao, hitbox ou cameras da arena.
-- Fazer QA visual amplo da primeira versao; essa sera a tarefa seguinte.
+- Criar novo pacote de branding completo.
+- Produzir novos assets graficos.
+- Refatorar toda a arquitetura de HUD/paineis da Arena.
+- Alterar fisica, IA, cameras ou regras de corrida.
+
+## Checks Planejados
+
+- `npx eslint` nos arquivos alterados.
+- `npm run build`.
+- Validacao visual recomendada:
+  - `/simulator`: arena em full body/full viewport, sem compressao lateral;
+  - `/simulador-real`: confirmar que a Oficina nao foi afetada;
+  - verificar favicon e metadados no HTML/head gerado.
 
 ## Implementacao
 
 Executada em 2026-05-19 apos `[Concluir RPI]`.
 
-- `src/components/realsim/parts/MotorAssembly.tsx`
-  - `WankelEngine` recebeu props opcionais `running` e `throttle`.
-  - Rotor, eixo e polia frontal passaram a animar quando o teste Wankel esta
-    rodando.
-  - `EngineTestRig` passa `engineTest.running` e `engineTest.throttle` para o
-    motor da bancada.
-  - Grupo fisico do motor recebeu vibracao procedural em X/Y/Z proporcional ao
-    slider `Aceleracao`, com marcha lenta suave e tremor mais intenso em stress.
-  - Polia e eixo do dinamometro tambem giram em tempo real conforme o arrasto do
-    slider.
-- `src/components/realsim/Workshop.tsx`
-  - Vidro frontal trocado de layer azul/esbranquicada com `meshBasicMaterial`
-    para `meshPhysicalMaterial` transparente/clear glass.
-  - `depthWrite={false}` aplicado ao vidro para reduzir bloqueio visual e
-    preservar leitura interna.
-  - Fundos de UI frontal foram reposicionados para fora do vidro, com opacidade
-    localizada, evitando uma layer ampla sobre o motor.
-  - Textos `SALA ACUSTICA`, dB/RPM e health/load permanecem opacos e externos.
-- `src/components/simulator/KartModel.tsx`
-  - Mantida a API publica e a hierarquia de refs usadas por fisica, cameras,
-    direcao e replay.
-  - Chassi recebeu trilhos superiores, struts e roll hoop inspirados no modelo
-    oficinal.
-  - Side pods foram convertidos visualmente em degraus laterais de aluminio com
-    textura/ridges e identificacao de kart.
-  - Volante recebeu hub emissivo tecnico.
-  - Adicionado bucket seat shell por baixo/atras da corredora.
-  - Motor traseiro simplificado foi substituido por leitura compacta de Wankel,
-    com housing triangular, rotor visivel, ribs e exaustao metalica.
-- Controle de volume seguro:
-  - `EngineTestState` ganhou `volume`.
-  - `RealSimulator` controla `engineVolume` com padrao inicial de 45%.
-  - `useWankelTestAudio` recebe `volume` e aplica ao `masterGain` em tempo real.
-  - `Workshop` adicionou slider `Volume seguro` ao Painel Externo da sala
-    acustica.
-  - `RealSimUI` adicionou o mesmo slider ao overlay tecnico quando visivel.
-- Documentacao e prontidao para DLLs:
-  - Criado `public/docs/DLL_STUDENT_GUIDE.md` com funcoes, condicoes,
-    criterios de bloqueio, checklist, boas praticas e padroes de projeto para
-    os alunos.
-  - Atualizado `public/docs/CSHARP_MODULE_CONTRACT.md` para deixar explicito
-    que o nome do arquivo `.dll` tambem bloqueia carregamento quando incorreto.
-  - `dllInspector` passou a validar `FileName` como criterio bloqueante.
-  - `DllImportPanel` passou a exibir a validacao `FileName` e linkar o guia dos
-    alunos.
-  - Prontidao atual confirmada: o frontend recebe, inspeciona e testa DLLs por
-    cenario simulado; execucao real da DLL ainda requer host .NET externo via
-    WebSocket.
+- `src/routes/__root.tsx`
+  - Removidos metadados genericos `Lovable`.
+  - Head global passou a usar identidade `RL Kart 26A — RLLabs`.
+  - Adicionados metadados base:
+    - `description`;
+    - `keywords`;
+    - `author=RLLabs`;
+    - `theme-color`;
+    - Open Graph;
+    - Twitter Card.
+  - Adicionados links de favicon e `apple-touch-icon` apontando para
+    `/logo_kart_A26.png`.
+- `src/routes/index.tsx`
+  - Removida referencia a `Lovable` da descricao da home.
+  - Titulo/OG da home ajustados para `RLLabs`.
+- `src/components/rl/Stack.tsx`
+  - Card e subtitulo da arquitetura alterados de `Lovable` para `RLLabs`.
+  - Item `Oficina RL Labs` ajustado para `Oficina RLLabs`.
+- `src/components/simulator/SimulatorScene.tsx`
+  - Modo `fullscreen` da Arena passou a usar wrapper `h-screen`/`w-full`,
+    sem header interno e sem grid lateral.
+  - Viewport da corrida agora ocupa todo o corpo principal, com canvas em area
+    total, aproximando o comportamento da Oficina.
+  - Controles essenciais migraram para overlay compacto:
+    - modo Engenharia/Piloto;
+    - Split;
+    - Dev;
+    - Audio;
+    - Reset.
+  - Modo nao-fullscreen manteve layout antigo com coluna lateral.
+- Deploy compartilhado Apache:
+  - investigado em 2026-05-19 a pedido do usuario antes do fechamento;
+  - o build atual e TanStack Start SSR/worker, gerando `dist/client` para
+    assets e `dist/server` para runtime;
+  - `dist/client` nao possui `index.html`, portanto um `.htaccess` de SPA
+    estatica nao consegue rodar a aplicacao sozinho em Apache compartilhado;
+  - tentativa de habilitar `tanstackStart.spa.enabled` falhou no prerender
+    porque o plugin tentou importar `dist/server/server.js`, enquanto este
+    projeto gera o entry SSR/Cloudflare como `dist/server/index.js`;
+  - a alteracao experimental foi revertida para nao deixar deploy quebrado;
+  - conclusao: para hospedagem compartilhada pura, seria necessario converter o
+    projeto para build SPA/static export de forma dedicada; do jeito atual, o
+    alvo correto continua sendo runtime SSR/worker/Node compativel.
+- `README.md`
+  - Reescrito com identidade `RLLabs`, thumbs locais, rotas principais,
+    experiencias da Arena/Oficina, fluxo das DLLs, arquitetura, stack,
+    estrutura do repositorio, comandos, observacao de deploy e roadmap tecnico.
+  - Removidas referencias a `Lovable`.
+- Git remote:
+  - Nao havia remote configurado.
+  - Criado `origin` apontando para
+    `git@github.com:rubenslyra/kart-manager-csharp.git`.
 
 ## Checks
 
-- `npx eslint src\components\realsim\parts\MotorAssembly.tsx src\components\realsim\Workshop.tsx src\components\simulator\KartModel.tsx --fix`: aplicado para formatacao.
-- `npx eslint src\components\realsim\parts\MotorAssembly.tsx src\components\realsim\Workshop.tsx src\components\simulator\KartModel.tsx --fix`: reaplicado apos reforco de vibracao/rotacao pelo slider.
-- `npx eslint src\components\realsim\parts\MotorAssembly.tsx src\components\realsim\Workshop.tsx src\components\simulator\KartModel.tsx`: aprovado.
+- `rg "Lovable|@Lovable" src public package.json`: sem resultados.
+- `npx eslint src\routes\__root.tsx src\routes\index.tsx src\components\rl\Stack.tsx src\components\simulator\SimulatorScene.tsx --fix`: aplicado para formatacao.
+- `npx eslint src\routes\__root.tsx src\routes\index.tsx src\components\rl\Stack.tsx src\components\simulator\SimulatorScene.tsx`: aprovado.
 - `npm run build`: aprovado.
   - Avisos residuais conhecidos:
+    - `@import` de fontes no CSS fora da primeira posicao;
+    - chunks acima de 500 kB.
+- Tentativa `npm run build` com `tanstackStart.spa.enabled=true`: reprovada no
+  prerender por incompatibilidade entre o prerender local e o entry
+  `dist/server/index.js`; revertida.
+- `npm run build` apos reversao do shell SPA experimental: aprovado.
+  - Mesmos avisos residuais conhecidos:
+    - `@import` de fontes no CSS fora da primeira posicao;
+    - chunks acima de 500 kB.
+- `rg "Lovable|@Lovable" README.md src public package.json`: sem resultados.
+- `npx eslint src\routes\__root.tsx src\routes\index.tsx src\components\rl\Stack.tsx src\components\simulator\SimulatorScene.tsx`: aprovado apos README/remote.
+- `npm run build`: aprovado apos README/remote.
+  - Mesmos avisos residuais conhecidos:
     - `@import` de fontes no CSS fora da primeira posicao;
     - chunks acima de 500 kB.
 
@@ -384,13 +349,14 @@ Executada em 2026-05-19 apos `[Concluir RPI]`.
 Finalizada em 2026-05-19.
 
 - Diff revisado antes do commit.
-- Escopo implementado conforme RPI aprovado:
-  - karts da arena refinados com linguagem visual do modelo oficinal;
-  - vidro frontal da sala acustica convertido para clear glass;
-  - motor Wankel da bancada com animacao e vibracao durante teste ativo;
-  - controle de volume seguro exposto no painel externo e overlay tecnico;
-  - validacao de DLL reforcada por nome de arquivo;
-  - guia dos alunos publicado em `public/docs/DLL_STUDENT_GUIDE.md`.
+- Escopo implementado conforme RPI aprovado e extensoes solicitadas antes do
+  fechamento:
+  - favicon e SEO global com identidade `RLLabs`;
+  - remocao de referencias a `Lovable`;
+  - Arena em full body no modo fullscreen;
+  - README enriquecido com thumbs e documentacao tecnica/produto;
+  - investigacao de deploy compartilhado Apache;
+  - remote `origin` configurado para o repositorio informado.
 - Artefatos nao rastreados fora do escopo mantidos sem alteracao:
   - `chamado-correções-erros-prints/`;
   - `image_1030ed13.png`;
@@ -398,8 +364,9 @@ Finalizada em 2026-05-19.
 
 ## Notas De Release
 
-- **Alterado:** karts da arena agora usam chassi, banco, degraus laterais e motor traseiro com leitura visual mais proxima do kart oficinal.
-- **Corrigido:** vidro frontal da sala acustica deixou de aplicar filtro fosco/esbranquicado sobre o motor Wankel.
-- **Adicionado:** teste Wankel ganhou movimento mecanico visivel e controle de volume seguro.
-- **Adicionado:** guia de entrega de DLLs C# para alunos.
-- **Tecnico:** importador de DLLs agora bloqueia arquivo cujo nome nao corresponda ao slot selecionado.
+- **Adicionado:** favicon com o logo do RL Kart 26A e metadados SEO/Open Graph/Twitter.
+- **Alterado:** identidade institucional do projeto passa a referenciar `RLLabs`.
+- **Corrigido:** Arena fullscreen deixou de ficar comprimida por coluna lateral.
+- **Alterado:** README agora apresenta thumbs, rotas, experiencias, arquitetura, stack, comandos, deploy e roadmap.
+- **Tecnico:** remote `origin` configurado para `git@github.com:rubenslyra/kart-manager-csharp.git`.
+- **Tecnico:** confirmado que hospedagem compartilhada Apache pura exige conversao futura para SPA/static export; build atual segue SSR/worker.

@@ -1,355 +1,210 @@
 # RL Kart 26A
 
-### Plataforma Educacional de Engenharia, Simulação e Desenvolvimento Modular em C#
+Plataforma educacional da **RLLabs** para engenharia de software aplicada a um
+mini kart eletrico: arena 3D, oficina tecnica, telemetria, validacao de DLLs C#
+e fluxo didatico de modulos.
 
-<img src="https://github.com/user-attachments/assets/022d2efb-cbe0-468a-9867-f0a1a86e34ef" width="100%" alt="RL Kart 26A Banner"/>
+<p align="center">
+  <img src="./public/logo_kart_A26.png" width="180" alt="Logo RL Kart 26A" />
+</p>
 
-<br/>
+<p align="center">
+  <img src="https://img.shields.io/badge/RLLabs-Educational%20Engineering-39c5ff?style=for-the-badge" alt="RLLabs" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-Strict-3178C6?style=for-the-badge&logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Three.js-3D-black?style=for-the-badge&logo=three.js" alt="Three.js" />
+  <img src="https://img.shields.io/badge/C%23-DLL%20Modules-512BD4?style=for-the-badge&logo=dotnet" alt="CSharp" />
+  <img src="https://img.shields.io/badge/TanStack-Start-FF4154?style=for-the-badge" alt="TanStack Start" />
+</p>
 
-![Three.js](https://img.shields.io/badge/Three.js-3D-black?style=for-the-badge&logo=three.js)
-![React](https://img.shields.io/badge/React-Frontend-61DAFB?style=for-the-badge&logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=for-the-badge&logo=typescript)
-![CSharp](https://img.shields.io/badge/C%23-.NET_8-512BD4?style=for-the-badge&logo=dotnet)
-![WebSocket](https://img.shields.io/badge/WebSocket-RealTime-00C853?style=for-the-badge)
-![Blender](https://img.shields.io/badge/Blender-3D-E87D0D?style=for-the-badge&logo=blender)
-![Panda3D](https://img.shields.io/badge/Panda3D-Simulation-0099FF?style=for-the-badge)
-![Lovable](https://img.shields.io/badge/Lovable-AI_UI-00B0FF?style=for-the-badge)
+## Thumbs
 
-<br/>
+| Arena | Oficina | Blueprint |
+|---|---|---|
+| <img src="./src/assets/hero-kart.jpg" alt="Arena de corrida RL Kart 26A" width="280" /> | <img src="./src/assets/blueprint-overview.jpg" alt="Oficina tecnica RL Kart 26A" width="280" /> | <img src="./src/assets/blueprint-3d.jpg" alt="Blueprint tecnico RL Kart 26A" width="280" /> |
 
-### "O informático modela. O software dá vida. A vida real executa."
+## Visao Geral
 
-</div>
+O RL Kart 26A une simulacao 3D e ensino de programacao modular. A proposta e
+permitir que alunos criem modulos em C#, compilem DLLs e validem contratos
+tecnicos em uma oficina virtual antes de observar o comportamento do kart em uma
+arena de corrida.
 
----
+O projeto atual e um frontend/simulador com:
 
-# 📘 Sobre o Projeto
+- home institucional do projeto;
+- Arena de Corrida em Three.js/React Three Fiber;
+- Oficina tecnica do kart com foco por modulo;
+- importador e inspetor de DLLs C#;
+- contrato documentado para alunos;
+- telemetria, auditoria, HUDs, replay e paineis de engenharia;
+- modo demo/mock para simular dados de modulos enquanto o host .NET real nao
+  esta conectado.
 
-O **RL Kart 26A** é uma plataforma educacional modular criada para ensinar:
+## Rotas Principais
 
-- lógica de programação;
-- arquitetura de software;
-- engenharia de sistemas;
-- comunicação entre aplicações;
-- integração C# + WebSocket + Simulação 3D;
-- modelagem orientada a estados;
-- telemetria;
-- validação de componentes;
-- desenvolvimento de software aplicado ao mundo real.
-
-O projeto utiliza:
-
-- C# (.NET)
-- Three.js
-- React
-- TypeScript
-- Blender
-- WebSockets
-- Simulação 3D em tempo real
-
----
-
-# 🎯 Objetivo Educacional
-
-Cada aula desenvolve uma funcionalidade real do kart.
-
-O aluno:
-1. cria um módulo em C#;
-2. compila uma DLL;
-3. envia dados ao simulador;
-4. vê o kart responder visualmente em tempo real.
-
----
-
-# 🧠 Conceito Central
-
-O projeto funciona como um:
-
-# Digital Twin (Gêmeo Digital)
-
-Onde:
-
-| Camada | Responsabilidade |
+| Rota | Funcao |
 |---|---|
-| Three.js | Visualização 3D |
-| C# DLLs | Lógica |
-| WebSocket | Comunicação |
-| Blender | Assets |
-| React/Lovable | Interface |
-| Telemetria | Diagnóstico |
+| `/` | hub do projeto, arquitetura, aulas, stack e visao educacional |
+| `/simulator` | Arena de Corrida full body com IA, replay, classificacao, grid e telemetria |
+| `/simulador-real` | Oficina tecnica com kart, sala acustica, paineis C# e checklist |
 
----
+## Experiencias
 
-# 🏗️ Arquitetura
+### Arena de Corrida
 
-```text
-Aluno cria DLL em C#
-        ↓
-Console Host (.NET)
-        ↓
-WebSocket
-        ↓
-Bridge JSON
-        ↓
-Three.js / React
-        ↓
-Kart reage em tempo real
-````
+- Cena 3D full body.
+- Rayssa como piloto principal.
+- Modo Engenharia Observador.
+- Progressao por vitorias.
+- Classificacao alternada, grid oficial e largada.
+- Pit lane simplificado.
+- Replay, camera selector, split-screen e HUDs.
+- Controles de debug, hitbox e performance.
 
----
+### Oficina Tecnica
 
-# ⚙️ Estrutura do Projeto
+- Kart procedural/GLB fallback por partes.
+- Foco por modulo: motor, freios, direcao, bateria, painel e chicote.
+- Sala acustica com teste Wankel animado.
+- Controle de volume seguro.
+- Wireframe/X-Ray e labels tecnicos.
+- Auditoria de telemetria.
 
-```text
-RLKart26A/
-│
-├── apps/
-│   ├── lovable-ui/
-│   ├── simulator-threejs/
-│   └── csharp-runtime/
-│
-├── assets/
-│   ├── kart/
-│   ├── workshop/
-│   ├── track/
-│   ├── sounds/
-│   └── ui/
-│
-├── docs/
-│
-├── runtime/
-│   └── modules/
-│
-└── websocket/
-```
+### DLLs C#
 
----
+O painel `DLLs C# · Importar & Testar` valida contratos estaticamente no
+navegador:
 
-# 🚗 Estados do Kart
+- cabecalho PE;
+- metadados .NET/BSJB;
+- nome do arquivo por slot;
+- `AssemblyName`;
+- `ModuleId`;
+- versao SemVer;
+- funcoes obrigatorias por modulo.
+
+Guia dos alunos:
+
+- [`public/docs/DLL_STUDENT_GUIDE.md`](./public/docs/DLL_STUDENT_GUIDE.md)
+
+Contrato tecnico:
+
+- [`public/docs/CSHARP_MODULE_CONTRACT.md`](./public/docs/CSHARP_MODULE_CONTRACT.md)
+
+Limite atual: o frontend inspeciona DLLs e executa cenarios simulados via
+`mockBridge`. Para executar DLLs reais, ainda e necessario um host .NET externo
+conectado por WebSocket.
+
+## Arquitetura
 
 ```text
-OFF
-WAITING_FOR_MODULES
-CORE_READY
-GEARBOX_READY
-BRAKES_READY
-IGNITION_READY
-READY_TO_DRIVE
-DRIVING
-WARNING
-CRITICAL_FAILURE
-SHUTDOWN
+Aluno desenvolve DLL C#
+        |
+        v
+Contrato de modulo
+        |
+        v
+Inspector no navegador
+        |
+        v
+Bridge mock ou WebSocket real
+        |
+        v
+Telemetria / estado do kart
+        |
+        v
+Oficina tecnica + Arena 3D
 ```
 
----
+## Stack
 
-# 🔌 Comunicação C# ↔ Simulador
+| Camada | Tecnologia |
+|---|---|
+| App | React 19 + TypeScript |
+| Roteamento/SSR | TanStack Start / TanStack Router |
+| 3D | Three.js, React Three Fiber, Drei |
+| UI | Tailwind CSS, componentes Radix/shadcn-style |
+| Audio | Web Audio + assets locais |
+| Modulos | C#/.NET, DLLs e contrato educacional |
+| Deploy principal | build SSR/worker compativel com runtime server/edge |
 
-O sistema utiliza:
-
-* WebSocket
-* JSON
-* DLLs carregadas dinamicamente
-
----
-
-# 📡 Exemplo de JSON
-
-```json
-{
-  "vehicleState": "READY_TO_DRIVE",
-  "modules": {
-    "gearbox": {
-      "currentGear": "D"
-    },
-    "battery": {
-      "level": 78
-    },
-    "steering": {
-      "angle": 12
-    }
-  }
-}
-```
-
----
-
-# 🛠️ Tecnologias
-
-## Frontend
-
-* React
-* TypeScript
-* Tailwind
-* React Three Fiber
-* Drei
-
-## Backend
-
-* .NET 8
-* C#
-* WebSocket
-
-## 3D
-
-* Blender
-* GLTF / GLB
-* PBR Materials
-
----
-
-# 🎓 Módulos Educacionais
-
-| Aula   | Sistema               |
-| ------ | --------------------- |
-| Aula 1 | Core System           |
-| Aula 2 | Gearbox               |
-| Aula 3 | Brakes                |
-| Aula 4 | Health Monitor        |
-| Aula 5 | Ignition              |
-| Aula 6 | Telemetria            |
-| Aula 7 | Comunicação WebSocket |
-
----
-
-# 🧩 Features
-
-* Simulador Real
-* Oficina Técnica
-* Telemetria
-* Dashboard
-* Mock DLLs
-* Integração real com C#
-* Checklist de saída
-* Visualização modular
-* Wireframe inspection
-* Camera focus por módulo
-* Sistema de estados
-* Split-screen
-* Sistema de auditoria JSON
-* HUD técnica
-
----
-
-# 🎨 Direção de Arte
-
-Tema visual:
-
-* industrial futurista;
-* engenharia;
-* RL Labs;
-* blueprint técnico;
-* neon azul;
-* metal grafite;
-* laboratório cinematográfico.
-
----
-
-# 📦 Assets
-
-Formato principal:
+## Estrutura Relevante
 
 ```text
-.glb
+src/
+  components/
+    simulator/       Arena, corrida, HUDs, replay, IA
+    realsim/         Oficina tecnica, kart, sala acustica, DLL panel
+    rl/              Home, secoes institucionais e stack
+  routes/            Rotas TanStack Start
+  bridge/            Mock/WebSocket telemetry bridge
+  lib/csharp/        Inspector de DLLs
+public/
+  docs/              Contratos e guias de entrega
+  models/            Modelos publicos quando disponiveis
+  sounds/            Eventos e audio de corrida
 ```
 
----
-
-# 🚀 Roadmap
-
-## Fase 1
-
-* oficina técnica;
-* mock DLLs;
-* telemetria.
-
-## Fase 2
-
-* integração real C#;
-* websocket bridge.
-
-## Fase 3
-
-* corrida técnica;
-* módulos dinâmicos.
-
-## Fase 4
-
-* protótipo físico.
-
----
-
-# ▶️ Executando o Projeto
-
-## Frontend
+## Executando Localmente
 
 ```bash
 npm install
 npm run dev
 ```
 
----
+URL padrao:
 
-## Backend C#
-
-```bash
-dotnet restore
-dotnet run
+```text
+http://127.0.0.1:5173/
 ```
 
----
-
-# 🔥 Executando WebSocket
+## Build
 
 ```bash
-dotnet run --project websocket-server
+npm run build
 ```
 
----
+Saida atual:
 
-# 📸 Simulador
+```text
+dist/client  # assets publicos do cliente
+dist/server  # bundle SSR/worker
+```
 
-## Dashboard
+Observacao de deploy: este projeto nao e uma SPA estatica pura. O build atual
+nao gera `dist/client/index.html`; portanto, um `.htaccess` de Apache sozinho
+nao e suficiente para rodar a aplicacao completa em hospedagem compartilhada
+estatica. Para esse cenario, seria necessario adaptar o projeto para export
+SPA/static dedicado. O alvo atual e um runtime SSR/worker/Node compativel.
 
-* telemetria;
-* módulos;
-* checklist;
-* auditoria.
+## Checks Recomendados
 
-## Oficina
+```bash
+npx eslint src/routes/__root.tsx src/routes/index.tsx src/components/rl/Stack.tsx src/components/simulator/SimulatorScene.tsx
+npm run build
+```
 
-* inspeção técnica;
-* integração DLL;
-* validação de componentes.
+## Roadmap Tecnico
 
----
+- Host .NET externo para execucao real das DLLs.
+- WebSocket de telemetria em ambiente integrado.
+- Export estatico opcional para hospedagem compartilhada.
+- Capturas oficiais da Arena/Oficina para substituir thumbs locais.
+- Testes automatizados para contratos de modulo.
 
-# 📱 Redes
+## Redes
 
-## Rubinho Lyra Labs
+- YouTube: [@rubinholyralabs](https://www.youtube.com/@rubinholyralabs)
+- Instagram: [@rubinholyralabs](https://www.instagram.com/rubinholyralabs/)
+- LinkedIn: [Rubens Lyra](https://www.linkedin.com/in/rubenslyra/)
+- TikTok: [@rubinholyra](https://www.tiktok.com/@rubinholyra)
 
-* YouTube:
-  [https://www.youtube.com/@rubinholyralabs](https://www.youtube.com/@rubinholyralabs)
+## Autor
 
-* Instagram:
-  [https://www.instagram.com/rubinholyralabs/](https://www.instagram.com/rubinholyralabs/)
+Rubens Lyra  
+RLLabs
 
-* LinkedIn:
-  [https://www.linkedin.com/in/rubenslyra/](https://www.linkedin.com/in/rubenslyra/)
-
-* TikTok:
-  [https://www.tiktok.com/@rubinholyra](https://www.tiktok.com/@rubinholyra)
-
----
-
-# 👨‍💻 Autor
-
-Rubens Lyra
-Rubinho Lyra Labs
-
----
-
-# 📄 Licença
+## Licenca
 
 Projeto educacional experimental.
-

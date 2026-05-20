@@ -13,13 +13,13 @@ export const Route = createFileRoute("/")({
   component: Index,
   head: () => ({
     meta: [
-      { title: "RL Kart 26A — Hub Educacional · RL Labs" },
+      { title: "RL Kart 26A — Hub Educacional · RLLabs" },
       {
         name: "description",
         content:
-          "Mini Kart Elétrico Educacional. Cada aula compila uma DLL em C# que libera uma função real do kart. Lovable + Three.js + Blender + C#.",
+          "Mini Kart Eletrico Educacional. Cada aula compila uma DLL em C# que libera uma funcao real do kart. RLLabs + Three.js + Blender + C#.",
       },
-      { property: "og:title", content: "RL Kart 26A — RL Labs" },
+      { property: "og:title", content: "RL Kart 26A — RLLabs" },
       {
         property: "og:description",
         content: "Do virtual ao real. Software educacional integrado ao veículo.",
