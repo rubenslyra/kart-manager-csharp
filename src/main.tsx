@@ -12,6 +12,7 @@ const router = createRouter({
   context: { queryClient },
   scrollRestoration: true,
   defaultPreloadStaleTime: 0,
+  basepath: "/kart-manager-csharp",
 });
 
 declare module "@tanstack/react-router" {
