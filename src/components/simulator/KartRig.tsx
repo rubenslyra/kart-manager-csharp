@@ -105,7 +105,7 @@ export function KartRig({
 }: Props) {
   const group = useRef<Group>(null);
   const chassisRef = useRef<Group>(null);
-  const controls = useKartControls(devMode, undefined, controlMode === "manual");
+  const controls = useKartControls(devMode, undefined, controlMode === "manual" || devMode);
   const curve = useMemo(() => trackCurve(), []);
   const speed = useRef(0);
   const lap = useRef(0);
@@ -166,14 +166,13 @@ export function KartRig({
 
     const stateAllowsDrive = state === "READY_TO_DRIVE" || state === "DRIVING";
     const canDrive =
-      raceActive &&
       !raceStore.get().pitService.active &&
       (controlMode === "autopilot" || devMode || (ignition && battery > 0 && stateAllowsDrive));
 
     let autoSteer = 0;
     let autoBrake = 0;
     let autoForward = 0;
-    const autoAssist = controlMode === "autopilot" || c.automatic > 0;
+    const autoAssist = (controlMode === "autopilot" && !devMode) || c.automatic > 0;
     if (autoAssist) {
       const probeNow = nearestOnTrack(group.current.position);
       const lookAheadT = (probeNow.t + 0.026) % 1;
