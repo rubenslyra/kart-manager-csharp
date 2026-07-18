@@ -1,14 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  Outlet,
-  Link,
-  createRootRouteWithContext,
-  useRouter,
-  HeadContent,
-  Scripts,
-} from "@tanstack/react-router";
-
-import appCss from "../styles.css?url";
+import { Outlet, Link, createRootRouteWithContext, useRouter } from "@tanstack/react-router";
 
 function NotFoundComponent() {
   return (
@@ -68,81 +59,14 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "RL Kart 26A — Hub Educacional RLLabs" },
-      {
-        name: "description",
-        content:
-          "RL Kart 26A e uma experiencia educacional da RLLabs com arena de corrida, oficina tecnica, telemetria e modulos C#.",
-      },
-      {
-        name: "keywords",
-        content:
-          "RL Kart 26A, RLLabs, kart eletrico educacional, C#, Three.js, telemetria, simulador",
-      },
-      { name: "author", content: "RLLabs" },
-      { name: "theme-color", content: "#0d1826" },
-      { property: "og:title", content: "RL Kart 26A — RLLabs" },
-      {
-        property: "og:description",
-        content:
-          "Arena e oficina tecnica do RL Kart 26A, com corrida 3D, telemetria e validacao de modulos C#.",
-      },
-      { property: "og:type", content: "website" },
-      { property: "og:image", content: "/logo_kart_A26.png" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "RL Kart 26A — RLLabs" },
-      {
-        name: "twitter:description",
-        content:
-          "Hub educacional RLLabs com corrida 3D, oficina tecnica e modulos C# para o RL Kart 26A.",
-      },
-      { name: "twitter:image", content: "/logo_kart_A26.png" },
-    ],
-    links: [
-      {
-        rel: "icon",
-        type: "image/png",
-        href: "/logo_kart_A26.png",
-      },
-      {
-        rel: "apple-touch-icon",
-        href: "/logo_kart_A26.png",
-      },
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-    ],
-  }),
-  shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
 
-function RootShell({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
-
 function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
-
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={new QueryClient()}>
       <Outlet />
     </QueryClientProvider>
   );

@@ -18,7 +18,7 @@ const ENGINEER_MESSAGES = [
 ] as const;
 
 export function HelmetHud({ active, audioEnabled, t, lap, physics }: Props) {
-  const [message, setMessage] = useState(ENGINEER_MESSAGES[0]);
+  const [message, setMessage] = useState<string>(ENGINEER_MESSAGES[0]);
   const lastSpoken = useRef("");
   const lastAt = useRef(0);
 
